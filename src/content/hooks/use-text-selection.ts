@@ -13,59 +13,106 @@ export type { SelectionInfo } from "./text-selection";
 const SELECTION_DELAY_MS = 10;
 const HOST_ID = "flash-translate-root";
 
+interface SelectionDetails {
+  text: string;
+  rect: DOMRect;
+}
+
+function buildSelectionInfo(
+  selection: Selection | null,
+  rawText: string | undefined | null,
+  fallbackRect: DOMRect
+): SelectionDetails | null {
+  const validText = getValidSelectionText(rawText);
+  if (!validText) {
+    return null;
+  }
+
+  const rect = getSelectionRect(selection, fallbackRect);
+  if (!rect) {
+    return null;
+  }
+
+  return { text: validText, rect };
+}
+
+function clearSelectionState(
+  setSelection: (value: SelectionInfo | null) => void,
+  lastSelectionTextRef: React.MutableRefObject<string | null>
+) {
+  setSelection(null);
+  lastSelectionTextRef.current = null;
+}
+
+function handlePendingClear(
+  pendingClearRef: React.MutableRefObject<boolean>,
+  setSelection: (value: SelectionInfo | null) => void,
+  lastSelectionTextRef: React.MutableRefObject<string | null>
+) {
+  if (pendingClearRef.current) {
+    clearSelectionState(setSelection, lastSelectionTextRef);
+  }
+  pendingClearRef.current = false;
+}
+
 export function useTextSelection() {
   const [selection, setSelection] = useState<SelectionInfo | null>(null);
   const [isVisible, setIsVisible] = useState(true);
   const lastSelectionTextRef = useRef<string | null>(null);
+  const pendingClearRef = useRef(false);
 
   const handleMouseUp = () => {
     // Delay to ensure selection is complete
     setTimeout(() => {
       const windowSelection = window.getSelection();
+      const isContentEditable = isNodeInContentEditable(
+        windowSelection?.anchorNode ?? null
+      );
 
       // Skip translation for contenteditable elements (text inputs, editors, etc.)
-      if (isNodeInContentEditable(windowSelection?.anchorNode ?? null)) {
+      if (isContentEditable) {
+        handlePendingClear(pendingClearRef, setSelection, lastSelectionTextRef);
         return;
       }
 
       const rawText = windowSelection?.toString();
-
-      // Validate and normalize (trim) in pure function
-      const validText = getValidSelectionText(rawText);
-      if (!validText) {
-        return;
-      }
-
-      const rect = getSelectionRect(
+      const selectionInfo = buildSelectionInfo(
         windowSelection,
+        rawText,
         document.body.getBoundingClientRect()
       );
-      if (!rect) {
+      if (!selectionInfo) {
+        handlePendingClear(pendingClearRef, setSelection, lastSelectionTextRef);
         return;
       }
 
+      pendingClearRef.current = false;
       if (
-        shouldShowPopupForSelection(validText, lastSelectionTextRef.current)
+        shouldShowPopupForSelection(
+          selectionInfo.text,
+          lastSelectionTextRef.current
+        )
       ) {
         setIsVisible(true);
       }
-      lastSelectionTextRef.current = validText;
-      setSelection({ text: validText, rect });
+      lastSelectionTextRef.current = selectionInfo.text;
+      setSelection({ text: selectionInfo.text, rect: selectionInfo.rect });
     }, SELECTION_DELAY_MS);
   };
 
   const handleMouseDown = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
     const shadowHost = document.getElementById(HOST_ID);
+    const path = event.composedPath();
+    const isInsideShadowHost =
+      shadowHost?.contains(target) || isClickInsideShadowHost(path, HOST_ID);
 
     // Close popup when clicking outside our UI
-    if (shadowHost && !shadowHost.contains(target)) {
-      const path = event.composedPath();
-      if (!isClickInsideShadowHost(path, HOST_ID)) {
-        setSelection(null);
-        lastSelectionTextRef.current = null;
-      }
+    if (isInsideShadowHost) {
+      pendingClearRef.current = false;
+      return;
     }
+    pendingClearRef.current = true;
   };
 
   const handleKeyDown = (event: KeyboardEvent) => {
