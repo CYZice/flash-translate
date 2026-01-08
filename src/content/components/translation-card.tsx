@@ -111,7 +111,7 @@ export function TranslationCard({
 
   return (
     <div
-      className="fixed font-sans text-gray-800 text-sm leading-normal"
+      className="fixed font-sans text-gray-800 text-sm leading-normal transition-[left,top] duration-150 ease-out"
       style={{
         left: `${cardLeft}px`,
         top: `${cardTop}px`,
@@ -119,7 +119,7 @@ export function TranslationCard({
       }}
     >
       <div
-        className="relative animate-popup-expand overflow-visible rounded-xl border border-stone-400/60 border-solid bg-white/90 pt-4 shadow-2xl backdrop-blur"
+        className="relative animate-popup-expand overflow-visible rounded-xl border border-stone-400/60 border-solid bg-white/90 pt-4 shadow-2xl backdrop-blur transition-[width] duration-150 ease-out"
         style={{
           width: `${width}px`,
           minWidth: `${MIN_POPUP_WIDTH}px`,
