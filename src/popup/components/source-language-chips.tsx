@@ -118,7 +118,10 @@ export function SourceLanguageChips({
             />
           ))}
           <LanguageDownloadDropdown
-            downloadablePairs={downloadablePairs}
+            downloadableLanguages={downloadablePairs.map((p) => ({
+              code: p.sourceLanguage,
+              status: p.status,
+            }))}
             onDownload={handleDownload}
           />
         </div>

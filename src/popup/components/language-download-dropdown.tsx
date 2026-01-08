@@ -2,21 +2,30 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { getLanguageNativeName } from "@/shared/constants/languages";
 import { getMessage } from "@/shared/utils/i18n";
-import type { LanguagePairStatus } from "@/shared/utils/translator";
+import type { TranslationAvailabilityStatus } from "@/shared/utils/translator";
 import {
   calculateDropdownPosition,
   type DropdownPosition,
 } from "../hooks/dropdown-position";
 import { StatusIndicator } from "./status-indicator";
 
+export interface DownloadableLanguage {
+  code: string;
+  status: TranslationAvailabilityStatus;
+}
+
 export interface LanguageDownloadDropdownProps {
-  downloadablePairs: LanguagePairStatus[];
-  onDownload: (sourceLanguage: string) => void;
+  downloadableLanguages: DownloadableLanguage[];
+  onDownload: (languageCode: string) => void;
+  tooltipAvailable?: string;
+  tooltipNone?: string;
 }
 
 export function LanguageDownloadDropdown({
-  downloadablePairs,
+  downloadableLanguages,
   onDownload,
+  tooltipAvailable,
+  tooltipNone,
 }: LanguageDownloadDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState<DropdownPosition>("left");
@@ -46,12 +55,20 @@ export function LanguageDownloadDropdown({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen]);
 
-  const handleDownloadClick = (sourceLanguage: string) => {
-    onDownload(sourceLanguage);
+  const handleDownloadClick = (languageCode: string) => {
+    onDownload(languageCode);
     setIsOpen(false);
   };
 
-  const hasDownloadableLanguages = downloadablePairs.length > 0;
+  const hasDownloadableLanguages = downloadableLanguages.length > 0;
+
+  const availableTooltip =
+    tooltipAvailable ||
+    getMessage(
+      "popup_source_languagesAvailable",
+      String(downloadableLanguages.length)
+    );
+  const noneTooltip = tooltipNone || getMessage("popup_source_noLanguages");
 
   return (
     <div className="relative">
@@ -65,14 +82,7 @@ export function LanguageDownloadDropdown({
         disabled={!hasDownloadableLanguages}
         onClick={() => setIsOpen(!isOpen)}
         ref={buttonRef}
-        title={
-          hasDownloadableLanguages
-            ? getMessage(
-                "popup_source_languagesAvailable",
-                String(downloadablePairs.length)
-              )
-            : getMessage("popup_source_noLanguages")
-        }
+        title={hasDownloadableLanguages ? availableTooltip : noneTooltip}
         type="button"
       >
         +
@@ -91,14 +101,14 @@ export function LanguageDownloadDropdown({
               position === "left" ? "left-0" : "right-0"
             )}
           >
-            {downloadablePairs.map((pair) => (
+            {downloadableLanguages.map((lang) => (
               <button
                 className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-50"
-                key={pair.sourceLanguage}
-                onClick={() => handleDownloadClick(pair.sourceLanguage)}
+                key={lang.code}
+                onClick={() => handleDownloadClick(lang.code)}
                 type="button"
               >
-                <span>{getLanguageNativeName(pair.sourceLanguage)}</span>
+                <span>{getLanguageNativeName(lang.code)}</span>
                 <StatusIndicator status="after-download" />
               </button>
             ))}

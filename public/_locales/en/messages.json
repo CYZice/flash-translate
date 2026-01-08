@@ -61,6 +61,18 @@
   "popup_target_loading": {
     "message": "Loading languages..."
   },
+  "popup_target_languagesAvailable": {
+    "message": "$COUNT$ language(s) available",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "popup_target_noLanguages": {
+    "message": "No languages available"
+  },
 
   "popup_footer_supportTitle": {
     "message": "Support & Feedback"

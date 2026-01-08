@@ -1,16 +1,16 @@
-import { useEffect, useState } from "react";
-import { cn } from "@/lib/utils";
-import {
-  getLanguageNativeName,
-  getLanguageUpperCode,
-  SUPPORTED_LANGUAGES,
-} from "@/shared/constants/languages";
+import { useEffect, useRef, useState } from "react";
+import { SUPPORTED_LANGUAGES } from "@/shared/constants/languages";
 import { getMessage } from "@/shared/utils/i18n";
+import { createPrefixedLogger } from "@/shared/utils/logger";
 import {
   type TranslationAvailabilityStatus,
   translatorManager,
 } from "@/shared/utils/translator";
-import { StatusIndicator } from "./status-indicator";
+import { useDownloadState } from "../hooks/use-download-state";
+import { LanguageChip } from "./language-chip";
+import { LanguageDownloadDropdown } from "./language-download-dropdown";
+
+const log = createPrefixedLogger("TargetLanguageChips");
 
 interface TargetLanguageStatus {
   code: string;
@@ -28,6 +28,24 @@ export function TargetLanguageChips({
 }: TargetLanguageChipsProps) {
   const [statuses, setStatuses] = useState<TargetLanguageStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { getStatus, startDownload, finishDownload, clearDownloadError } =
+    useDownloadState();
+
+  // Track error clear timeouts for cleanup
+  const errorTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map()
+  );
+
+  // Cleanup all pending timeouts on unmount
+  useEffect(() => {
+    const timeouts = errorTimeoutsRef.current;
+    return () => {
+      for (const timeout of timeouts.values()) {
+        clearTimeout(timeout);
+      }
+      timeouts.clear();
+    };
+  }, []);
 
   // Check availability for all target languages
   useEffect(() => {
@@ -50,8 +68,62 @@ export function TargetLanguageChips({
     checkAllTargets();
   }, []);
 
-  const getStatus = (code: string): TranslationAvailabilityStatus => {
-    return statuses.find((s) => s.code === code)?.status || "unavailable";
+  const availableStatuses = statuses.filter((s) => s.status === "available");
+  const downloadableStatuses = statuses.filter(
+    (s) => s.status === "after-download"
+  );
+
+  // Convert statuses to pairs format for useDownloadState compatibility
+  const convertToPairs = (targetLangStatuses: TargetLanguageStatus[]) => {
+    return targetLangStatuses.map((s) => {
+      const sourceToCheck = s.code === "en" ? "ja" : "en";
+      return {
+        sourceLanguage: sourceToCheck,
+        targetLanguage: s.code,
+        status: s.status,
+      };
+    });
+  };
+
+  const handleDownload = async (targetLang: string) => {
+    const sourceToCheck = targetLang === "en" ? "ja" : "en";
+    const pairKey = `${sourceToCheck}-${targetLang}`;
+
+    // Clear any existing timeout for this pair
+    const existingTimeout = errorTimeoutsRef.current.get(pairKey);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+      errorTimeoutsRef.current.delete(pairKey);
+    }
+
+    startDownload(sourceToCheck, targetLang);
+
+    try {
+      await translatorManager.getTranslator(sourceToCheck, targetLang);
+      // Re-check all targets after successful download
+      const results = await Promise.all(
+        SUPPORTED_LANGUAGES.map(async (lang) => {
+          const source = lang.code === "en" ? "ja" : "en";
+          const status = await translatorManager.checkAvailability(
+            source,
+            lang.code
+          );
+          return { code: lang.code, status };
+        })
+      );
+      setStatuses(results);
+      finishDownload(sourceToCheck, targetLang, false);
+    } catch (error) {
+      log.error("Download failed:", error);
+      finishDownload(sourceToCheck, targetLang, true);
+
+      // Auto-clear error after 5 seconds with proper cleanup tracking
+      const timeoutId = setTimeout(() => {
+        clearDownloadError(sourceToCheck, targetLang);
+        errorTimeoutsRef.current.delete(pairKey);
+      }, 5000);
+      errorTimeoutsRef.current.set(pairKey, timeoutId);
+    }
   };
 
   if (isLoading) {
@@ -72,35 +144,39 @@ export function TargetLanguageChips({
     );
   }
 
+  const pairs = convertToPairs(statuses);
+
   return (
     <div className="px-3 py-2.5">
-      <div className="flex items-start gap-2">
-        <span className="shrink-0 pt-1.5 text-gray-500 text-xs">
+      <div className="flex items-center gap-2">
+        <span className="shrink-0 text-gray-500 text-xs">
           {getMessage("popup_target_label")}
         </span>
         <div className="flex flex-1 flex-wrap gap-1.5">
-          {SUPPORTED_LANGUAGES.map((lang) => {
-            const isSelected = lang.code === targetLanguage;
-            const status = getStatus(lang.code);
-
+          {availableStatuses.map((langStatus) => {
+            const sourceToCheck = langStatus.code === "en" ? "ja" : "en";
             return (
-              <button
-                className={cn(
-                  "inline-flex items-center gap-1 rounded px-2 py-1 text-xs transition-all duration-150",
-                  isSelected
-                    ? "bg-blue-500 text-white shadow-sm"
-                    : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                )}
-                key={lang.code}
-                onClick={() => onChangeTargetLanguage(lang.code)}
-                title={getLanguageNativeName(lang.code)}
-                type="button"
-              >
-                <span>{getLanguageUpperCode(lang.code)}</span>
-                <StatusIndicator size="sm" status={status} />
-              </button>
+              <LanguageChip
+                isSelected={langStatus.code === targetLanguage}
+                key={langStatus.code}
+                languageCode={langStatus.code}
+                onClick={() => onChangeTargetLanguage(langStatus.code)}
+                status={getStatus(sourceToCheck, langStatus.code, pairs)}
+              />
             );
           })}
+          <LanguageDownloadDropdown
+            downloadableLanguages={downloadableStatuses.map((s) => ({
+              code: s.code,
+              status: s.status,
+            }))}
+            onDownload={handleDownload}
+            tooltipAvailable={getMessage(
+              "popup_target_languagesAvailable",
+              String(downloadableStatuses.length)
+            )}
+            tooltipNone={getMessage("popup_target_noLanguages")}
+          />
         </div>
       </div>
     </div>

@@ -61,6 +61,18 @@
   "popup_target_loading": {
     "message": "言語を読み込み中..."
   },
+  "popup_target_languagesAvailable": {
+    "message": "$COUNT$言語が利用可能",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "popup_target_noLanguages": {
+    "message": "利用可能な言語がありません"
+  },
 
   "popup_footer_supportTitle": {
     "message": "サポート・フィードバック"
