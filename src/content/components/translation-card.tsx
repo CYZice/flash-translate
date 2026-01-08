@@ -107,7 +107,19 @@ export function TranslationCard({
     64
   );
   const cardLeft = position.x + offset.x + resizeOffsetX;
-  const cardTop = position.y + offset.y;
+  const rawCardTop = position.y + offset.y;
+
+  // Adjust card position if it overflows bottom of viewport
+  const minCardHeight = 180;
+  const viewportMargin = 8;
+  const cardBottom = rawCardTop + minCardHeight;
+  const cardTop =
+    cardBottom > window.innerHeight - viewportMargin
+      ? Math.max(
+          viewportMargin,
+          rawCardTop - (cardBottom - (window.innerHeight - viewportMargin))
+        )
+      : rawCardTop;
 
   return (
     <div
