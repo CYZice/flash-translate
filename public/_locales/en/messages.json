@@ -16,6 +16,21 @@
     "message": "Flash Translate"
   },
 
+  "popup_behavior_autoDetectLanguage": {
+    "message": "Auto-detect language"
+  },
+  "popup_behavior_autoDetectLanguageDesc": {
+    "message": "Automatically detect the language of selected text"
+  },
+  "popup_behavior_autoDetectUnavailable": {
+    "message": "Language Detection API is not available. Enable it in Chrome flags."
+  },
+  "popup_behavior_autoDetectEnableFlag": {
+    "message": "Enable in Chrome flags"
+  },
+  "popup_behavior_autoDetectCopied": {
+    "message": "URL copied!"
+  },
   "popup_behavior_skipSameLanguage": {
     "message": "Skip same language"
   },

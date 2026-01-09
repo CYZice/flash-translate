@@ -7,15 +7,23 @@ import { LanguageSelector } from "./language-selector";
 interface TranslationCardHeaderProps {
   sourceLanguage: string;
   targetLanguage: string;
+  detectedLanguage: string | null;
+  isDetecting: boolean;
+  autoDetectEnabled: boolean;
   onClose: () => void;
   onExcludeSite: () => void;
+  onSourceLanguageOverride: (lang: string | null) => void;
 }
 
 export function TranslationCardHeader({
   sourceLanguage,
   targetLanguage,
+  detectedLanguage,
+  isDetecting,
+  autoDetectEnabled,
   onClose,
   onExcludeSite,
+  onSourceLanguageOverride,
 }: TranslationCardHeaderProps) {
   const onOpenSettings = () => {
     const settingsUrl = chrome.runtime.getURL("src/popup/index.html");
@@ -23,7 +31,12 @@ export function TranslationCardHeader({
   };
 
   const onSourceChange = async (lang: string) => {
-    await saveSettings({ sourceLanguage: lang });
+    // When auto-detect is enabled, override the detected language
+    if (autoDetectEnabled) {
+      onSourceLanguageOverride(lang);
+    } else {
+      await saveSettings({ sourceLanguage: lang });
+    }
   };
 
   const onTargetChange = async (lang: string) => {
@@ -40,6 +53,8 @@ export function TranslationCardHeader({
   return (
     <div className="relative flex min-h-10 items-stretch justify-between rounded-t-xl border-b border-none px-3">
       <LanguageSelector
+        isAutoDetected={autoDetectEnabled && detectedLanguage !== null}
+        isDetecting={isDetecting}
         onSourceChange={onSourceChange}
         onSwap={onSwap}
         onTargetChange={onTargetChange}

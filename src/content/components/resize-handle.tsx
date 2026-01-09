@@ -27,20 +27,18 @@ export function ResizeHandle({
     }
   };
 
-  const getAriaLabel = () => {
-    if (side === "left") {
-      return getMessage("content_resizeHandleLeft");
-    }
-    if (side === "right") {
-      return getMessage("content_resizeHandleRight");
-    }
-    return getMessage("content_resizeHandleBottom");
-  };
+  const ariaLabelMap = {
+    left: getMessage("content_resizeHandleLeft"),
+    right: getMessage("content_resizeHandleRight"),
+    bottom: getMessage("content_resizeHandleBottom"),
+  } as const;
+
+  const ariaLabel = ariaLabelMap[side];
 
   return (
     // biome-ignore lint/a11y/useSemanticElements: <hr> is not appropriate for resize handle
     <div
-      aria-label={getAriaLabel()}
+      aria-label={ariaLabel}
       aria-orientation={side === "bottom" ? "vertical" : "horizontal"}
       aria-valuemax={100}
       aria-valuemin={0}

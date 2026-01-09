@@ -27,6 +27,7 @@ export default function App() {
     targetLanguage,
     skipSameLanguage,
     exclusionPatterns,
+    autoDetectLanguage,
   } = settings;
 
   // Check if current URL is excluded
@@ -46,6 +47,7 @@ export default function App() {
 
   return (
     <TranslationCard
+      autoDetectLanguage={autoDetectLanguage}
       onClose={dismissPopup}
       onExcludeSite={clearSelection}
       selection={selection}

@@ -97,59 +97,28 @@ export function useResizable({
     return { left: 0, right: window.innerWidth, bottom: window.innerHeight };
   };
 
-  const handleLeftMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const popupRect = getPopupRect(e);
-    dragStartRef.current = {
-      mouseX: e.clientX,
-      mouseY: e.clientY,
-      width,
-      height,
-      offsetX,
-      side: "left",
-      popupLeft: popupRect.left,
-      popupRight: popupRect.right,
-      popupBottom: popupRect.bottom,
+  const createMouseDownHandler =
+    (side: "left" | "right" | "bottom") => (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const popupRect = getPopupRect(e);
+      dragStartRef.current = {
+        mouseX: e.clientX,
+        mouseY: e.clientY,
+        width,
+        height,
+        offsetX,
+        side,
+        popupLeft: popupRect.left,
+        popupRight: popupRect.right,
+        popupBottom: popupRect.bottom,
+      };
+      setIsResizing(true);
     };
-    setIsResizing(true);
-  };
 
-  const handleRightMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const popupRect = getPopupRect(e);
-    dragStartRef.current = {
-      mouseX: e.clientX,
-      mouseY: e.clientY,
-      width,
-      height,
-      offsetX,
-      side: "right",
-      popupLeft: popupRect.left,
-      popupRight: popupRect.right,
-      popupBottom: popupRect.bottom,
-    };
-    setIsResizing(true);
-  };
-
-  const handleBottomMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const popupRect = getPopupRect(e);
-    dragStartRef.current = {
-      mouseX: e.clientX,
-      mouseY: e.clientY,
-      width,
-      height,
-      offsetX,
-      side: "bottom",
-      popupLeft: popupRect.left,
-      popupRight: popupRect.right,
-      popupBottom: popupRect.bottom,
-    };
-    setIsResizing(true);
-  };
+  const handleLeftMouseDown = createMouseDownHandler("left");
+  const handleRightMouseDown = createMouseDownHandler("right");
+  const handleBottomMouseDown = createMouseDownHandler("bottom");
 
   const handleLeftKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
