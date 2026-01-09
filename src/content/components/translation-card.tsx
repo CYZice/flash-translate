@@ -168,7 +168,7 @@ export function TranslationCard({
           targetLanguage={targetLanguage}
         />
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-1 pb-10">
+        <div className="min-h-10 flex-1 overflow-y-auto px-4 py-1">
           <TranslationContent
             availability={availability}
             error={error}
