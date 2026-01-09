@@ -16,6 +16,21 @@
     "message": "Flash Translate"
   },
 
+  "popup_behavior_autoDetectLanguage": {
+    "message": "言語を自動検出"
+  },
+  "popup_behavior_autoDetectLanguageDesc": {
+    "message": "選択したテキストの言語を自動的に検出"
+  },
+  "popup_behavior_autoDetectUnavailable": {
+    "message": "言語検出 API が利用できません。Chrome のフラグで有効にしてください。"
+  },
+  "popup_behavior_autoDetectEnableFlag": {
+    "message": "Chrome フラグで有効化"
+  },
+  "popup_behavior_autoDetectCopied": {
+    "message": "URLをコピーしました"
+  },
   "popup_behavior_skipSameLanguage": {
     "message": "同じ言語をスキップ"
   },
