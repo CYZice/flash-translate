@@ -6,7 +6,7 @@ interface TranslationCardFooterProps {
 
 export function TranslationCardFooter({ result }: TranslationCardFooterProps) {
   return (
-    <div className="fixed right-0 bottom-0 left-0 flex items-center justify-end rounded-b-xl px-3 py-2">
+    <div className="fixed right-0 bottom-0 left-0 flex items-center justify-end rounded-b-xl bg-linear-to-t from-gray-100/90 to-50% to-transparent px-3 py-2">
       <CopyButton text={result} />
     </div>
   );
