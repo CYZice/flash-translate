@@ -136,7 +136,7 @@ export function TranslationCard({
       }}
     >
       <div
-        className="relative animate-popup-expand overflow-auto rounded-xl border border-stone-400/60 border-solid bg-white/90 pt-3 shadow-2xl backdrop-blur transition-[width,height] duration-150 ease-out"
+        className="relative flex animate-popup-expand flex-col overflow-hidden rounded-xl border border-stone-400/60 border-solid bg-white/90 pt-3 shadow-2xl backdrop-blur transition-[width,height] duration-150 ease-out"
         style={{
           width: `${width}px`,
           height: `${height}px`,
@@ -168,7 +168,7 @@ export function TranslationCard({
           targetLanguage={targetLanguage}
         />
 
-        <div className="overflow-auto px-4 py-1">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-1 pb-10">
           <TranslationContent
             availability={availability}
             error={error}
