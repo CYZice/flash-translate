@@ -1,60 +1,88 @@
 import { useEffect, useRef, useState } from "react";
 import { useLatestRef } from "@/shared/hooks/use-latest-ref";
-import { calculateLeftResize, calculateRightResize } from "./resizable";
+import {
+  calculateBottomResize,
+  calculateLeftResize,
+  calculateRightResize,
+} from "./resizable";
 
 interface UseResizableOptions {
   initialWidth: number;
   minWidth?: number;
   maxWidth?: number;
+  initialHeight?: number;
+  minHeight?: number;
+  maxHeight?: number;
   edgeMargin?: number;
-  onResizeEnd?: (width: number) => void;
+  onResizeEnd?: (width: number, height: number) => void;
   /** Pixels to resize per arrow key press (default: 10) */
   keyboardStep?: number;
 }
 
 interface UseResizableReturn {
   width: number;
+  height: number;
   isResizing: boolean;
   offsetX: number;
   handleLeftMouseDown: (e: React.MouseEvent) => void;
   handleRightMouseDown: (e: React.MouseEvent) => void;
+  handleBottomMouseDown: (e: React.MouseEvent) => void;
   handleLeftKeyDown: (e: React.KeyboardEvent) => void;
   handleRightKeyDown: (e: React.KeyboardEvent) => void;
+  handleBottomKeyDown: (e: React.KeyboardEvent) => void;
 }
 
 export function useResizable({
   initialWidth,
   minWidth = 280,
   maxWidth = 600,
+  initialHeight = 180,
+  minHeight = 120,
+  maxHeight = 600,
   edgeMargin = 8,
   onResizeEnd,
   keyboardStep = 10,
 }: UseResizableOptions): UseResizableReturn {
   const [width, setWidth] = useState(initialWidth);
+  const [height, setHeight] = useState(initialHeight);
   const [offsetX, setOffsetX] = useState(0);
   const [isResizing, setIsResizing] = useState(false);
 
   // Refs to store values at drag start
   const dragStartRef = useRef({
     mouseX: 0,
+    mouseY: 0,
     width: 0,
+    height: 0,
     offsetX: 0,
-    side: "right" as "left" | "right",
+    side: "right" as "left" | "right" | "bottom",
     popupLeft: 0,
     popupRight: 0,
+    popupBottom: 0,
   });
-  // Track current width for mouseup handler without causing effect re-runs
+  // Track current dimensions for mouseup handler without causing effect re-runs
   const currentWidthRef = useLatestRef(width);
+  const currentHeightRef = useLatestRef(height);
 
   // Update width when initialWidth changes (e.g., from settings)
   useEffect(() => {
     setWidth(initialWidth);
   }, [initialWidth]);
 
+  // Update height when initialHeight changes
+  useEffect(() => {
+    setHeight(initialHeight);
+  }, [initialHeight]);
+
   // Clamp width when maxWidth changes (e.g., window resize)
   useEffect(() => {
     setWidth((prev) => Math.min(prev, maxWidth));
   }, [maxWidth]);
+
+  // Clamp height when maxHeight changes (e.g., window resize)
+  useEffect(() => {
+    setHeight((prev) => Math.min(prev, maxHeight));
+  }, [maxHeight]);
 
   const getPopupRect = (e: React.MouseEvent) => {
     // Navigate up to find the popup container (the one with position: fixed)
@@ -64,9 +92,9 @@ export function useResizable({
     }
     if (element) {
       const rect = element.getBoundingClientRect();
-      return { left: rect.left, right: rect.right };
+      return { left: rect.left, right: rect.right, bottom: rect.bottom };
     }
-    return { left: 0, right: window.innerWidth };
+    return { left: 0, right: window.innerWidth, bottom: window.innerHeight };
   };
 
   const handleLeftMouseDown = (e: React.MouseEvent) => {
@@ -75,11 +103,14 @@ export function useResizable({
     const popupRect = getPopupRect(e);
     dragStartRef.current = {
       mouseX: e.clientX,
+      mouseY: e.clientY,
       width,
+      height,
       offsetX,
       side: "left",
       popupLeft: popupRect.left,
       popupRight: popupRect.right,
+      popupBottom: popupRect.bottom,
     };
     setIsResizing(true);
   };
@@ -90,11 +121,32 @@ export function useResizable({
     const popupRect = getPopupRect(e);
     dragStartRef.current = {
       mouseX: e.clientX,
+      mouseY: e.clientY,
       width,
+      height,
       offsetX,
       side: "right",
       popupLeft: popupRect.left,
       popupRight: popupRect.right,
+      popupBottom: popupRect.bottom,
+    };
+    setIsResizing(true);
+  };
+
+  const handleBottomMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const popupRect = getPopupRect(e);
+    dragStartRef.current = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      width,
+      height,
+      offsetX,
+      side: "bottom",
+      popupLeft: popupRect.left,
+      popupRight: popupRect.right,
+      popupBottom: popupRect.bottom,
     };
     setIsResizing(true);
   };
@@ -103,7 +155,7 @@ export function useResizable({
     if (e.key === "Escape") {
       setWidth(initialWidth);
       setOffsetX(0);
-      onResizeEnd?.(initialWidth);
+      onResizeEnd?.(initialWidth, height);
       return;
     }
 
@@ -120,13 +172,13 @@ export function useResizable({
 
     setWidth(newWidth);
     setOffsetX(newOffsetX);
-    onResizeEnd?.(newWidth);
+    onResizeEnd?.(newWidth, height);
   };
 
   const handleRightKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
       setWidth(initialWidth);
-      onResizeEnd?.(initialWidth);
+      onResizeEnd?.(initialWidth, height);
       return;
     }
 
@@ -140,10 +192,30 @@ export function useResizable({
     const newWidth = Math.max(minWidth, Math.min(maxWidth, width + delta));
 
     setWidth(newWidth);
-    onResizeEnd?.(newWidth);
+    onResizeEnd?.(newWidth, height);
   };
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: currentWidthRef.current is intentionally excluded - useLatestRef ensures we always have the latest value without causing effect re-runs
+  const handleBottomKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      setHeight(initialHeight);
+      onResizeEnd?.(width, initialHeight);
+      return;
+    }
+
+    if (e.key !== "ArrowUp" && e.key !== "ArrowDown") {
+      return;
+    }
+
+    e.preventDefault();
+    // Bottom handle: ArrowDown expands (increases height)
+    const delta = e.key === "ArrowDown" ? keyboardStep : -keyboardStep;
+    const newHeight = Math.max(minHeight, Math.min(maxHeight, height + delta));
+
+    setHeight(newHeight);
+    onResizeEnd?.(width, newHeight);
+  };
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: currentWidthRef.current and currentHeightRef.current are intentionally excluded - useLatestRef ensures we always have the latest value without causing effect re-runs
   useEffect(() => {
     if (!isResizing) {
       return;
@@ -152,16 +224,19 @@ export function useResizable({
     const handleMouseMove = (e: MouseEvent) => {
       const {
         mouseX,
+        mouseY,
         width: startWidth,
+        height: startHeight,
         offsetX: startOffsetX,
         side,
         popupLeft,
         popupRight,
+        popupBottom,
       } = dragStartRef.current;
-      const deltaX = e.clientX - mouseX;
-      const constraints = { minWidth, maxWidth, edgeMargin };
 
       if (side === "left") {
+        const deltaX = e.clientX - mouseX;
+        const constraints = { minWidth, maxWidth, edgeMargin };
         const { newWidth, newOffsetX } = calculateLeftResize({
           deltaX,
           startWidth,
@@ -171,7 +246,9 @@ export function useResizable({
         });
         setWidth(newWidth);
         setOffsetX(newOffsetX);
-      } else {
+      } else if (side === "right") {
+        const deltaX = e.clientX - mouseX;
+        const constraints = { minWidth, maxWidth, edgeMargin };
         const { newWidth } = calculateRightResize({
           deltaX,
           startWidth,
@@ -180,13 +257,25 @@ export function useResizable({
           constraints,
         });
         setWidth(newWidth);
+      } else {
+        // bottom
+        const deltaY = e.clientY - mouseY;
+        const constraints = { minHeight, maxHeight, edgeMargin };
+        const { newHeight } = calculateBottomResize({
+          deltaY,
+          startHeight,
+          popupBottom,
+          viewportHeight: window.innerHeight,
+          constraints,
+        });
+        setHeight(newHeight);
       }
     };
 
     const handleMouseUp = () => {
       setIsResizing(false);
-      // Use ref to get latest width without dependency
-      onResizeEnd?.(currentWidthRef.current);
+      // Use refs to get latest dimensions without dependency
+      onResizeEnd?.(currentWidthRef.current, currentHeightRef.current);
     };
 
     document.addEventListener("mousemove", handleMouseMove);
@@ -196,15 +285,26 @@ export function useResizable({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isResizing, minWidth, maxWidth, edgeMargin, onResizeEnd]);
+  }, [
+    isResizing,
+    minWidth,
+    maxWidth,
+    minHeight,
+    maxHeight,
+    edgeMargin,
+    onResizeEnd,
+  ]);
 
   return {
     width,
+    height,
     isResizing,
     offsetX,
     handleLeftMouseDown,
     handleRightMouseDown,
+    handleBottomMouseDown,
     handleLeftKeyDown,
     handleRightKeyDown,
+    handleBottomKeyDown,
   };
 }

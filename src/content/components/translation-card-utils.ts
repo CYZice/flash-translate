@@ -4,6 +4,8 @@
  */
 
 export const MIN_POPUP_WIDTH = 280;
+export const MIN_POPUP_HEIGHT = 120;
+export const INITIAL_POPUP_HEIGHT = 180;
 export const POPUP_EDGE_MARGIN = 32; // 16px margin on each side
 
 /**
@@ -26,4 +28,13 @@ export function calculatePopupWidth(
  */
 export function calculateMaxPopupWidth(viewportWidth: number): number {
   return viewportWidth - POPUP_EDGE_MARGIN;
+}
+
+/**
+ * Calculate maximum popup height based on viewport height
+ * @param viewportHeight - Current viewport height
+ * @returns Maximum allowed popup height
+ */
+export function calculateMaxPopupHeight(viewportHeight: number): number {
+  return viewportHeight - POPUP_EDGE_MARGIN;
 }

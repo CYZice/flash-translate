@@ -9,8 +9,11 @@ import { ResizeHandle } from "./resize-handle";
 import { TranslationCardFooter } from "./translation-card-footer";
 import { TranslationCardHeader } from "./translation-card-header";
 import {
+  calculateMaxPopupHeight,
   calculateMaxPopupWidth,
   calculatePopupWidth,
+  INITIAL_POPUP_HEIGHT,
+  MIN_POPUP_HEIGHT,
   MIN_POPUP_WIDTH,
 } from "./translation-card-utils";
 import { TranslationContent } from "./translation-content";
@@ -46,6 +49,9 @@ export function TranslationCard({
   const [maxPopupWidth, setMaxPopupWidth] = useState(() =>
     calculateMaxPopupWidth(window.innerWidth)
   );
+  const [maxPopupHeight, setMaxPopupHeight] = useState(() =>
+    calculateMaxPopupHeight(window.innerHeight)
+  );
 
   // Calculate popup width based on selection width (clamped to min/max)
   const selectionBasedWidth = calculatePopupWidth(
@@ -53,7 +59,7 @@ export function TranslationCard({
     maxPopupWidth
   );
 
-  // Update max width on window resize with debounce
+  // Update max dimensions on window resize with debounce
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     const handleResize = () => {
@@ -62,6 +68,7 @@ export function TranslationCard({
       }
       timeoutId = setTimeout(() => {
         setMaxPopupWidth(calculateMaxPopupWidth(window.innerWidth));
+        setMaxPopupHeight(calculateMaxPopupHeight(window.innerHeight));
       }, 100);
     };
     window.addEventListener("resize", handleResize);
@@ -75,16 +82,22 @@ export function TranslationCard({
 
   const {
     width,
+    height,
     isResizing,
     offsetX: resizeOffsetX,
     handleLeftMouseDown,
     handleRightMouseDown,
+    handleBottomMouseDown,
     handleLeftKeyDown,
     handleRightKeyDown,
+    handleBottomKeyDown,
   } = useResizable({
     initialWidth: selectionBasedWidth,
     minWidth: MIN_POPUP_WIDTH,
     maxWidth: maxPopupWidth,
+    initialHeight: INITIAL_POPUP_HEIGHT,
+    minHeight: MIN_POPUP_HEIGHT,
+    maxHeight: maxPopupHeight,
   });
 
   const {
@@ -96,23 +109,23 @@ export function TranslationCard({
 
   const position = calculatePopupPosition(
     selection.rect,
-    { popupWidth: selectionBasedWidth, popupHeight: 180, margin: 8 },
+    { popupWidth: selectionBasedWidth, popupHeight: height, margin: 8 },
     { width: window.innerWidth, height: window.innerHeight }
   );
 
   const headerHeight = 40;
+  const footerHeight = 32;
   const contentPadding = 24;
-  const maxContentHeight = Math.max(
-    position.maxHeight - headerHeight - contentPadding,
+  const contentHeight = Math.max(
+    height - headerHeight - footerHeight - contentPadding,
     64
   );
   const cardLeft = position.x + offset.x + resizeOffsetX;
   const rawCardTop = position.y + offset.y;
 
   // Adjust card position if it overflows bottom of viewport
-  const minCardHeight = 180;
   const viewportMargin = 8;
-  const cardBottom = rawCardTop + minCardHeight;
+  const cardBottom = rawCardTop + height;
   const cardTop =
     cardBottom > window.innerHeight - viewportMargin
       ? Math.max(
@@ -131,11 +144,14 @@ export function TranslationCard({
       }}
     >
       <div
-        className="relative animate-popup-expand overflow-visible rounded-xl border border-stone-400/60 border-solid bg-white/90 pt-4 shadow-2xl backdrop-blur"
+        className="relative animate-popup-expand overflow-visible rounded-xl border border-stone-400/60 border-solid bg-white/90 pt-4 pb-4 shadow-2xl backdrop-blur"
         style={{
           width: `${width}px`,
+          height: `${height}px`,
           minWidth: `${MIN_POPUP_WIDTH}px`,
           maxWidth: `${maxPopupWidth}px`,
+          minHeight: `${MIN_POPUP_HEIGHT}px`,
+          maxHeight: `${maxPopupHeight}px`,
         }}
       >
         <DragHandle
@@ -155,6 +171,12 @@ export function TranslationCard({
           onMouseDown={handleRightMouseDown}
           side="right"
         />
+        <ResizeHandle
+          isResizing={isResizing}
+          onKeyDown={handleBottomKeyDown}
+          onMouseDown={handleBottomMouseDown}
+          side="bottom"
+        />
         <TranslationCardHeader
           onClose={onClose}
           onExcludeSite={onExcludeSite}
@@ -165,7 +187,7 @@ export function TranslationCard({
         <div
           className="min-h-16 px-4 py-3"
           style={{
-            maxHeight: `${maxContentHeight}px`,
+            height: `${contentHeight}px`,
             overflowY: "auto",
           }}
         >

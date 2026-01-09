@@ -2,11 +2,20 @@
 // These are extracted from useResizable hook for testability
 
 /**
- * Resize constraints
+ * Resize constraints for width
  */
 export interface ResizeConstraints {
   minWidth: number;
   maxWidth: number;
+  edgeMargin: number;
+}
+
+/**
+ * Resize constraints for height
+ */
+export interface HeightResizeConstraints {
+  minHeight: number;
+  maxHeight: number;
   edgeMargin: number;
 }
 
@@ -124,4 +133,73 @@ export function calculateRightResize(
   const newWidth = clampWidth(startWidth + clampedDelta, minWidth, maxWidth);
 
   return { newWidth };
+}
+
+/**
+ * Parameters for bottom handle resize calculation
+ */
+export interface BottomResizeParams {
+  deltaY: number;
+  startHeight: number;
+  popupBottom: number;
+  viewportHeight: number;
+  constraints: HeightResizeConstraints;
+}
+
+/**
+ * Result of bottom handle resize calculation
+ */
+export interface BottomResizeResult {
+  newHeight: number;
+}
+
+/**
+ * Clamp a height value to min/max bounds
+ */
+export function clampHeight(
+  height: number,
+  minHeight: number,
+  maxHeight: number
+): number {
+  return Math.min(maxHeight, Math.max(minHeight, height));
+}
+
+/**
+ * Calculate maximum expansion possible for bottom handle
+ */
+export function calculateMaxBottomExpansion(
+  popupBottom: number,
+  viewportHeight: number,
+  edgeMargin: number
+): number {
+  return viewportHeight - edgeMargin - popupBottom;
+}
+
+/**
+ * Calculate new height for bottom handle resize
+ * Bottom handle: drag down to increase height, top edge stays fixed
+ */
+export function calculateBottomResize(
+  params: BottomResizeParams
+): BottomResizeResult {
+  const { deltaY, startHeight, popupBottom, viewportHeight, constraints } =
+    params;
+  const { minHeight, maxHeight, edgeMargin } = constraints;
+
+  // Limit: new bottom edge must not go past viewportHeight - edgeMargin
+  const maxExpandBottom = calculateMaxBottomExpansion(
+    popupBottom,
+    viewportHeight,
+    edgeMargin
+  );
+  const clampedDelta = Math.min(maxExpandBottom, deltaY);
+
+  // deltaY > 0 means mouse moved down = increase height
+  const newHeight = clampHeight(
+    startHeight + clampedDelta,
+    minHeight,
+    maxHeight
+  );
+
+  return { newHeight };
 }

@@ -1,4 +1,4 @@
-import { GripVertical } from "lucide-react";
+import { GripHorizontal, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getMessage } from "@/shared/utils/i18n";
 
@@ -6,9 +6,9 @@ interface ResizeHandleProps {
   onMouseDown: (e: React.MouseEvent) => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
   isResizing: boolean;
-  side: "left" | "right";
-  /** Current width percentage (0-100) for aria-valuenow */
-  widthPercent?: number;
+  side: "left" | "right" | "bottom";
+  /** Current size percentage (0-100) for aria-valuenow */
+  sizePercent?: number;
 }
 
 export function ResizeHandle({
@@ -16,36 +16,54 @@ export function ResizeHandle({
   onKeyDown,
   isResizing,
   side,
-  widthPercent = 50,
+  sizePercent = 50,
 }: ResizeHandleProps) {
+  const isBottomHandle = side === "bottom";
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Forward arrow keys and Escape to parent for keyboard resizing
-    if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "Escape") {
+    const validKeys = isBottomHandle
+      ? ["ArrowUp", "ArrowDown", "Escape"]
+      : ["ArrowLeft", "ArrowRight", "Escape"];
+    if (validKeys.includes(e.key)) {
       e.preventDefault();
       onKeyDown?.(e);
     }
   };
 
+  const getAriaLabel = () => {
+    if (side === "left") {
+      return getMessage("content_resizeHandleLeft");
+    }
+    if (side === "right") {
+      return getMessage("content_resizeHandleRight");
+    }
+    return getMessage("content_resizeHandleBottom");
+  };
+
+  const GripIcon = isBottomHandle ? GripHorizontal : GripVertical;
+
   return (
     // biome-ignore lint/a11y/useSemanticElements: <hr> is not appropriate for resize handle
     <div
-      aria-label={
-        side === "left"
-          ? getMessage("content_resizeHandleLeft")
-          : getMessage("content_resizeHandleRight")
-      }
-      aria-orientation="vertical"
+      aria-label={getAriaLabel()}
+      aria-orientation={isBottomHandle ? "horizontal" : "vertical"}
       aria-valuemax={100}
       aria-valuemin={0}
-      aria-valuenow={Math.round(widthPercent)}
-      className="absolute top-0 z-10 flex h-full w-4 cursor-ew-resize items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+      aria-valuenow={Math.round(sizePercent)}
+      className={cn(
+        "absolute z-10 flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
+        isBottomHandle
+          ? "bottom-0 left-0 h-4 w-full cursor-ns-resize"
+          : "top-0 h-full w-4 cursor-ew-resize"
+      )}
       onKeyDown={handleKeyDown}
       onMouseDown={onMouseDown}
       role="separator"
-      style={{ [side]: 0 }}
+      style={isBottomHandle ? undefined : { [side]: 0 }}
       tabIndex={0}
     >
-      <GripVertical
+      <GripIcon
         className={cn(
           "transition-[color,opacity] duration-150",
           isResizing ? "text-blue-500 opacity-100" : "text-gray-400 opacity-70"

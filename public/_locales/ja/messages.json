@@ -155,6 +155,9 @@
   "content_resizeHandleRight": {
     "message": "右リサイズハンドル"
   },
+  "content_resizeHandleBottom": {
+    "message": "下リサイズハンドル"
+  },
   "content_sourceLanguage": {
     "message": "翻訳元言語"
   },

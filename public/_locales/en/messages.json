@@ -155,6 +155,9 @@
   "content_resizeHandleRight": {
     "message": "Right resize handle"
   },
+  "content_resizeHandleBottom": {
+    "message": "Bottom resize handle"
+  },
   "content_sourceLanguage": {
     "message": "Source language"
   },

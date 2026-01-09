@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
+  calculateBottomResize,
   calculateLeftResize,
+  calculateMaxBottomExpansion,
   calculateMaxLeftExpansion,
   calculateMaxRightExpansion,
   calculateRightResize,
+  clampHeight,
   clampWidth,
+  type HeightResizeConstraints,
   type ResizeConstraints,
 } from "./resizable";
 
@@ -310,5 +314,171 @@ describe("calculateRightResize", () => {
 
     // Max available: 400 - 8 - 350 = 42
     expect(result.newWidth).toBe(342);
+  });
+});
+
+const defaultHeightConstraints: HeightResizeConstraints = {
+  minHeight: 120,
+  maxHeight: 600,
+  edgeMargin: 8,
+};
+
+describe("clampHeight", () => {
+  it("returns height when within bounds", () => {
+    expect(clampHeight(400, 120, 600)).toBe(400);
+  });
+
+  it("returns minHeight when height is below minimum", () => {
+    expect(clampHeight(100, 120, 600)).toBe(120);
+  });
+
+  it("returns maxHeight when height is above maximum", () => {
+    expect(clampHeight(700, 120, 600)).toBe(600);
+  });
+
+  it("handles edge case where height equals minHeight", () => {
+    expect(clampHeight(120, 120, 600)).toBe(120);
+  });
+
+  it("handles edge case where height equals maxHeight", () => {
+    expect(clampHeight(600, 120, 600)).toBe(600);
+  });
+
+  it("handles negative height", () => {
+    expect(clampHeight(-100, 120, 600)).toBe(120);
+  });
+});
+
+describe("calculateMaxBottomExpansion", () => {
+  it("calculates available space to bottom edge", () => {
+    // viewportHeight=768, popupBottom=500, margin=8 => 768 - 8 - 500 = 260
+    expect(calculateMaxBottomExpansion(500, 768, 8)).toBe(260);
+  });
+
+  it("returns zero when popup is at edge margin", () => {
+    // viewportHeight=768, popupBottom=760, margin=8 => 768 - 8 - 760 = 0
+    expect(calculateMaxBottomExpansion(760, 768, 8)).toBe(0);
+  });
+
+  it("returns negative when popup is past edge margin", () => {
+    expect(calculateMaxBottomExpansion(764, 768, 8)).toBe(-4);
+  });
+
+  it("handles zero margin", () => {
+    expect(calculateMaxBottomExpansion(500, 768, 0)).toBe(268);
+  });
+});
+
+describe("calculateBottomResize", () => {
+  const viewportHeight = 768;
+
+  it("increases height when dragging down (positive deltaY)", () => {
+    const result = calculateBottomResize({
+      deltaY: 50,
+      startHeight: 180,
+      popupBottom: 400,
+      viewportHeight,
+      constraints: defaultHeightConstraints,
+    });
+
+    expect(result.newHeight).toBe(230);
+  });
+
+  it("decreases height when dragging up (negative deltaY)", () => {
+    const result = calculateBottomResize({
+      deltaY: -30,
+      startHeight: 200,
+      popupBottom: 400,
+      viewportHeight,
+      constraints: defaultHeightConstraints,
+    });
+
+    expect(result.newHeight).toBe(170);
+  });
+
+  it("clamps height to minHeight", () => {
+    const result = calculateBottomResize({
+      deltaY: -200,
+      startHeight: 180,
+      popupBottom: 400,
+      viewportHeight,
+      constraints: defaultHeightConstraints,
+    });
+
+    expect(result.newHeight).toBe(120);
+  });
+
+  it("clamps height to maxHeight", () => {
+    const result = calculateBottomResize({
+      deltaY: 500,
+      startHeight: 180,
+      popupBottom: 100, // Low enough so viewport edge doesn't limit first
+      viewportHeight,
+      constraints: defaultHeightConstraints,
+    });
+
+    expect(result.newHeight).toBe(600);
+  });
+
+  it("clamps expansion to viewport bottom edge", () => {
+    const result = calculateBottomResize({
+      deltaY: 200,
+      startHeight: 180,
+      popupBottom: 700, // Only 60px available (768 - 8 - 700)
+      viewportHeight,
+      constraints: defaultHeightConstraints,
+    });
+
+    expect(result.newHeight).toBe(240); // 180 + 60
+  });
+
+  it("prevents popup from going past bottom edge margin", () => {
+    const result = calculateBottomResize({
+      deltaY: 100,
+      startHeight: 180,
+      popupBottom: 740, // Only 20px available
+      viewportHeight,
+      constraints: defaultHeightConstraints,
+    });
+
+    expect(result.newHeight).toBe(200); // 180 + 20
+  });
+
+  it("handles popup already at bottom edge", () => {
+    const result = calculateBottomResize({
+      deltaY: 50,
+      startHeight: 180,
+      popupBottom: 760, // Already at edge margin
+      viewportHeight,
+      constraints: defaultHeightConstraints,
+    });
+
+    // No expansion possible
+    expect(result.newHeight).toBe(180);
+  });
+
+  it("handles zero deltaY", () => {
+    const result = calculateBottomResize({
+      deltaY: 0,
+      startHeight: 180,
+      popupBottom: 400,
+      viewportHeight,
+      constraints: defaultHeightConstraints,
+    });
+
+    expect(result.newHeight).toBe(180);
+  });
+
+  it("handles short viewport", () => {
+    const result = calculateBottomResize({
+      deltaY: 50,
+      startHeight: 150,
+      popupBottom: 350,
+      viewportHeight: 400, // Short viewport
+      constraints: { ...defaultHeightConstraints, minHeight: 100 },
+    });
+
+    // Max available: 400 - 8 - 350 = 42
+    expect(result.newHeight).toBe(192);
   });
 });
