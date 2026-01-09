@@ -1,4 +1,3 @@
-import { GripHorizontal, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getMessage } from "@/shared/utils/i18n";
 
@@ -41,8 +40,6 @@ export function ResizeHandle({
     return getMessage("content_resizeHandleBottom");
   };
 
-  const GripIcon = isBottomHandle ? GripHorizontal : GripVertical;
-
   return (
     // biome-ignore lint/a11y/useSemanticElements: <hr> is not appropriate for resize handle
     <div
@@ -52,24 +49,17 @@ export function ResizeHandle({
       aria-valuemin={0}
       aria-valuenow={Math.round(sizePercent)}
       className={cn(
-        "absolute z-10 flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
+        "absolute z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
         isBottomHandle
-          ? "bottom-0 left-0 h-4 w-full cursor-ns-resize"
-          : "top-0 h-full w-4 cursor-ew-resize"
+          ? "bottom-0 left-0 h-2 w-full cursor-ns-resize"
+          : "top-0 h-full w-3 cursor-ew-resize",
+        isResizing && "bg-blue-500/10"
       )}
       onKeyDown={handleKeyDown}
       onMouseDown={onMouseDown}
       role="separator"
       style={isBottomHandle ? undefined : { [side]: 0 }}
       tabIndex={0}
-    >
-      <GripIcon
-        className={cn(
-          "transition-[color,opacity] duration-150",
-          isResizing ? "text-blue-500 opacity-100" : "text-gray-400 opacity-70"
-        )}
-        size={16}
-      />
-    </div>
+    />
   );
 }

@@ -171,12 +171,6 @@ export function TranslationCard({
           onMouseDown={handleRightMouseDown}
           side="right"
         />
-        <ResizeHandle
-          isResizing={isResizing}
-          onKeyDown={handleBottomKeyDown}
-          onMouseDown={handleBottomMouseDown}
-          side="bottom"
-        />
         <TranslationCardHeader
           onClose={onClose}
           onExcludeSite={onExcludeSite}
@@ -203,6 +197,12 @@ export function TranslationCard({
 
         <TranslationCardFooter result={result} />
       </div>
+      <ResizeHandle
+        isResizing={isResizing}
+        onKeyDown={handleBottomKeyDown}
+        onMouseDown={handleBottomMouseDown}
+        side="bottom"
+      />
     </div>
   );
 }
