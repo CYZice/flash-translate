@@ -4,7 +4,6 @@ import { getMessage } from "@/shared/utils/i18n";
 interface ResizeHandleProps {
   onMouseDown: (e: React.MouseEvent) => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
-  isResizing: boolean;
   side: "left" | "right" | "bottom";
   /** Current size percentage (0-100) for aria-valuenow */
   sizePercent?: number;
@@ -13,7 +12,6 @@ interface ResizeHandleProps {
 export function ResizeHandle({
   onMouseDown,
   onKeyDown,
-  isResizing,
   side,
   sizePercent = 50,
 }: ResizeHandleProps) {
@@ -52,8 +50,7 @@ export function ResizeHandle({
         "absolute z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
         isBottomHandle
           ? "bottom-0 left-0 h-2 w-full cursor-ns-resize"
-          : "top-0 h-full w-3 cursor-ew-resize",
-        isResizing && "bg-blue-500/10"
+          : "top-0 h-full w-3 cursor-ew-resize"
       )}
       onKeyDown={handleKeyDown}
       onMouseDown={onMouseDown}

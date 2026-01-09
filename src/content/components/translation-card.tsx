@@ -83,7 +83,6 @@ export function TranslationCard({
   const {
     width,
     height,
-    isResizing,
     offsetX: resizeOffsetX,
     handleLeftMouseDown,
     handleRightMouseDown,
@@ -160,13 +159,11 @@ export function TranslationCard({
           onMouseDown={handleDragMouseDown}
         />
         <ResizeHandle
-          isResizing={isResizing}
           onKeyDown={handleLeftKeyDown}
           onMouseDown={handleLeftMouseDown}
           side="left"
         />
         <ResizeHandle
-          isResizing={isResizing}
           onKeyDown={handleRightKeyDown}
           onMouseDown={handleRightMouseDown}
           side="right"
@@ -198,7 +195,6 @@ export function TranslationCard({
         <TranslationCardFooter result={result} />
       </div>
       <ResizeHandle
-        isResizing={isResizing}
         onKeyDown={handleBottomKeyDown}
         onMouseDown={handleBottomMouseDown}
         side="bottom"
