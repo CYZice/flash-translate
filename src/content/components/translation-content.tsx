@@ -59,7 +59,7 @@ export function TranslationContent({
   }
 
   return (
-    <div className="whitespace-pre-wrap break-words text-base text-gray-800 leading-relaxed">
+    <div className="wrap-break-word whitespace-pre-wrap text-base text-gray-800 leading-relaxed">
       {result || (
         <span className="text-gray-400 italic">
           {getMessage("content_translationPlaceholder")}

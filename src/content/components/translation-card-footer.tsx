@@ -6,10 +6,7 @@ interface TranslationCardFooterProps {
 
 export function TranslationCardFooter({ result }: TranslationCardFooterProps) {
   return (
-    <div
-      className="flex items-stretch rounded-b-xl border-t border-none px-3"
-      style={{ minHeight: "36px", justifyContent: "flex-end" }}
-    >
+    <div className="fixed right-0 bottom-0 left-0 flex items-center justify-end rounded-b-xl px-3 py-2">
       <CopyButton text={result} />
     </div>
   );

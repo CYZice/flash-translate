@@ -36,7 +36,7 @@ export function CopyButton({ text }: CopyButtonProps) {
           : getMessage("content_copyTranslation")
       }
       className={cn(
-        "flex cursor-pointer items-center rounded border-none bg-transparent p-1 transition-colors hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent",
+        "flex min-h-8 min-w-8 cursor-pointer items-center justify-center rounded border-none bg-transparent p-1 text-center transition-colors hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent",
         state === "idle" && "text-gray-400 hover:text-blue-600",
         state === "copied" && "text-green-600",
         state === "error" && "text-red-500"

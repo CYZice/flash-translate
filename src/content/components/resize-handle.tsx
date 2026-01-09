@@ -15,13 +15,12 @@ export function ResizeHandle({
   side,
   sizePercent = 50,
 }: ResizeHandleProps) {
-  const isBottomHandle = side === "bottom";
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Forward arrow keys and Escape to parent for keyboard resizing
-    const validKeys = isBottomHandle
-      ? ["ArrowUp", "ArrowDown", "Escape"]
-      : ["ArrowLeft", "ArrowRight", "Escape"];
+    const validKeys =
+      side === "bottom"
+        ? ["ArrowUp", "ArrowDown", "Escape"]
+        : ["ArrowLeft", "ArrowRight", "Escape"];
     if (validKeys.includes(e.key)) {
       e.preventDefault();
       onKeyDown?.(e);
@@ -42,20 +41,19 @@ export function ResizeHandle({
     // biome-ignore lint/a11y/useSemanticElements: <hr> is not appropriate for resize handle
     <div
       aria-label={getAriaLabel()}
-      aria-orientation={isBottomHandle ? "horizontal" : "vertical"}
+      aria-orientation={side === "bottom" ? "vertical" : "horizontal"}
       aria-valuemax={100}
       aria-valuemin={0}
       aria-valuenow={Math.round(sizePercent)}
       className={cn(
-        "absolute z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
-        isBottomHandle
-          ? "bottom-0 left-0 h-2 w-full cursor-ns-resize"
-          : "top-0 h-full w-3 cursor-ew-resize"
+        "fixed z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
+        side === "left" && "left-0 h-full w-2 cursor-ew-resize",
+        side === "right" && "right-0 h-full w-2 cursor-ew-resize",
+        side === "bottom" && "bottom-0 h-2 w-full cursor-ns-resize"
       )}
       onKeyDown={handleKeyDown}
       onMouseDown={onMouseDown}
       role="separator"
-      style={isBottomHandle ? undefined : { [side]: 0 }}
       tabIndex={0}
     />
   );

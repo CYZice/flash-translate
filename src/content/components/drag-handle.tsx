@@ -33,7 +33,7 @@ export function DragHandle({
     <button
       aria-label={getMessage("content_movePopup")}
       aria-pressed={isDragging}
-      className="absolute top-0 right-0 left-0 z-10 flex h-4 cursor-move items-center justify-center border-none bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+      className="fixed top-0 z-10 flex h-4 w-full cursor-move items-center justify-center border-none bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
       onKeyDown={handleKeyDown}
       onMouseDown={onMouseDown}
       type="button"

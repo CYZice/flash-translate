@@ -4,7 +4,7 @@
  */
 
 export const MIN_POPUP_WIDTH = 280;
-export const MIN_POPUP_HEIGHT = 120;
+export const MIN_POPUP_HEIGHT = 60;
 export const INITIAL_POPUP_HEIGHT = 180;
 export const POPUP_EDGE_MARGIN = 32; // 16px margin on each side
 

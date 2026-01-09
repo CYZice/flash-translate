@@ -38,10 +38,7 @@ export function TranslationCardHeader({
   };
 
   return (
-    <div
-      className="relative flex items-stretch justify-between rounded-t-xl border-b border-none px-3 py-1"
-      style={{ minHeight: "48px" }}
-    >
+    <div className="relative flex min-h-10 items-stretch justify-between rounded-t-xl border-b border-none px-3">
       <LanguageSelector
         onSourceChange={onSourceChange}
         onSwap={onSwap}
@@ -49,11 +46,11 @@ export function TranslationCardHeader({
         sourceLanguage={sourceLanguage}
         targetLanguage={targetLanguage}
       />
-      <div className="flex items-stretch gap-1">
+      <div className="flex items-stretch">
         <ExcludeSiteButton onExcluded={onExcludeSite} />
         <button
           aria-label={getMessage("content_openSettings")}
-          className="flex cursor-pointer items-center rounded border-none bg-transparent p-1 text-gray-400 transition-colors hover:bg-blue-50 hover:text-blue-600"
+          className="flex min-w-10 cursor-pointer items-center justify-center rounded border-none bg-transparent p-1 text-center text-gray-400 transition-colors hover:bg-blue-50 hover:text-blue-600"
           onClick={onOpenSettings}
           type="button"
         >
@@ -61,7 +58,7 @@ export function TranslationCardHeader({
         </button>
         <button
           aria-label={getMessage("content_close")}
-          className="-mr-1 flex cursor-pointer items-center rounded border-none bg-transparent p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+          className="flex min-w-10 cursor-pointer items-center justify-center rounded border-none bg-transparent p-1 text-center text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
           onClick={onClose}
           type="button"
         >

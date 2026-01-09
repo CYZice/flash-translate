@@ -112,13 +112,6 @@ export function TranslationCard({
     { width: window.innerWidth, height: window.innerHeight }
   );
 
-  const headerHeight = 40;
-  const footerHeight = 32;
-  const contentPadding = 24;
-  const contentHeight = Math.max(
-    height - headerHeight - footerHeight - contentPadding,
-    64
-  );
   const cardLeft = position.x + offset.x + resizeOffsetX;
   const rawCardTop = position.y + offset.y;
 
@@ -143,7 +136,7 @@ export function TranslationCard({
       }}
     >
       <div
-        className="relative animate-popup-expand overflow-visible rounded-xl border border-stone-400/60 border-solid bg-white/90 pt-4 pb-4 shadow-2xl backdrop-blur"
+        className="relative animate-popup-expand overflow-visible rounded-xl border border-stone-400/60 border-solid bg-white/90 pt-3 shadow-2xl backdrop-blur"
         style={{
           width: `${width}px`,
           height: `${height}px`,
@@ -175,13 +168,7 @@ export function TranslationCard({
           targetLanguage={targetLanguage}
         />
 
-        <div
-          className="min-h-16 px-4 py-3"
-          style={{
-            height: `${contentHeight}px`,
-            overflowY: "auto",
-          }}
-        >
+        <div className="overflow-auto px-4 py-1">
           <TranslationContent
             availability={availability}
             error={error}
@@ -193,12 +180,12 @@ export function TranslationCard({
         </div>
 
         <TranslationCardFooter result={result} />
+        <ResizeHandle
+          onKeyDown={handleBottomKeyDown}
+          onMouseDown={handleBottomMouseDown}
+          side="bottom"
+        />
       </div>
-      <ResizeHandle
-        onKeyDown={handleBottomKeyDown}
-        onMouseDown={handleBottomMouseDown}
-        side="bottom"
-      />
     </div>
   );
 }

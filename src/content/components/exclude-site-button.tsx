@@ -66,7 +66,7 @@ export function ExcludeSiteButton({ onExcluded }: ExcludeSiteButtonProps) {
     <>
       <button
         aria-label={getMessage("content_excludeSite")}
-        className="flex cursor-pointer items-center rounded border-none bg-transparent p-1 text-gray-400 transition-colors hover:bg-red-200 hover:text-red-500"
+        className="flex min-w-10 cursor-pointer items-center justify-center rounded border-none bg-transparent p-1 text-gray-400 transition-colors hover:bg-red-200 hover:text-red-500"
         onClick={handleClick}
         title={getMessage("content_excludeSite")}
         type="button"
