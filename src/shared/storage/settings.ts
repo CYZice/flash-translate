@@ -13,6 +13,7 @@ export interface TranslationSettings {
   targetLanguage: string;
   exclusionPatterns: ExclusionPattern[];
   skipSameLanguage: boolean;
+  autoDetectLanguage: boolean;
 }
 
 const STORAGE_KEY = "flash-translate-settings";
@@ -23,6 +24,7 @@ const DEFAULT_SETTINGS: TranslationSettings = {
   targetLanguage: "ja",
   exclusionPatterns: [],
   skipSameLanguage: true,
+  autoDetectLanguage: true,
 };
 
 // Type guard for ExclusionPattern
@@ -53,6 +55,9 @@ function validateSettings(data: unknown): Partial<TranslationSettings> {
   }
   if (typeof obj.skipSameLanguage === "boolean") {
     result.skipSameLanguage = obj.skipSameLanguage;
+  }
+  if (typeof obj.autoDetectLanguage === "boolean") {
+    result.autoDetectLanguage = obj.autoDetectLanguage;
   }
   if (Array.isArray(obj.exclusionPatterns)) {
     result.exclusionPatterns = obj.exclusionPatterns.filter(isExclusionPattern);

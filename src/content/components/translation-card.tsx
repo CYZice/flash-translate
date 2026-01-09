@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { calculatePopupPosition } from "../hooks/popup-position";
 import { useDraggable } from "../hooks/use-draggable";
+import { useLanguageDetection } from "../hooks/use-language-detection";
 import { useResizable } from "../hooks/use-resizable";
 import type { SelectionInfo } from "../hooks/use-text-selection";
 import { useTranslator } from "../hooks/use-translator";
@@ -22,6 +23,7 @@ interface TranslationCardProps {
   selection: SelectionInfo;
   sourceLanguage: string;
   targetLanguage: string;
+  autoDetectLanguage: boolean;
   onClose: () => void;
   onExcludeSite: () => void;
 }
@@ -30,21 +32,34 @@ export function TranslationCard({
   selection,
   sourceLanguage,
   targetLanguage,
+  autoDetectLanguage,
   onClose,
   onExcludeSite,
 }: TranslationCardProps) {
+  // Language detection
+  const {
+    effectiveSourceLanguage,
+    detectedLanguage,
+    isDetecting,
+    setOverriddenLanguage,
+  } = useLanguageDetection({
+    text: selection.text,
+    enabled: autoDetectLanguage,
+    fallbackLanguage: sourceLanguage,
+  });
+
   const { result, isLoading, error, translate, availability } = useTranslator({
-    sourceLanguage,
+    sourceLanguage: effectiveSourceLanguage,
     targetLanguage,
   });
 
   // Translate when selection or language changes
   // biome-ignore lint/correctness/useExhaustiveDependencies: translate is intentionally excluded to avoid infinite loops (it captures sourceLanguage/targetLanguage)
   useEffect(() => {
-    if (selection.text) {
+    if (selection.text && !isDetecting) {
       translate(selection.text);
     }
-  }, [selection.text, sourceLanguage, targetLanguage]);
+  }, [selection.text, effectiveSourceLanguage, targetLanguage, isDetecting]);
 
   const [maxPopupWidth, setMaxPopupWidth] = useState(() =>
     calculateMaxPopupWidth(window.innerWidth)
@@ -162,9 +177,13 @@ export function TranslationCard({
           side="right"
         />
         <TranslationCardHeader
+          autoDetectEnabled={autoDetectLanguage}
+          detectedLanguage={detectedLanguage}
+          isDetecting={isDetecting}
           onClose={onClose}
           onExcludeSite={onExcludeSite}
-          sourceLanguage={sourceLanguage}
+          onSourceLanguageOverride={setOverriddenLanguage}
+          sourceLanguage={effectiveSourceLanguage}
           targetLanguage={targetLanguage}
         />
 
@@ -174,7 +193,7 @@ export function TranslationCard({
             error={error}
             isLoading={isLoading}
             result={result}
-            sourceLanguage={sourceLanguage}
+            sourceLanguage={effectiveSourceLanguage}
             targetLanguage={targetLanguage}
           />
         </div>

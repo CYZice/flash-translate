@@ -19,6 +19,9 @@ export const selectExclusionPatterns: SettingsSelector<ExclusionPattern[]> = (
   s
 ) => s.exclusionPatterns;
 
+export const selectAutoDetectLanguage: SettingsSelector<boolean> = (s) =>
+  s.autoDetectLanguage;
+
 // Composite selectors for specific use cases
 
 /**
@@ -29,6 +32,7 @@ interface ContentAppSettings {
   targetLanguage: string;
   skipSameLanguage: boolean;
   exclusionPatterns: ExclusionPattern[];
+  autoDetectLanguage: boolean;
 }
 
 export const selectContentAppSettings: SettingsSelector<ContentAppSettings> = (
@@ -38,6 +42,7 @@ export const selectContentAppSettings: SettingsSelector<ContentAppSettings> = (
   targetLanguage: s.targetLanguage,
   skipSameLanguage: s.skipSameLanguage,
   exclusionPatterns: s.exclusionPatterns,
+  autoDetectLanguage: s.autoDetectLanguage,
 });
 
 /**

@@ -13,6 +13,7 @@ const mockSettings: TranslationSettings = {
   targetLanguage: "ja",
   sourceLanguage: "en",
   skipSameLanguage: true,
+  autoDetectLanguage: true,
   exclusionPatterns: [
     { id: "1", pattern: "https://example.com", enabled: true },
     { id: "2", pattern: "https://test.com", enabled: false },
@@ -72,6 +73,7 @@ describe("selectContentAppSettings", () => {
       sourceLanguage: "en",
       targetLanguage: "ja",
       skipSameLanguage: true,
+      autoDetectLanguage: true,
       exclusionPatterns: mockSettings.exclusionPatterns,
     });
   });
@@ -81,6 +83,7 @@ describe("selectContentAppSettings", () => {
     expect(result).toHaveProperty("sourceLanguage");
     expect(result).toHaveProperty("targetLanguage");
     expect(result).toHaveProperty("skipSameLanguage");
+    expect(result).toHaveProperty("autoDetectLanguage");
     expect(result).toHaveProperty("exclusionPatterns");
   });
 });
