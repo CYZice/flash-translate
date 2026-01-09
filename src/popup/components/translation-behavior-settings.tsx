@@ -19,22 +19,18 @@ export function TranslationBehaviorSettings() {
   const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
-    const loadSettings = async () => {
-      const settings = await getSettings();
+    const initialize = async () => {
+      setIsCheckingAvailability(true);
+      const [settings, availability] = await Promise.all([
+        getSettings(),
+        languageDetectorManager.checkAvailability(),
+      ]);
       setSkipSameLanguage(settings.skipSameLanguage);
       setAutoDetectLanguage(settings.autoDetectLanguage);
-    };
-    loadSettings();
-  }, []);
-
-  useEffect(() => {
-    const checkAvailability = async () => {
-      setIsCheckingAvailability(true);
-      const availability = await languageDetectorManager.checkAvailability();
       setDetectorAvailability(availability);
       setIsCheckingAvailability(false);
     };
-    checkAvailability();
+    initialize();
   }, []);
 
   const handleSkipSameLanguageToggle = async () => {
