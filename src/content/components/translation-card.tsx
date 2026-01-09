@@ -136,7 +136,7 @@ export function TranslationCard({
       }}
     >
       <div
-        className="relative animate-popup-expand overflow-visible rounded-xl border border-stone-400/60 border-solid bg-white/90 pt-3 shadow-2xl backdrop-blur"
+        className="relative animate-popup-expand overflow-auto rounded-xl border border-stone-400/60 border-solid bg-white/90 pt-3 shadow-2xl backdrop-blur transition-[width,height] duration-150 ease-out"
         style={{
           width: `${width}px`,
           height: `${height}px`,
