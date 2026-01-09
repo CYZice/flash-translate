@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   computeEffectiveSourceLanguage,
+  containsHighDensityScript,
   DEFAULT_CONFIDENCE_THRESHOLD,
   DEFAULT_MIN_TEXT_LENGTH,
+  getMinTextLengthForDetection,
+  HIGH_DENSITY_MIN_TEXT_LENGTH,
   isTextSufficientForDetection,
   mapDetectorAvailability,
   normalizeDetectedLanguage,
@@ -179,20 +182,101 @@ describe("shouldSkipDetection", () => {
     expect(shouldSkipDetection("hello world", false)).toBe(true);
   });
 
-  it("returns true for short text when enabled", () => {
-    expect(shouldSkipDetection("hi", true, 10)).toBe(true);
+  it("returns true for short Latin text when enabled", () => {
+    // Latin scripts require 5 characters minimum
+    expect(shouldSkipDetection("hi", true)).toBe(true);
+    expect(shouldSkipDetection("abc", true)).toBe(true);
   });
 
-  it("returns false for sufficient text when enabled", () => {
-    expect(shouldSkipDetection("hello world this is a test", true, 10)).toBe(
-      false
+  it("returns false for sufficient Latin text when enabled", () => {
+    expect(shouldSkipDetection("hello", true)).toBe(false);
+    expect(shouldSkipDetection("hello world", true)).toBe(false);
+  });
+
+  it("returns false for single CJK character when enabled", () => {
+    // CJK scripts require only 1 character
+    expect(shouldSkipDetection("翻", true)).toBe(false);
+    expect(shouldSkipDetection("안", true)).toBe(false);
+    expect(shouldSkipDetection("中", true)).toBe(false);
+  });
+
+  it("returns false for short Korean text (original issue)", () => {
+    // This was the original issue: 국민성장펀드 (7 chars) was being skipped
+    expect(shouldSkipDetection("국민성장펀드", true)).toBe(false);
+  });
+
+  it("uses dynamic min length based on script type", () => {
+    // Latin: needs 5 chars
+    expect(shouldSkipDetection("abcd", true)).toBe(true);
+    expect(shouldSkipDetection("abcde", true)).toBe(false);
+
+    // CJK: needs 1 char
+    expect(shouldSkipDetection("漢", true)).toBe(false);
+  });
+});
+
+describe("containsHighDensityScript", () => {
+  it("returns true for CJK characters", () => {
+    // Chinese
+    expect(containsHighDensityScript("中文")).toBe(true);
+    // Japanese Hiragana
+    expect(containsHighDensityScript("ひらがな")).toBe(true);
+    // Japanese Katakana
+    expect(containsHighDensityScript("カタカナ")).toBe(true);
+    // Korean Hangul
+    expect(containsHighDensityScript("한글")).toBe(true);
+    expect(containsHighDensityScript("국민성장펀드")).toBe(true);
+  });
+
+  it("returns true for Arabic script", () => {
+    expect(containsHighDensityScript("مرحبا")).toBe(true);
+  });
+
+  it("returns true for Hebrew script", () => {
+    expect(containsHighDensityScript("שלום")).toBe(true);
+  });
+
+  it("returns true for Devanagari script", () => {
+    expect(containsHighDensityScript("नमस्ते")).toBe(true);
+  });
+
+  it("returns true for Thai script", () => {
+    expect(containsHighDensityScript("สวัสดี")).toBe(true);
+  });
+
+  it("returns false for Latin script", () => {
+    expect(containsHighDensityScript("hello")).toBe(false);
+    expect(containsHighDensityScript("world")).toBe(false);
+  });
+
+  it("returns true for mixed text containing high-density script", () => {
+    expect(containsHighDensityScript("Hello 世界")).toBe(true);
+    expect(containsHighDensityScript("Test 테스트")).toBe(true);
+  });
+});
+
+describe("getMinTextLengthForDetection", () => {
+  it("returns HIGH_DENSITY_MIN_TEXT_LENGTH for CJK text", () => {
+    expect(getMinTextLengthForDetection("漢字")).toBe(
+      HIGH_DENSITY_MIN_TEXT_LENGTH
+    );
+    expect(getMinTextLengthForDetection("한글")).toBe(
+      HIGH_DENSITY_MIN_TEXT_LENGTH
+    );
+    expect(getMinTextLengthForDetection("ひらがな")).toBe(
+      HIGH_DENSITY_MIN_TEXT_LENGTH
     );
   });
 
-  it("uses default min length", () => {
-    const shortText = "a".repeat(DEFAULT_MIN_TEXT_LENGTH - 1);
-    const exactText = "a".repeat(DEFAULT_MIN_TEXT_LENGTH);
-    expect(shouldSkipDetection(shortText, true)).toBe(true);
-    expect(shouldSkipDetection(exactText, true)).toBe(false);
+  it("returns DEFAULT_MIN_TEXT_LENGTH for Latin text", () => {
+    expect(getMinTextLengthForDetection("hello")).toBe(DEFAULT_MIN_TEXT_LENGTH);
+    expect(getMinTextLengthForDetection("world")).toBe(DEFAULT_MIN_TEXT_LENGTH);
+  });
+
+  it("returns HIGH_DENSITY_MIN_TEXT_LENGTH for mixed text", () => {
+    // If any high-density script is present, use lower threshold
+    expect(getMinTextLengthForDetection("Hello 世界")).toBe(
+      HIGH_DENSITY_MIN_TEXT_LENGTH
+    );
   });
 });

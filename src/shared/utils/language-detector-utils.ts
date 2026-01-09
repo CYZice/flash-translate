@@ -25,9 +25,39 @@ export interface NormalizedLanguageDetectionResult {
 }
 
 /**
- * Default minimum text length for reliable detection
+ * Default minimum text length for reliable detection (for Latin scripts)
  */
-export const DEFAULT_MIN_TEXT_LENGTH = 10;
+export const DEFAULT_MIN_TEXT_LENGTH = 5;
+
+/**
+ * Minimum text length for high-density scripts (CJK, Abjad, Abugida)
+ */
+export const HIGH_DENSITY_MIN_TEXT_LENGTH = 1;
+
+/**
+ * Regular expression to detect high information density scripts:
+ * - CJK: Chinese, Japanese (Hiragana, Katakana), Korean (Hangul)
+ * - Abjad: Arabic, Hebrew (consonant-based, vowels often omitted)
+ * - Abugida: Devanagari, Thai, Myanmar, Tibetan, Bengali (syllabic)
+ */
+export const HIGH_DENSITY_SCRIPT_REGEX =
+  /[\u3000-\u9fff\uac00-\ud7af\u3040-\u309f\u30a0-\u30ff\u0600-\u06ff\u0590-\u05ff\u0900-\u097f\u0e00-\u0e7f\u1000-\u109f\u0f00-\u0fff\u0980-\u09ff]/;
+
+/**
+ * Check if text contains high information density scripts
+ */
+export function containsHighDensityScript(text: string): boolean {
+  return HIGH_DENSITY_SCRIPT_REGEX.test(text);
+}
+
+/**
+ * Get appropriate minimum text length based on script type
+ */
+export function getMinTextLengthForDetection(text: string): number {
+  return containsHighDensityScript(text)
+    ? HIGH_DENSITY_MIN_TEXT_LENGTH
+    : DEFAULT_MIN_TEXT_LENGTH;
+}
 
 /**
  * Default confidence threshold for accepting detection result
@@ -127,16 +157,14 @@ export function computeEffectiveSourceLanguage(
 
 /**
  * Check if detection should be skipped based on conditions
+ * Uses dynamic minimum text length based on script type
  */
-export function shouldSkipDetection(
-  text: string,
-  enabled: boolean,
-  minTextLength: number = DEFAULT_MIN_TEXT_LENGTH
-): boolean {
+export function shouldSkipDetection(text: string, enabled: boolean): boolean {
   if (!enabled) {
     return true;
   }
-  return !isTextSufficientForDetection(text, minTextLength);
+  const minLength = getMinTextLengthForDetection(text);
+  return !isTextSufficientForDetection(text, minLength);
 }
 
 /**
