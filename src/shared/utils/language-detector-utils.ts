@@ -163,8 +163,10 @@ export function shouldSkipDetection(text: string, enabled: boolean): boolean {
   if (!enabled) {
     return true;
   }
-  const minLength = getMinTextLengthForDetection(text);
-  return !isTextSufficientForDetection(text, minLength);
+  return !isTextSufficientForDetection(
+    text,
+    getMinTextLengthForDetection(text)
+  );
 }
 
 /**
