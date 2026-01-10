@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { isLanguageMatch } from "@/shared/storage/settings";
+import { DEFAULT_CONFIDENCE_THRESHOLD } from "@/shared/utils/language-detector-utils";
 import { calculateCardPosition } from "../hooks/card-position";
 import { useDraggable } from "../hooks/use-draggable";
 import { useLanguageDetection } from "../hooks/use-language-detection";
@@ -24,6 +26,7 @@ interface TranslationCardProps {
   sourceLanguage: string;
   targetLanguage: string;
   autoDetectLanguage: boolean;
+  skipSameLanguage: boolean;
   onClose: () => void;
   onExcludeSite: () => void;
 }
@@ -33,6 +36,7 @@ export function TranslationCard({
   sourceLanguage,
   targetLanguage,
   autoDetectLanguage,
+  skipSameLanguage,
   onClose,
   onExcludeSite,
 }: TranslationCardProps) {
@@ -40,6 +44,7 @@ export function TranslationCard({
   const {
     effectiveSourceLanguage,
     detectedLanguage,
+    confidence,
     isDetecting,
     setOverriddenLanguage,
   } = useLanguageDetection({
@@ -48,18 +53,40 @@ export function TranslationCard({
     fallbackLanguage: sourceLanguage,
   });
 
-  const { result, isLoading, error, translate, availability } = useTranslator({
-    sourceLanguage: effectiveSourceLanguage,
-    targetLanguage,
-  });
+  const { result, isLoading, error, translate, availability, reset } =
+    useTranslator({
+      sourceLanguage: effectiveSourceLanguage,
+      targetLanguage,
+    });
+
+  const shouldSkipDetectedTranslation =
+    skipSameLanguage &&
+    autoDetectLanguage &&
+    detectedLanguage !== null &&
+    confidence >= DEFAULT_CONFIDENCE_THRESHOLD &&
+    isLanguageMatch(detectedLanguage, targetLanguage);
 
   // Translate when selection or language changes
-  // biome-ignore lint/correctness/useExhaustiveDependencies: translate is intentionally excluded to avoid infinite loops (it captures sourceLanguage/targetLanguage)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: translate/reset are intentionally excluded to avoid infinite loops (they capture sourceLanguage/targetLanguage)
   useEffect(() => {
+    if (shouldSkipDetectedTranslation) {
+      reset();
+      return;
+    }
     if (selection.text && !isDetecting) {
       translate(selection.text);
     }
-  }, [selection.text, effectiveSourceLanguage, targetLanguage, isDetecting]);
+  }, [
+    selection.text,
+    effectiveSourceLanguage,
+    targetLanguage,
+    isDetecting,
+    shouldSkipDetectedTranslation,
+  ]);
+
+  if (shouldSkipDetectedTranslation) {
+    return null;
+  }
 
   const [maxCardWidth, setMaxCardWidth] = useState(() =>
     calculateMaxCardWidth(window.innerWidth)

@@ -39,8 +39,8 @@ export default function App() {
     return null;
   }
 
-  // Skip translation if page language matches target language
-  const pageLanguage = getPageLanguage();
+  // Skip translation based on HTML lang only when auto-detect is disabled
+  const pageLanguage = autoDetectLanguage ? null : getPageLanguage();
   if (shouldSkipTranslation(targetLanguage, skipSameLanguage, pageLanguage)) {
     return null;
   }
@@ -51,6 +51,7 @@ export default function App() {
       onClose={dismissCard}
       onExcludeSite={clearSelection}
       selection={selection}
+      skipSameLanguage={skipSameLanguage}
       sourceLanguage={sourceLanguage}
       targetLanguage={targetLanguage}
     />
