@@ -84,10 +84,6 @@ export function TranslationCard({
     shouldSkipDetectedTranslation,
   ]);
 
-  if (shouldSkipDetectedTranslation) {
-    return null;
-  }
-
   const [maxCardWidth, setMaxCardWidth] = useState(() =>
     calculateMaxCardWidth(window.innerWidth)
   );
@@ -167,6 +163,10 @@ export function TranslationCard({
           rawCardTop - (cardBottom - (window.innerHeight - viewportMargin))
         )
       : rawCardTop;
+
+  if (shouldSkipDetectedTranslation) {
+    return null;
+  }
 
   return (
     <div
