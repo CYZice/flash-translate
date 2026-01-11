@@ -161,8 +161,8 @@
   "content_cancel": {
     "message": "キャンセル"
   },
-  "content_movePopup": {
-    "message": "ポップアップを移動"
+  "content_moveCard": {
+    "message": "カードを移動"
   },
   "content_resizeHandleLeft": {
     "message": "左リサイズハンドル"

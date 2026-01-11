@@ -5,7 +5,7 @@ import {
   isClickInsideShadowHost,
   isNodeInContentEditable,
   type SelectionInfo,
-  shouldShowPopupForSelection,
+  shouldShowCardForSelection,
 } from "./text-selection";
 
 export type { SelectionInfo } from "./text-selection";
@@ -88,7 +88,7 @@ export function useTextSelection() {
 
       pendingClearRef.current = false;
       if (
-        shouldShowPopupForSelection(
+        shouldShowCardForSelection(
           selectionInfo.text,
           lastSelectionTextRef.current
         )
@@ -107,7 +107,7 @@ export function useTextSelection() {
     const isInsideShadowHost =
       shadowHost?.contains(target) || isClickInsideShadowHost(path, HOST_ID);
 
-    // Close popup when clicking outside our UI
+    // Close card when clicking outside our UI
     if (isInsideShadowHost) {
       pendingClearRef.current = false;
       return;
@@ -117,13 +117,13 @@ export function useTextSelection() {
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Escape") {
-      // Escape key hides popup but keeps text selection
+      // Escape key hides card but keeps text selection
       setIsVisible(false);
     }
   };
 
-  // Dismiss popup without clearing text selection
-  const dismissPopup = () => {
+  // Dismiss card without clearing text selection
+  const dismissCard = () => {
     setIsVisible(false);
   };
 
@@ -149,5 +149,5 @@ export function useTextSelection() {
     };
   }, []);
 
-  return { selection, isVisible, dismissPopup, clearSelection };
+  return { selection, isVisible, dismissCard, clearSelection };
 }

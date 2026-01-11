@@ -161,8 +161,8 @@
   "content_cancel": {
     "message": "Cancel"
   },
-  "content_movePopup": {
-    "message": "Move popup"
+  "content_moveCard": {
+    "message": "Move card"
   },
   "content_resizeHandleLeft": {
     "message": "Left resize handle"

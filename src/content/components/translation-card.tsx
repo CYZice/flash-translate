@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { calculatePopupPosition } from "../hooks/popup-position";
+import { calculateCardPosition } from "../hooks/card-position";
 import { useDraggable } from "../hooks/use-draggable";
 import { useLanguageDetection } from "../hooks/use-language-detection";
 import { useResizable } from "../hooks/use-resizable";
@@ -10,12 +10,12 @@ import { ResizeHandle } from "./resize-handle";
 import { TranslationCardFooter } from "./translation-card-footer";
 import { TranslationCardHeader } from "./translation-card-header";
 import {
-  calculateMaxPopupHeight,
-  calculateMaxPopupWidth,
-  calculatePopupWidth,
-  INITIAL_POPUP_HEIGHT,
-  MIN_POPUP_HEIGHT,
-  MIN_POPUP_WIDTH,
+  calculateCardWidth,
+  calculateMaxCardHeight,
+  calculateMaxCardWidth,
+  INITIAL_CARD_HEIGHT,
+  MIN_CARD_HEIGHT,
+  MIN_CARD_WIDTH,
 } from "./translation-card-utils";
 import { TranslationContent } from "./translation-content";
 
@@ -61,17 +61,17 @@ export function TranslationCard({
     }
   }, [selection.text, effectiveSourceLanguage, targetLanguage, isDetecting]);
 
-  const [maxPopupWidth, setMaxPopupWidth] = useState(() =>
-    calculateMaxPopupWidth(window.innerWidth)
+  const [maxCardWidth, setMaxCardWidth] = useState(() =>
+    calculateMaxCardWidth(window.innerWidth)
   );
-  const [maxPopupHeight, setMaxPopupHeight] = useState(() =>
-    calculateMaxPopupHeight(window.innerHeight)
+  const [maxCardHeight, setMaxCardHeight] = useState(() =>
+    calculateMaxCardHeight(window.innerHeight)
   );
 
-  // Calculate popup width based on selection width (clamped to min/max)
-  const selectionBasedWidth = calculatePopupWidth(
+  // Calculate card width based on selection width (clamped to min/max)
+  const selectionBasedWidth = calculateCardWidth(
     selection.rect.width,
-    maxPopupWidth
+    maxCardWidth
   );
 
   // Update max dimensions on window resize with debounce
@@ -82,8 +82,8 @@ export function TranslationCard({
         clearTimeout(timeoutId);
       }
       timeoutId = setTimeout(() => {
-        setMaxPopupWidth(calculateMaxPopupWidth(window.innerWidth));
-        setMaxPopupHeight(calculateMaxPopupHeight(window.innerHeight));
+        setMaxCardWidth(calculateMaxCardWidth(window.innerWidth));
+        setMaxCardHeight(calculateMaxCardHeight(window.innerHeight));
       }, 100);
     };
     window.addEventListener("resize", handleResize);
@@ -107,11 +107,11 @@ export function TranslationCard({
     handleBottomKeyDown,
   } = useResizable({
     initialWidth: selectionBasedWidth,
-    minWidth: MIN_POPUP_WIDTH,
-    maxWidth: maxPopupWidth,
-    initialHeight: INITIAL_POPUP_HEIGHT,
-    minHeight: MIN_POPUP_HEIGHT,
-    maxHeight: maxPopupHeight,
+    minWidth: MIN_CARD_WIDTH,
+    maxWidth: maxCardWidth,
+    initialHeight: INITIAL_CARD_HEIGHT,
+    minHeight: MIN_CARD_HEIGHT,
+    maxHeight: maxCardHeight,
   });
 
   const {
@@ -121,9 +121,9 @@ export function TranslationCard({
     handleKeyDown: handleDragKeyDown,
   } = useDraggable();
 
-  const position = calculatePopupPosition(
+  const position = calculateCardPosition(
     selection.rect,
-    { popupWidth: selectionBasedWidth, popupHeight: height, margin: 8 },
+    { cardWidth: selectionBasedWidth, cardHeight: height, margin: 8 },
     { width: window.innerWidth, height: window.innerHeight }
   );
 
@@ -151,14 +151,14 @@ export function TranslationCard({
       }}
     >
       <div
-        className="relative flex animate-popup-expand flex-col overflow-hidden rounded-xl border border-stone-400/60 border-solid bg-white/90 pt-3 shadow-2xl backdrop-blur transition-[width,height] duration-150 ease-out"
+        className="relative flex animate-card-expand flex-col overflow-hidden rounded-xl border border-stone-400/60 border-solid bg-white/90 pt-3 shadow-2xl backdrop-blur transition-[width,height] duration-150 ease-out"
         style={{
           width: `${width}px`,
           height: `${height}px`,
-          minWidth: `${MIN_POPUP_WIDTH}px`,
-          maxWidth: `${maxPopupWidth}px`,
-          minHeight: `${MIN_POPUP_HEIGHT}px`,
-          maxHeight: `${maxPopupHeight}px`,
+          minWidth: `${MIN_CARD_WIDTH}px`,
+          maxWidth: `${maxCardWidth}px`,
+          minHeight: `${MIN_CARD_HEIGHT}px`,
+          maxHeight: `${maxCardHeight}px`,
         }}
       >
         <DragHandle

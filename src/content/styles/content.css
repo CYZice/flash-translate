@@ -8,8 +8,8 @@
   box-sizing: border-box;
 }
 
-/* Translation card popup animation - fade in from top-left */
-@keyframes popup-expand {
+/* Translation card animation - fade in from top-left */
+@keyframes card-expand {
   from {
     opacity: 0;
     transform: scale(0.75);
@@ -20,7 +20,7 @@
   }
 }
 
-.animate-popup-expand {
-  animation: popup-expand 150ms ease-out;
+.animate-card-expand {
+  animation: card-expand 150ms ease-out;
   transform-origin: top left;
 }

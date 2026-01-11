@@ -1,9 +1,9 @@
-// Pure functions for popup position calculation
+// Pure functions for card position calculation
 
 /**
- * Minimum popup height constraint
+ * Minimum card height constraint
  */
-export const MIN_POPUP_HEIGHT = 100;
+export const MIN_CARD_HEIGHT = 100;
 
 /**
  * Interface for rectangle-like objects (avoids DOMRect dependency for testability)
@@ -26,18 +26,18 @@ export interface ViewportDimensions {
 }
 
 /**
- * Options for popup position calculation
+ * Options for card position calculation
  */
-export interface PopupPositionOptions {
-  popupWidth: number;
-  popupHeight: number;
+export interface CardPositionOptions {
+  cardWidth: number;
+  cardHeight: number;
   margin: number;
 }
 
 /**
- * Result of popup position calculation
+ * Result of card position calculation
  */
-export interface PopupPosition {
+export interface CardPosition {
   x: number;
   y: number;
   placement: "bottom" | "top";
@@ -49,18 +49,18 @@ export interface PopupPosition {
  */
 export function calculateHorizontalPosition(
   selectionRect: RectLike,
-  popupWidth: number,
+  cardWidth: number,
   viewportWidth: number,
   margin: number
 ): number {
-  // Center popup on selection
-  let x = selectionRect.left + selectionRect.width / 2 - popupWidth / 2;
+  // Center card on selection
+  let x = selectionRect.left + selectionRect.width / 2 - cardWidth / 2;
 
   // Clamp to viewport bounds
   if (x < margin) {
     x = margin;
-  } else if (x + popupWidth > viewportWidth - margin) {
-    x = viewportWidth - popupWidth - margin;
+  } else if (x + cardWidth > viewportWidth - margin) {
+    x = viewportWidth - cardWidth - margin;
   }
 
   return x;
@@ -71,7 +71,7 @@ export function calculateHorizontalPosition(
  */
 export function calculateVerticalPosition(
   selectionRect: RectLike,
-  popupHeight: number,
+  cardHeight: number,
   viewportHeight: number,
   margin: number
 ): { y: number; placement: "bottom" | "top"; maxHeight: number } {
@@ -80,20 +80,20 @@ export function calculateVerticalPosition(
   const spaceAbove = selectionRect.top - margin * 2;
 
   // Prefer showing below the selection
-  if (selectionRect.bottom + margin + popupHeight <= viewportHeight) {
+  if (selectionRect.bottom + margin + cardHeight <= viewportHeight) {
     return {
       y: selectionRect.bottom + margin,
       placement: "bottom",
-      maxHeight: Math.max(spaceBelow, MIN_POPUP_HEIGHT),
+      maxHeight: Math.max(spaceBelow, MIN_CARD_HEIGHT),
     };
   }
 
   // Show above if not enough space below
-  if (selectionRect.top - margin - popupHeight >= 0) {
+  if (selectionRect.top - margin - cardHeight >= 0) {
     return {
-      y: selectionRect.top - margin - popupHeight,
+      y: selectionRect.top - margin - cardHeight,
       placement: "top",
-      maxHeight: Math.max(spaceAbove, MIN_POPUP_HEIGHT),
+      maxHeight: Math.max(spaceAbove, MIN_CARD_HEIGHT),
     };
   }
 
@@ -101,30 +101,30 @@ export function calculateVerticalPosition(
   return {
     y: selectionRect.bottom + margin,
     placement: "bottom",
-    maxHeight: Math.max(spaceBelow, MIN_POPUP_HEIGHT),
+    maxHeight: Math.max(spaceBelow, MIN_CARD_HEIGHT),
   };
 }
 
 /**
  * Main function combining horizontal and vertical calculations
  */
-export function calculatePopupPosition(
+export function calculateCardPosition(
   selectionRect: RectLike,
-  options: PopupPositionOptions,
+  options: CardPositionOptions,
   viewport: ViewportDimensions
-): PopupPosition {
-  const { popupWidth, popupHeight, margin } = options;
+): CardPosition {
+  const { cardWidth, cardHeight, margin } = options;
 
   const x = calculateHorizontalPosition(
     selectionRect,
-    popupWidth,
+    cardWidth,
     viewport.width,
     margin
   );
 
   const { y, placement, maxHeight } = calculateVerticalPosition(
     selectionRect,
-    popupHeight,
+    cardHeight,
     viewport.height,
     margin
   );

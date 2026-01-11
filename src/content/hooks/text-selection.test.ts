@@ -7,7 +7,7 @@ import {
   getValidSelectionText,
   isNodeInContentEditable,
   isValidRect,
-  shouldShowPopupForSelection,
+  shouldShowCardForSelection,
 } from "./text-selection";
 
 describe("getValidSelectionText", () => {
@@ -69,23 +69,23 @@ describe("isValidRect", () => {
   });
 });
 
-describe("shouldShowPopupForSelection", () => {
+describe("shouldShowCardForSelection", () => {
   it("returns true when lastText is null", () => {
-    expect(shouldShowPopupForSelection("hello", null)).toBe(true);
+    expect(shouldShowCardForSelection("hello", null)).toBe(true);
   });
 
   it("returns true when text is different from lastText", () => {
-    expect(shouldShowPopupForSelection("hello", "world")).toBe(true);
-    expect(shouldShowPopupForSelection("new text", "old text")).toBe(true);
+    expect(shouldShowCardForSelection("hello", "world")).toBe(true);
+    expect(shouldShowCardForSelection("new text", "old text")).toBe(true);
   });
 
   it("returns false when text is same as lastText", () => {
-    expect(shouldShowPopupForSelection("hello", "hello")).toBe(false);
-    expect(shouldShowPopupForSelection("same", "same")).toBe(false);
+    expect(shouldShowCardForSelection("hello", "hello")).toBe(false);
+    expect(shouldShowCardForSelection("same", "same")).toBe(false);
   });
 
   it("is case-sensitive", () => {
-    expect(shouldShowPopupForSelection("Hello", "hello")).toBe(true);
+    expect(shouldShowCardForSelection("Hello", "hello")).toBe(true);
   });
 });
 

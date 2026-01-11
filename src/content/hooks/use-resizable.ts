@@ -56,9 +56,9 @@ export function useResizable({
     height: 0,
     offsetX: 0,
     side: "right" as "left" | "right" | "bottom",
-    popupLeft: 0,
-    popupRight: 0,
-    popupBottom: 0,
+    cardLeft: 0,
+    cardRight: 0,
+    cardBottom: 0,
   });
   // Track current dimensions for mouseup handler without causing effect re-runs
   const currentWidthRef = useLatestRef(width);
@@ -84,8 +84,8 @@ export function useResizable({
     setHeight((prev) => Math.min(prev, maxHeight));
   }, [maxHeight]);
 
-  const getPopupRect = (e: React.MouseEvent) => {
-    // Navigate up to find the popup container (the one with position: fixed)
+  const getCardRect = (e: React.MouseEvent) => {
+    // Navigate up to find the card container (the one with position: fixed)
     let element = e.currentTarget.parentElement;
     while (element && getComputedStyle(element).position !== "fixed") {
       element = element.parentElement;
@@ -101,7 +101,7 @@ export function useResizable({
     (side: "left" | "right" | "bottom") => (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      const popupRect = getPopupRect(e);
+      const cardRect = getCardRect(e);
       dragStartRef.current = {
         mouseX: e.clientX,
         mouseY: e.clientY,
@@ -109,9 +109,9 @@ export function useResizable({
         height,
         offsetX,
         side,
-        popupLeft: popupRect.left,
-        popupRight: popupRect.right,
-        popupBottom: popupRect.bottom,
+        cardLeft: cardRect.left,
+        cardRight: cardRect.right,
+        cardBottom: cardRect.bottom,
       };
       setIsResizing(true);
     };
@@ -198,9 +198,9 @@ export function useResizable({
         height: startHeight,
         offsetX: startOffsetX,
         side,
-        popupLeft,
-        popupRight,
-        popupBottom,
+        cardLeft,
+        cardRight,
+        cardBottom,
       } = dragStartRef.current;
 
       if (side === "left") {
@@ -210,7 +210,7 @@ export function useResizable({
           deltaX,
           startWidth,
           startOffsetX,
-          popupLeft,
+          cardLeft,
           constraints,
         });
         setWidth(newWidth);
@@ -221,7 +221,7 @@ export function useResizable({
         const { newWidth } = calculateRightResize({
           deltaX,
           startWidth,
-          popupRight,
+          cardRight,
           viewportWidth: window.innerWidth,
           constraints,
         });
@@ -233,7 +233,7 @@ export function useResizable({
         const { newHeight } = calculateBottomResize({
           deltaY,
           startHeight,
-          popupBottom,
+          cardBottom,
           viewportHeight: window.innerHeight,
           constraints,
         });

@@ -13,7 +13,7 @@ function getCurrentUrl(): string {
 }
 
 export default function App() {
-  const { selection, isVisible, dismissPopup, clearSelection } =
+  const { selection, isVisible, dismissCard, clearSelection } =
     useTextSelection();
   const [settings, isLoading] = useSettings(selectContentAppSettings);
 
@@ -48,7 +48,7 @@ export default function App() {
   return (
     <TranslationCard
       autoDetectLanguage={autoDetectLanguage}
-      onClose={dismissPopup}
+      onClose={dismissCard}
       onExcludeSite={clearSelection}
       selection={selection}
       sourceLanguage={sourceLanguage}

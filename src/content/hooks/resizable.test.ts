@@ -49,11 +49,11 @@ describe("calculateMaxLeftExpansion", () => {
     expect(calculateMaxLeftExpansion(100, 8)).toBe(92);
   });
 
-  it("returns zero when popup is at edge margin", () => {
+  it("returns zero when card is at edge margin", () => {
     expect(calculateMaxLeftExpansion(8, 8)).toBe(0);
   });
 
-  it("returns negative when popup is past edge margin", () => {
+  it("returns negative when card is past edge margin", () => {
     expect(calculateMaxLeftExpansion(4, 8)).toBe(-4);
   });
 
@@ -64,16 +64,16 @@ describe("calculateMaxLeftExpansion", () => {
 
 describe("calculateMaxRightExpansion", () => {
   it("calculates available space to right edge", () => {
-    // viewportWidth=1024, popupRight=800, margin=8 => 1024 - 8 - 800 = 216
+    // viewportWidth=1024, cardRight=800, margin=8 => 1024 - 8 - 800 = 216
     expect(calculateMaxRightExpansion(800, 1024, 8)).toBe(216);
   });
 
-  it("returns zero when popup is at edge margin", () => {
-    // viewportWidth=1024, popupRight=1016, margin=8 => 1024 - 8 - 1016 = 0
+  it("returns zero when card is at edge margin", () => {
+    // viewportWidth=1024, cardRight=1016, margin=8 => 1024 - 8 - 1016 = 0
     expect(calculateMaxRightExpansion(1016, 1024, 8)).toBe(0);
   });
 
-  it("returns negative when popup is past edge margin", () => {
+  it("returns negative when card is past edge margin", () => {
     expect(calculateMaxRightExpansion(1020, 1024, 8)).toBe(-4);
   });
 
@@ -88,7 +88,7 @@ describe("calculateLeftResize", () => {
       deltaX: -50,
       startWidth: 320,
       startOffsetX: 0,
-      popupLeft: 100,
+      cardLeft: 100,
       constraints: defaultConstraints,
     });
 
@@ -101,7 +101,7 @@ describe("calculateLeftResize", () => {
       deltaX: 30,
       startWidth: 350,
       startOffsetX: 0,
-      popupLeft: 100,
+      cardLeft: 100,
       constraints: defaultConstraints,
     });
 
@@ -114,7 +114,7 @@ describe("calculateLeftResize", () => {
       deltaX: 200,
       startWidth: 320,
       startOffsetX: 0,
-      popupLeft: 100,
+      cardLeft: 100,
       constraints: defaultConstraints,
     });
 
@@ -127,7 +127,7 @@ describe("calculateLeftResize", () => {
       deltaX: -500,
       startWidth: 320,
       startOffsetX: 0,
-      popupLeft: 500,
+      cardLeft: 500,
       constraints: defaultConstraints,
     });
 
@@ -140,7 +140,7 @@ describe("calculateLeftResize", () => {
       deltaX: -200,
       startWidth: 320,
       startOffsetX: 0,
-      popupLeft: 50, // Only 42px available (50 - 8)
+      cardLeft: 50, // Only 42px available (50 - 8)
       constraints: defaultConstraints,
     });
 
@@ -149,12 +149,12 @@ describe("calculateLeftResize", () => {
     expect(result.newOffsetX).toBe(-42);
   });
 
-  it("prevents popup from going past left edge margin", () => {
+  it("prevents card from going past left edge margin", () => {
     const result = calculateLeftResize({
       deltaX: -100,
       startWidth: 320,
       startOffsetX: 0,
-      popupLeft: 20, // Only 12px available
+      cardLeft: 20, // Only 12px available
       constraints: defaultConstraints,
     });
 
@@ -162,12 +162,12 @@ describe("calculateLeftResize", () => {
     expect(result.newOffsetX).toBe(-12);
   });
 
-  it("handles popup already at left edge", () => {
+  it("handles card already at left edge", () => {
     const result = calculateLeftResize({
       deltaX: -50,
       startWidth: 320,
       startOffsetX: 0,
-      popupLeft: 8, // Already at edge margin
+      cardLeft: 8, // Already at edge margin
       constraints: defaultConstraints,
     });
 
@@ -181,7 +181,7 @@ describe("calculateLeftResize", () => {
       deltaX: 0,
       startWidth: 320,
       startOffsetX: 10,
-      popupLeft: 100,
+      cardLeft: 100,
       constraints: defaultConstraints,
     });
 
@@ -194,7 +194,7 @@ describe("calculateLeftResize", () => {
       deltaX: -20,
       startWidth: 320,
       startOffsetX: 15,
-      popupLeft: 100,
+      cardLeft: 100,
       constraints: defaultConstraints,
     });
 
@@ -210,7 +210,7 @@ describe("calculateRightResize", () => {
     const result = calculateRightResize({
       deltaX: 50,
       startWidth: 320,
-      popupRight: 500,
+      cardRight: 500,
       viewportWidth,
       constraints: defaultConstraints,
     });
@@ -222,7 +222,7 @@ describe("calculateRightResize", () => {
     const result = calculateRightResize({
       deltaX: -30,
       startWidth: 350,
-      popupRight: 500,
+      cardRight: 500,
       viewportWidth,
       constraints: defaultConstraints,
     });
@@ -234,7 +234,7 @@ describe("calculateRightResize", () => {
     const result = calculateRightResize({
       deltaX: -200,
       startWidth: 320,
-      popupRight: 500,
+      cardRight: 500,
       viewportWidth,
       constraints: defaultConstraints,
     });
@@ -246,7 +246,7 @@ describe("calculateRightResize", () => {
     const result = calculateRightResize({
       deltaX: 500,
       startWidth: 320,
-      popupRight: 500,
+      cardRight: 500,
       viewportWidth,
       constraints: defaultConstraints,
     });
@@ -258,7 +258,7 @@ describe("calculateRightResize", () => {
     const result = calculateRightResize({
       deltaX: 200,
       startWidth: 320,
-      popupRight: 950, // Only 66px available (1024 - 8 - 950)
+      cardRight: 950, // Only 66px available (1024 - 8 - 950)
       viewportWidth,
       constraints: defaultConstraints,
     });
@@ -266,11 +266,11 @@ describe("calculateRightResize", () => {
     expect(result.newWidth).toBe(386); // 320 + 66
   });
 
-  it("prevents popup from going past right edge margin", () => {
+  it("prevents card from going past right edge margin", () => {
     const result = calculateRightResize({
       deltaX: 100,
       startWidth: 320,
-      popupRight: 1000, // Only 16px available
+      cardRight: 1000, // Only 16px available
       viewportWidth,
       constraints: defaultConstraints,
     });
@@ -278,11 +278,11 @@ describe("calculateRightResize", () => {
     expect(result.newWidth).toBe(336); // 320 + 16
   });
 
-  it("handles popup already at right edge", () => {
+  it("handles card already at right edge", () => {
     const result = calculateRightResize({
       deltaX: 50,
       startWidth: 320,
-      popupRight: 1016, // Already at edge margin
+      cardRight: 1016, // Already at edge margin
       viewportWidth,
       constraints: defaultConstraints,
     });
@@ -295,7 +295,7 @@ describe("calculateRightResize", () => {
     const result = calculateRightResize({
       deltaX: 0,
       startWidth: 320,
-      popupRight: 500,
+      cardRight: 500,
       viewportWidth,
       constraints: defaultConstraints,
     });
@@ -307,7 +307,7 @@ describe("calculateRightResize", () => {
     const result = calculateRightResize({
       deltaX: 50,
       startWidth: 300,
-      popupRight: 350,
+      cardRight: 350,
       viewportWidth: 400, // Narrow viewport
       constraints: { ...defaultConstraints, minWidth: 200 },
     });
@@ -351,16 +351,16 @@ describe("clampHeight", () => {
 
 describe("calculateMaxBottomExpansion", () => {
   it("calculates available space to bottom edge", () => {
-    // viewportHeight=768, popupBottom=500, margin=8 => 768 - 8 - 500 = 260
+    // viewportHeight=768, cardBottom=500, margin=8 => 768 - 8 - 500 = 260
     expect(calculateMaxBottomExpansion(500, 768, 8)).toBe(260);
   });
 
-  it("returns zero when popup is at edge margin", () => {
-    // viewportHeight=768, popupBottom=760, margin=8 => 768 - 8 - 760 = 0
+  it("returns zero when card is at edge margin", () => {
+    // viewportHeight=768, cardBottom=760, margin=8 => 768 - 8 - 760 = 0
     expect(calculateMaxBottomExpansion(760, 768, 8)).toBe(0);
   });
 
-  it("returns negative when popup is past edge margin", () => {
+  it("returns negative when card is past edge margin", () => {
     expect(calculateMaxBottomExpansion(764, 768, 8)).toBe(-4);
   });
 
@@ -376,7 +376,7 @@ describe("calculateBottomResize", () => {
     const result = calculateBottomResize({
       deltaY: 50,
       startHeight: 180,
-      popupBottom: 400,
+      cardBottom: 400,
       viewportHeight,
       constraints: defaultHeightConstraints,
     });
@@ -388,7 +388,7 @@ describe("calculateBottomResize", () => {
     const result = calculateBottomResize({
       deltaY: -30,
       startHeight: 200,
-      popupBottom: 400,
+      cardBottom: 400,
       viewportHeight,
       constraints: defaultHeightConstraints,
     });
@@ -400,7 +400,7 @@ describe("calculateBottomResize", () => {
     const result = calculateBottomResize({
       deltaY: -200,
       startHeight: 180,
-      popupBottom: 400,
+      cardBottom: 400,
       viewportHeight,
       constraints: defaultHeightConstraints,
     });
@@ -412,7 +412,7 @@ describe("calculateBottomResize", () => {
     const result = calculateBottomResize({
       deltaY: 500,
       startHeight: 180,
-      popupBottom: 100, // Low enough so viewport edge doesn't limit first
+      cardBottom: 100, // Low enough so viewport edge doesn't limit first
       viewportHeight,
       constraints: defaultHeightConstraints,
     });
@@ -424,7 +424,7 @@ describe("calculateBottomResize", () => {
     const result = calculateBottomResize({
       deltaY: 200,
       startHeight: 180,
-      popupBottom: 700, // Only 60px available (768 - 8 - 700)
+      cardBottom: 700, // Only 60px available (768 - 8 - 700)
       viewportHeight,
       constraints: defaultHeightConstraints,
     });
@@ -432,11 +432,11 @@ describe("calculateBottomResize", () => {
     expect(result.newHeight).toBe(240); // 180 + 60
   });
 
-  it("prevents popup from going past bottom edge margin", () => {
+  it("prevents card from going past bottom edge margin", () => {
     const result = calculateBottomResize({
       deltaY: 100,
       startHeight: 180,
-      popupBottom: 740, // Only 20px available
+      cardBottom: 740, // Only 20px available
       viewportHeight,
       constraints: defaultHeightConstraints,
     });
@@ -444,11 +444,11 @@ describe("calculateBottomResize", () => {
     expect(result.newHeight).toBe(200); // 180 + 20
   });
 
-  it("handles popup already at bottom edge", () => {
+  it("handles card already at bottom edge", () => {
     const result = calculateBottomResize({
       deltaY: 50,
       startHeight: 180,
-      popupBottom: 760, // Already at edge margin
+      cardBottom: 760, // Already at edge margin
       viewportHeight,
       constraints: defaultHeightConstraints,
     });
@@ -461,7 +461,7 @@ describe("calculateBottomResize", () => {
     const result = calculateBottomResize({
       deltaY: 0,
       startHeight: 180,
-      popupBottom: 400,
+      cardBottom: 400,
       viewportHeight,
       constraints: defaultHeightConstraints,
     });
@@ -473,7 +473,7 @@ describe("calculateBottomResize", () => {
     const result = calculateBottomResize({
       deltaY: 50,
       startHeight: 150,
-      popupBottom: 350,
+      cardBottom: 350,
       viewportHeight: 400, // Short viewport
       constraints: { ...defaultHeightConstraints, minHeight: 100 },
     });

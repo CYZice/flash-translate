@@ -26,7 +26,7 @@ export interface LeftResizeParams {
   deltaX: number;
   startWidth: number;
   startOffsetX: number;
-  popupLeft: number;
+  cardLeft: number;
   constraints: ResizeConstraints;
 }
 
@@ -44,7 +44,7 @@ export interface LeftResizeResult {
 export interface RightResizeParams {
   deltaX: number;
   startWidth: number;
-  popupRight: number;
+  cardRight: number;
   viewportWidth: number;
   constraints: ResizeConstraints;
 }
@@ -71,21 +71,21 @@ export function clampWidth(
  * Calculate maximum expansion possible for left handle
  */
 export function calculateMaxLeftExpansion(
-  popupLeft: number,
+  cardLeft: number,
   edgeMargin: number
 ): number {
-  return popupLeft - edgeMargin;
+  return cardLeft - edgeMargin;
 }
 
 /**
  * Calculate maximum expansion possible for right handle
  */
 export function calculateMaxRightExpansion(
-  popupRight: number,
+  cardRight: number,
   viewportWidth: number,
   edgeMargin: number
 ): number {
-  return viewportWidth - edgeMargin - popupRight;
+  return viewportWidth - edgeMargin - cardRight;
 }
 
 /**
@@ -95,11 +95,11 @@ export function calculateMaxRightExpansion(
 export function calculateLeftResize(
   params: LeftResizeParams
 ): LeftResizeResult {
-  const { deltaX, startWidth, startOffsetX, popupLeft, constraints } = params;
+  const { deltaX, startWidth, startOffsetX, cardLeft, constraints } = params;
   const { minWidth, maxWidth, edgeMargin } = constraints;
 
   // Limit: new left edge must not go past edgeMargin
-  const maxExpandLeft = calculateMaxLeftExpansion(popupLeft, edgeMargin);
+  const maxExpandLeft = calculateMaxLeftExpansion(cardLeft, edgeMargin);
   const clampedDelta = Math.max(-maxExpandLeft, deltaX);
 
   // deltaX < 0 means mouse moved left = increase width
@@ -119,12 +119,12 @@ export function calculateLeftResize(
 export function calculateRightResize(
   params: RightResizeParams
 ): RightResizeResult {
-  const { deltaX, startWidth, popupRight, viewportWidth, constraints } = params;
+  const { deltaX, startWidth, cardRight, viewportWidth, constraints } = params;
   const { minWidth, maxWidth, edgeMargin } = constraints;
 
   // Limit: new right edge must not go past viewportWidth - edgeMargin
   const maxExpandRight = calculateMaxRightExpansion(
-    popupRight,
+    cardRight,
     viewportWidth,
     edgeMargin
   );
@@ -141,7 +141,7 @@ export function calculateRightResize(
 export interface BottomResizeParams {
   deltaY: number;
   startHeight: number;
-  popupBottom: number;
+  cardBottom: number;
   viewportHeight: number;
   constraints: HeightResizeConstraints;
 }
@@ -168,11 +168,11 @@ export function clampHeight(
  * Calculate maximum expansion possible for bottom handle
  */
 export function calculateMaxBottomExpansion(
-  popupBottom: number,
+  cardBottom: number,
   viewportHeight: number,
   edgeMargin: number
 ): number {
-  return viewportHeight - edgeMargin - popupBottom;
+  return viewportHeight - edgeMargin - cardBottom;
 }
 
 /**
@@ -182,13 +182,13 @@ export function calculateMaxBottomExpansion(
 export function calculateBottomResize(
   params: BottomResizeParams
 ): BottomResizeResult {
-  const { deltaY, startHeight, popupBottom, viewportHeight, constraints } =
+  const { deltaY, startHeight, cardBottom, viewportHeight, constraints } =
     params;
   const { minHeight, maxHeight, edgeMargin } = constraints;
 
   // Limit: new bottom edge must not go past viewportHeight - edgeMargin
   const maxExpandBottom = calculateMaxBottomExpansion(
-    popupBottom,
+    cardBottom,
     viewportHeight,
     edgeMargin
   );

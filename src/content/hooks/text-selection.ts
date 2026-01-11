@@ -66,10 +66,10 @@ export function getSelectionRect(
 }
 
 /**
- * Determines if the popup should be shown for a new selection
+ * Determines if the card should be shown for a new selection
  * Returns true if the text is different from the last selection
  */
-export function shouldShowPopupForSelection(
+export function shouldShowCardForSelection(
   currentText: string,
   lastText: string | null
 ): boolean {

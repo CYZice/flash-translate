@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  calculateCardPosition,
   calculateHorizontalPosition,
-  calculatePopupPosition,
   calculateVerticalPosition,
-  MIN_POPUP_HEIGHT,
+  MIN_CARD_HEIGHT,
   type RectLike,
-} from "./popup-position";
+} from "./card-position";
 
 // Helper to create a selection rect for testing
 function createRect(overrides: Partial<RectLike> = {}): RectLike {
@@ -21,17 +21,17 @@ function createRect(overrides: Partial<RectLike> = {}): RectLike {
 }
 
 describe("calculateHorizontalPosition", () => {
-  const popupWidth = 320;
+  const cardWidth = 320;
   const viewportWidth = 1024;
   const margin = 8;
 
-  it("centers popup on selection when space is available", () => {
+  it("centers card on selection when space is available", () => {
     const rect = createRect({ left: 400, right: 500, width: 100 });
     // Center of selection: 400 + 100/2 = 450
     // Popup left: 450 - 320/2 = 290
     const x = calculateHorizontalPosition(
       rect,
-      popupWidth,
+      cardWidth,
       viewportWidth,
       margin
     );
@@ -44,7 +44,7 @@ describe("calculateHorizontalPosition", () => {
     // Popup left: 512 - 160 = 352
     const x = calculateHorizontalPosition(
       rect,
-      popupWidth,
+      cardWidth,
       viewportWidth,
       margin
     );
@@ -56,7 +56,7 @@ describe("calculateHorizontalPosition", () => {
     // Would calculate: 0 + 25 - 160 = -135, but clamped to margin
     const x = calculateHorizontalPosition(
       rect,
-      popupWidth,
+      cardWidth,
       viewportWidth,
       margin
     );
@@ -68,33 +68,33 @@ describe("calculateHorizontalPosition", () => {
     // Would overflow right edge, so clamp
     const x = calculateHorizontalPosition(
       rect,
-      popupWidth,
+      cardWidth,
       viewportWidth,
       margin
     );
-    expect(x).toBe(viewportWidth - popupWidth - margin);
+    expect(x).toBe(viewportWidth - cardWidth - margin);
   });
 
-  it("handles narrow viewport where popup fills available space", () => {
-    const narrowViewport = 340; // Only slightly wider than popup
+  it("handles narrow viewport where card fills available space", () => {
+    const narrowViewport = 340; // Only slightly wider than card
     const rect = createRect({ left: 10, right: 60, width: 50 });
     const x = calculateHorizontalPosition(
       rect,
-      popupWidth,
+      cardWidth,
       narrowViewport,
       margin
     );
-    // Should clamp to left margin since popup barely fits
+    // Should clamp to left margin since card barely fits
     expect(x).toBe(margin);
   });
 
-  it("handles selection wider than popup", () => {
+  it("handles selection wider than card", () => {
     const rect = createRect({ left: 100, right: 500, width: 400 });
     // Center: 100 + 200 = 300
     // Popup left: 300 - 160 = 140
     const x = calculateHorizontalPosition(
       rect,
-      popupWidth,
+      cardWidth,
       viewportWidth,
       margin
     );
@@ -103,22 +103,22 @@ describe("calculateHorizontalPosition", () => {
 
   it("handles zero margin", () => {
     const rect = createRect({ left: 0, right: 50, width: 50 });
-    const x = calculateHorizontalPosition(rect, popupWidth, viewportWidth, 0);
+    const x = calculateHorizontalPosition(rect, cardWidth, viewportWidth, 0);
     // Would be: 0 + 25 - 160 = -135, clamped to 0
     expect(x).toBe(0);
   });
 });
 
 describe("calculateVerticalPosition", () => {
-  const popupHeight = 150;
+  const cardHeight = 150;
   const viewportHeight = 768;
   const margin = 8;
 
-  it("places popup below selection when sufficient space", () => {
+  it("places card below selection when sufficient space", () => {
     const rect = createRect({ top: 100, bottom: 120 });
     const result = calculateVerticalPosition(
       rect,
-      popupHeight,
+      cardHeight,
       viewportHeight,
       margin
     );
@@ -131,7 +131,7 @@ describe("calculateVerticalPosition", () => {
     const rect = createRect({ top: 100, bottom: 120 });
     const result = calculateVerticalPosition(
       rect,
-      popupHeight,
+      cardHeight,
       viewportHeight,
       margin
     );
@@ -140,26 +140,26 @@ describe("calculateVerticalPosition", () => {
     expect(result.maxHeight).toBe(632);
   });
 
-  it("places popup above selection when no space below", () => {
+  it("places card above selection when no space below", () => {
     const rect = createRect({ top: 600, bottom: 700 });
     // Space below: 768 - 700 - 8 - 150 = -90 (not enough)
     // Space above: 600 - 8 - 150 = 442 (enough)
     const result = calculateVerticalPosition(
       rect,
-      popupHeight,
+      cardHeight,
       viewportHeight,
       margin
     );
 
     expect(result.placement).toBe("top");
-    expect(result.y).toBe(600 - margin - popupHeight);
+    expect(result.y).toBe(600 - margin - cardHeight);
   });
 
   it("calculates correct maxHeight for top placement", () => {
     const rect = createRect({ top: 600, bottom: 700 });
     const result = calculateVerticalPosition(
       rect,
-      popupHeight,
+      cardHeight,
       viewportHeight,
       margin
     );
@@ -171,10 +171,10 @@ describe("calculateVerticalPosition", () => {
   it("falls back to bottom when neither above nor below has full space", () => {
     const tinyViewport = 200;
     const rect = createRect({ top: 80, bottom: 120 });
-    // Not enough space above or below for full popup
+    // Not enough space above or below for full card
     const result = calculateVerticalPosition(
       rect,
-      popupHeight,
+      cardHeight,
       tinyViewport,
       margin
     );
@@ -186,22 +186,22 @@ describe("calculateVerticalPosition", () => {
   it("ensures minimum height constraint", () => {
     const tinyViewport = 130;
     const rect = createRect({ top: 50, bottom: 70 });
-    // spaceBelow = 130 - 70 - 16 = 44 (less than MIN_POPUP_HEIGHT)
+    // spaceBelow = 130 - 70 - 16 = 44 (less than MIN_CARD_HEIGHT)
     const result = calculateVerticalPosition(
       rect,
-      popupHeight,
+      cardHeight,
       tinyViewport,
       margin
     );
 
-    expect(result.maxHeight).toBe(MIN_POPUP_HEIGHT);
+    expect(result.maxHeight).toBe(MIN_CARD_HEIGHT);
   });
 
   it("handles selection at top of viewport", () => {
     const rect = createRect({ top: 0, bottom: 20 });
     const result = calculateVerticalPosition(
       rect,
-      popupHeight,
+      cardHeight,
       viewportHeight,
       margin
     );
@@ -215,21 +215,21 @@ describe("calculateVerticalPosition", () => {
     const rect = createRect({ top: 700, bottom: 768 });
     const result = calculateVerticalPosition(
       rect,
-      popupHeight,
+      cardHeight,
       viewportHeight,
       margin
     );
 
     // Should place above since below has no space
     expect(result.placement).toBe("top");
-    expect(result.y).toBe(700 - margin - popupHeight);
+    expect(result.y).toBe(700 - margin - cardHeight);
   });
 
   it("handles zero margin", () => {
     const rect = createRect({ top: 100, bottom: 120 });
     const result = calculateVerticalPosition(
       rect,
-      popupHeight,
+      cardHeight,
       viewportHeight,
       0
     );
@@ -240,10 +240,10 @@ describe("calculateVerticalPosition", () => {
   });
 });
 
-describe("calculatePopupPosition", () => {
+describe("calculateCardPosition", () => {
   const defaultOptions = {
-    popupWidth: 320,
-    popupHeight: 150,
+    cardWidth: 320,
+    cardHeight: 150,
     margin: 8,
   };
   const defaultViewport = {
@@ -253,11 +253,7 @@ describe("calculatePopupPosition", () => {
 
   it("returns complete position object with defaults", () => {
     const rect = createRect({ left: 400, right: 500, top: 100, bottom: 120 });
-    const result = calculatePopupPosition(
-      rect,
-      defaultOptions,
-      defaultViewport
-    );
+    const result = calculateCardPosition(rect, defaultOptions, defaultViewport);
 
     expect(result).toHaveProperty("x");
     expect(result).toHaveProperty("y");
@@ -265,28 +261,28 @@ describe("calculatePopupPosition", () => {
     expect(result).toHaveProperty("maxHeight");
   });
 
-  it("respects custom popupWidth option", () => {
+  it("respects custom cardWidth option", () => {
     const rect = createRect({ left: 0, right: 50, width: 50 });
-    const options = { ...defaultOptions, popupWidth: 200 };
-    const result = calculatePopupPosition(rect, options, defaultViewport);
+    const options = { ...defaultOptions, cardWidth: 200 };
+    const result = calculateCardPosition(rect, options, defaultViewport);
 
-    // With smaller popup, more room to position
+    // With smaller card, more room to position
     expect(result.x).toBeGreaterThanOrEqual(defaultOptions.margin);
   });
 
-  it("respects custom popupHeight option", () => {
+  it("respects custom cardHeight option", () => {
     const rect = createRect({ top: 600, bottom: 650 });
-    const options = { ...defaultOptions, popupHeight: 50 };
-    const result = calculatePopupPosition(rect, options, defaultViewport);
+    const options = { ...defaultOptions, cardHeight: 50 };
+    const result = calculateCardPosition(rect, options, defaultViewport);
 
-    // With smaller popup, should fit below
+    // With smaller card, should fit below
     expect(result.placement).toBe("bottom");
   });
 
   it("respects custom margin option", () => {
     const rect = createRect({ left: 0, right: 50 });
     const options = { ...defaultOptions, margin: 20 };
-    const result = calculatePopupPosition(rect, options, defaultViewport);
+    const result = calculateCardPosition(rect, options, defaultViewport);
 
     expect(result.x).toBe(20);
   });
@@ -294,11 +290,11 @@ describe("calculatePopupPosition", () => {
   it("handles small viewport (mobile)", () => {
     const mobileViewport = { width: 375, height: 667 };
     const rect = createRect({ left: 100, right: 200, top: 300, bottom: 320 });
-    const result = calculatePopupPosition(rect, defaultOptions, mobileViewport);
+    const result = calculateCardPosition(rect, defaultOptions, mobileViewport);
 
     // Should clamp to fit within mobile viewport
     expect(result.x).toBeLessThanOrEqual(
-      mobileViewport.width - defaultOptions.popupWidth - defaultOptions.margin
+      mobileViewport.width - defaultOptions.cardWidth - defaultOptions.margin
     );
     expect(result.x).toBeGreaterThanOrEqual(defaultOptions.margin);
   });
@@ -306,11 +302,7 @@ describe("calculatePopupPosition", () => {
   it("handles large viewport (desktop)", () => {
     const desktopViewport = { width: 1920, height: 1080 };
     const rect = createRect({ left: 800, right: 900, top: 400, bottom: 420 });
-    const result = calculatePopupPosition(
-      rect,
-      defaultOptions,
-      desktopViewport
-    );
+    const result = calculateCardPosition(rect, defaultOptions, desktopViewport);
 
     // Should center on selection
     const expectedX = 800 + 50 - 160; // 690
@@ -320,11 +312,7 @@ describe("calculatePopupPosition", () => {
 
   it("handles selection spanning most of viewport width", () => {
     const rect = createRect({ left: 50, right: 974, width: 924 });
-    const result = calculatePopupPosition(
-      rect,
-      defaultOptions,
-      defaultViewport
-    );
+    const result = calculateCardPosition(rect, defaultOptions, defaultViewport);
 
     // Center of selection: 50 + 462 = 512
     // Popup left: 512 - 160 = 352
