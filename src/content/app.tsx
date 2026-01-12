@@ -1,14 +1,9 @@
 import { useLanguageDetectorAvailability } from "@/shared/hooks/use-language-detector-availability";
 import { useSettings } from "@/shared/hooks/use-settings";
-import {
-  getPageLanguage,
-  isLanguageMatch,
-  isUrlExcluded,
-  shouldSkipTranslation,
-} from "@/shared/storage/settings";
+import { getPageLanguage, isUrlExcluded } from "@/shared/storage/settings";
 import { selectContentAppSettings } from "@/shared/storage/settings-selectors";
-import { DEFAULT_CONFIDENCE_THRESHOLD } from "@/shared/utils/language-detector-utils";
 import { TranslationCard } from "./components/translation-card";
+import { evaluateSkipRules } from "./hooks/skip-rules";
 import { useLanguageDetection } from "./hooks/use-language-detection";
 import {
   type SelectionInfo,
@@ -26,40 +21,6 @@ function canDisplayCard(
   isDetectorPending: boolean
 ): selection is SelectionInfo {
   return Boolean(selection) && isVisible && !isExcluded && !isDetectorPending;
-}
-
-function isSkippedByPageLanguage(
-  targetLanguage: string,
-  skipSameLanguage: boolean,
-  autoDetectEnabled: boolean
-): boolean {
-  const pageLanguage = autoDetectEnabled ? null : getPageLanguage();
-  return shouldSkipTranslation(targetLanguage, skipSameLanguage, pageLanguage);
-}
-
-function isSkippedByDetectedLanguage({
-  skipSameLanguage,
-  autoDetectEnabled,
-  isDetecting,
-  detectedLanguage,
-  confidence,
-  targetLanguage,
-}: {
-  skipSameLanguage: boolean;
-  autoDetectEnabled: boolean;
-  isDetecting: boolean;
-  detectedLanguage: string | null;
-  confidence: number;
-  targetLanguage: string;
-}): boolean {
-  const canSkip =
-    skipSameLanguage &&
-    autoDetectEnabled &&
-    !isDetecting &&
-    detectedLanguage !== null &&
-    confidence >= DEFAULT_CONFIDENCE_THRESHOLD;
-
-  return canSkip && isLanguageMatch(detectedLanguage, targetLanguage);
 }
 
 export default function App() {
@@ -113,22 +74,18 @@ export default function App() {
     return null;
   }
 
-  // Skip translation based on HTML lang only when auto-detect is disabled/unavailable
-  const shouldSkipByPageLanguage = isSkippedByPageLanguage(
+  // Evaluate skip rules using unified logic
+  const skipResult = evaluateSkipRules({
     targetLanguage,
-    skipSameLanguage,
-    autoDetectEnabled
-  );
-  const shouldSkipDetectedTranslation = isSkippedByDetectedLanguage({
     skipSameLanguage,
     autoDetectEnabled,
-    isDetecting,
     detectedLanguage,
     confidence,
-    targetLanguage,
+    pageLanguage: autoDetectEnabled ? null : getPageLanguage(),
+    isDetecting,
   });
 
-  if (shouldSkipByPageLanguage || shouldSkipDetectedTranslation) {
+  if (skipResult.shouldSkip) {
     return null;
   }
 
