@@ -52,19 +52,14 @@ function isSkippedByDetectedLanguage({
   confidence: number;
   targetLanguage: string;
 }): boolean {
-  if (!(skipSameLanguage && autoDetectEnabled) || isDetecting) {
-    return false;
-  }
+  const canSkip =
+    skipSameLanguage &&
+    autoDetectEnabled &&
+    !isDetecting &&
+    detectedLanguage !== null &&
+    confidence >= DEFAULT_CONFIDENCE_THRESHOLD;
 
-  if (detectedLanguage === null) {
-    return false;
-  }
-
-  if (confidence < DEFAULT_CONFIDENCE_THRESHOLD) {
-    return false;
-  }
-
-  return isLanguageMatch(detectedLanguage, targetLanguage);
+  return canSkip && isLanguageMatch(detectedLanguage, targetLanguage);
 }
 
 export default function App() {
@@ -108,11 +103,10 @@ export default function App() {
     targetLanguage,
     skipSameLanguage,
     exclusionPatterns,
-    autoDetectLanguage,
   } = settings;
 
   const isExcluded = isUrlExcluded(getCurrentUrl(), exclusionPatterns);
-  const isDetectorPending = autoDetectLanguage && availability === null;
+  const isDetectorPending = autoDetectSetting && availability === null;
 
   // Display gating
   if (!canDisplayCard(selection, isVisible, isExcluded, isDetectorPending)) {
