@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useLanguageDetectorAvailability } from "@/shared/hooks/use-language-detector-availability";
 import { getSettings, saveSettings } from "@/shared/storage/settings";
 import { getMessage } from "@/shared/utils/i18n";
-import {
-  type LanguageDetectionAvailability,
-  languageDetectorManager,
-} from "@/shared/utils/language-detector";
 import { ToggleSwitch } from "./toggle-switch";
 
 const CHROME_FLAGS_URL = "chrome://flags/#language-detection-api";
@@ -13,22 +10,17 @@ const CHROME_FLAGS_URL = "chrome://flags/#language-detection-api";
 export function TranslationBehaviorSettings() {
   const [skipSameLanguage, setSkipSameLanguage] = useState(true);
   const [autoDetectLanguage, setAutoDetectLanguage] = useState(true);
-  const [detectorAvailability, setDetectorAvailability] =
-    useState<LanguageDetectionAvailability>("available");
-  const [isCheckingAvailability, setIsCheckingAvailability] = useState(true);
   const [isCopied, setIsCopied] = useState(false);
+  const {
+    availability: detectorAvailability,
+    isChecking: isCheckingAvailability,
+  } = useLanguageDetectorAvailability();
 
   useEffect(() => {
     const initialize = async () => {
-      setIsCheckingAvailability(true);
-      const [settings, availability] = await Promise.all([
-        getSettings(),
-        languageDetectorManager.checkAvailability(),
-      ]);
+      const settings = await getSettings();
       setSkipSameLanguage(settings.skipSameLanguage);
       setAutoDetectLanguage(settings.autoDetectLanguage);
-      setDetectorAvailability(availability);
-      setIsCheckingAvailability(false);
     };
     initialize();
   }, []);
@@ -54,6 +46,8 @@ export function TranslationBehaviorSettings() {
   const isDetectorUnavailable =
     detectorAvailability === "unavailable" ||
     detectorAvailability === "unsupported";
+  const autoDetectEnabled = autoDetectLanguage && !isDetectorUnavailable;
+  const effectiveSkipSameLanguage = autoDetectEnabled ? true : skipSameLanguage;
 
   return (
     <div className="border-gray-100 border-t px-3 py-2.5">
@@ -75,22 +69,30 @@ export function TranslationBehaviorSettings() {
           />
         </div>
         <ToggleSwitch
-          checked={autoDetectLanguage && !isDetectorUnavailable}
+          checked={autoDetectEnabled}
           disabled={isDetectorUnavailable}
           onChange={handleAutoDetectToggle}
         />
       </div>
       <div className="flex items-center justify-between">
         <div className="flex-1 pr-3">
-          <span className="text-gray-700 text-sm">
+          <span
+            className={cn(
+              "text-sm",
+              autoDetectEnabled ? "text-gray-400" : "text-gray-700"
+            )}
+          >
             {getMessage("popup_behavior_skipSameLanguage")}
           </span>
           <p className="mt-0.5 text-gray-400 text-xs">
-            {getMessage("popup_behavior_skipSameLanguageDesc")}
+            {autoDetectEnabled
+              ? getMessage("popup_behavior_skipSameLanguageAutoDetectNote")
+              : getMessage("popup_behavior_skipSameLanguageDesc")}
           </p>
         </div>
         <ToggleSwitch
-          checked={skipSameLanguage}
+          checked={effectiveSkipSameLanguage}
+          disabled={autoDetectEnabled}
           onChange={handleSkipSameLanguageToggle}
         />
       </div>

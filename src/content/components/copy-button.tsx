@@ -1,6 +1,7 @@
 import { Check, Copy, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/shared/components/button";
 import { getMessage } from "@/shared/utils/i18n";
 import { createPrefixedLogger } from "@/shared/utils/logger";
 
@@ -29,25 +30,23 @@ export function CopyButton({ text }: CopyButtonProps) {
   };
 
   return (
-    <button
+    <Button
       aria-label={
         state === "error"
           ? getMessage("content_copyFailed")
           : getMessage("content_copyTranslation")
       }
       className={cn(
-        "flex min-h-8 min-w-8 cursor-pointer items-center justify-center rounded border-none bg-transparent p-1 text-center backdrop-blur-sm transition-colors hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent",
-        state === "idle" && "text-gray-400 hover:text-blue-600",
-        state === "copied" && "text-green-600",
-        state === "error" && "text-red-500"
+        state === "copied" && "text-green-600 hover:text-green-600",
+        state === "error" && "text-red-500 hover:text-red-500"
       )}
       disabled={!text}
       onClick={handleCopy}
-      type="button"
+      variant="ghost"
     >
       {state === "idle" && <Copy size={14} />}
       {state === "copied" && <Check size={14} />}
       {state === "error" && <X size={14} />}
-    </button>
+    </Button>
   );
 }

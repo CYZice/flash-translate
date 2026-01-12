@@ -1,4 +1,5 @@
 import { Settings, X } from "lucide-react";
+import { Button } from "@/shared/components/button";
 import { saveSettings } from "@/shared/storage/settings";
 import { getMessage } from "@/shared/utils/i18n";
 import { ExcludeSiteButton } from "./exclude-site-button";
@@ -43,42 +44,32 @@ export function TranslationCardHeader({
     await saveSettings({ targetLanguage: lang });
   };
 
-  const onSwap = async () => {
-    await saveSettings({
-      sourceLanguage: targetLanguage,
-      targetLanguage: sourceLanguage,
-    });
-  };
-
   return (
-    <div className="relative flex min-h-10 items-stretch justify-between rounded-t-xl border-b border-none px-3">
+    <div className="sticky top-0 z-10 flex min-h-8 items-center justify-between rounded-t-xl border-b border-none px-3">
       <LanguageSelector
         isAutoDetected={autoDetectEnabled && detectedLanguage !== null}
         isDetecting={isDetecting}
         onSourceChange={onSourceChange}
-        onSwap={onSwap}
         onTargetChange={onTargetChange}
         sourceLanguage={sourceLanguage}
         targetLanguage={targetLanguage}
       />
-      <div className="flex items-stretch">
+      <div className="flex items-stretch gap-1">
         <ExcludeSiteButton onExcluded={onExcludeSite} />
-        <button
+        <Button
           aria-label={getMessage("content_openSettings")}
-          className="flex min-w-10 cursor-pointer items-center justify-center rounded border-none bg-transparent p-1 text-center text-gray-400 transition-colors hover:bg-blue-50 hover:text-blue-600"
           onClick={onOpenSettings}
-          type="button"
+          variant="default"
         >
           <Settings size={14} />
-        </button>
-        <button
+        </Button>
+        <Button
           aria-label={getMessage("content_close")}
-          className="flex min-w-10 cursor-pointer items-center justify-center rounded border-none bg-transparent p-1 text-center text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
           onClick={onClose}
-          type="button"
+          variant="muted"
         >
           <X size={16} />
-        </button>
+        </Button>
       </div>
     </div>
   );
