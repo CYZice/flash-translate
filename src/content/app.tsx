@@ -2,15 +2,69 @@ import { useLanguageDetectorAvailability } from "@/shared/hooks/use-language-det
 import { useSettings } from "@/shared/hooks/use-settings";
 import {
   getPageLanguage,
+  isLanguageMatch,
   isUrlExcluded,
   shouldSkipTranslation,
 } from "@/shared/storage/settings";
 import { selectContentAppSettings } from "@/shared/storage/settings-selectors";
+import { DEFAULT_CONFIDENCE_THRESHOLD } from "@/shared/utils/language-detector-utils";
 import { TranslationCard } from "./components/translation-card";
-import { useTextSelection } from "./hooks/use-text-selection";
+import { useLanguageDetection } from "./hooks/use-language-detection";
+import {
+  type SelectionInfo,
+  useTextSelection,
+} from "./hooks/use-text-selection";
 
 function getCurrentUrl(): string {
   return window.location.origin + window.location.pathname;
+}
+
+function canDisplayCard(
+  selection: SelectionInfo | null,
+  isVisible: boolean,
+  isExcluded: boolean,
+  isDetectorPending: boolean
+): selection is SelectionInfo {
+  return Boolean(selection) && isVisible && !isExcluded && !isDetectorPending;
+}
+
+function isSkippedByPageLanguage(
+  targetLanguage: string,
+  skipSameLanguage: boolean,
+  autoDetectEnabled: boolean
+): boolean {
+  const pageLanguage = autoDetectEnabled ? null : getPageLanguage();
+  return shouldSkipTranslation(targetLanguage, skipSameLanguage, pageLanguage);
+}
+
+function isSkippedByDetectedLanguage({
+  skipSameLanguage,
+  autoDetectEnabled,
+  isDetecting,
+  detectedLanguage,
+  confidence,
+  targetLanguage,
+}: {
+  skipSameLanguage: boolean;
+  autoDetectEnabled: boolean;
+  isDetecting: boolean;
+  detectedLanguage: string | null;
+  confidence: number;
+  targetLanguage: string;
+}): boolean {
+  if (!(skipSameLanguage && autoDetectEnabled) || isDetecting) {
+    return false;
+  }
+
+  if (detectedLanguage === null) {
+    return false;
+  }
+
+  if (confidence < DEFAULT_CONFIDENCE_THRESHOLD) {
+    return false;
+  }
+
+  return isLanguageMatch(detectedLanguage, targetLanguage);
 }
 
 export default function App() {
@@ -21,6 +75,28 @@ export default function App() {
   const { availability } = useLanguageDetectorAvailability({
     enabled: autoDetectSetting,
   });
+  const isDetectorUnavailable =
+    availability === "unavailable" || availability === "unsupported";
+  const autoDetectEnabled = autoDetectSetting && !isDetectorUnavailable;
+
+  const detectionText = selection?.text ?? "";
+  const detectionEnabled =
+    Boolean(selection?.text) &&
+    isVisible &&
+    autoDetectEnabled &&
+    availability !== null;
+
+  const {
+    effectiveSourceLanguage,
+    detectedLanguage,
+    confidence,
+    isDetecting,
+    setOverriddenLanguage,
+  } = useLanguageDetection({
+    text: detectionText,
+    enabled: detectionEnabled,
+    fallbackLanguage: settings?.sourceLanguage ?? "en",
+  });
 
   // Wait for settings to load
   if (isLoading || !settings) {
@@ -28,43 +104,52 @@ export default function App() {
   }
 
   const {
-    sourceLanguage,
+    sourceLanguage: fallbackSourceLanguage,
     targetLanguage,
     skipSameLanguage,
     exclusionPatterns,
     autoDetectLanguage,
   } = settings;
 
-  // Check if current URL is excluded
-  if (isUrlExcluded(getCurrentUrl(), exclusionPatterns)) {
+  const isExcluded = isUrlExcluded(getCurrentUrl(), exclusionPatterns);
+  const isDetectorPending = autoDetectLanguage && availability === null;
+
+  // Display gating
+  if (!canDisplayCard(selection, isVisible, isExcluded, isDetectorPending)) {
     return null;
   }
-
-  if (!(selection && isVisible)) {
-    return null;
-  }
-
-  if (autoDetectLanguage && availability === null) {
-    return null;
-  }
-
-  const isDetectorUnavailable =
-    availability === "unavailable" || availability === "unsupported";
-  const autoDetectEnabled = autoDetectLanguage && !isDetectorUnavailable;
 
   // Skip translation based on HTML lang only when auto-detect is disabled/unavailable
-  const pageLanguage = autoDetectEnabled ? null : getPageLanguage();
-  if (shouldSkipTranslation(targetLanguage, skipSameLanguage, pageLanguage)) {
+  const shouldSkipByPageLanguage = isSkippedByPageLanguage(
+    targetLanguage,
+    skipSameLanguage,
+    autoDetectEnabled
+  );
+  const shouldSkipDetectedTranslation = isSkippedByDetectedLanguage({
+    skipSameLanguage,
+    autoDetectEnabled,
+    isDetecting,
+    detectedLanguage,
+    confidence,
+    targetLanguage,
+  });
+
+  if (shouldSkipByPageLanguage || shouldSkipDetectedTranslation) {
     return null;
   }
 
   return (
     <TranslationCard
       autoDetectEnabled={autoDetectEnabled}
+      detectedLanguage={detectedLanguage}
+      isDetecting={isDetecting}
       onClose={dismissCard}
       onExcludeSite={clearSelection}
+      onSourceLanguageOverride={setOverriddenLanguage}
       selection={selection}
-      sourceLanguage={sourceLanguage}
+      sourceLanguage={
+        autoDetectEnabled ? effectiveSourceLanguage : fallbackSourceLanguage
+      }
       targetLanguage={targetLanguage}
     />
   );
