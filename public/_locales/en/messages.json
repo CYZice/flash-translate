@@ -143,9 +143,6 @@
   "content_close": {
     "message": "Close"
   },
-  "content_swapLanguages": {
-    "message": "Swap languages"
-  },
   "content_copyFailed": {
     "message": "Copy failed"
   },

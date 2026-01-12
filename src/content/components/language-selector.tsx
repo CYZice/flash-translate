@@ -7,7 +7,6 @@ interface LanguageSelectorProps {
   targetLanguage: string;
   onSourceChange: (lang: string) => void;
   onTargetChange: (lang: string) => void;
-  onSwap: () => void;
   isDetecting?: boolean;
   isAutoDetected?: boolean;
 }
@@ -17,7 +16,6 @@ export function LanguageSelector({
   targetLanguage,
   onSourceChange,
   onTargetChange,
-  onSwap,
   isDetecting = false,
   isAutoDetected = false,
 }: LanguageSelectorProps) {
@@ -45,14 +43,11 @@ export function LanguageSelector({
           ))}
         </select>
       </div>
-      <button
-        aria-label={getMessage("content_swapLanguages")}
-        className="flex cursor-pointer items-center justify-center rounded border-none bg-white/70 p-1 text-center text-blue-400 backdrop-blur-sm transition-colors hover:bg-blue-50 hover:text-blue-600"
-        onClick={onSwap}
-        type="button"
-      >
+
+      <div className="flex items-center justify-center border-none stroke-blue-400 text-center text-blue-400">
         <ChevronRight size={12} />
-      </button>
+      </div>
+
       <select
         aria-label={getMessage("content_targetLanguage")}
         className="flex min-w-10 cursor-pointer appearance-none items-center justify-center rounded border-none bg-white/70 px-1 text-center font-medium text-blue-700 text-xs backdrop-blur-sm transition-colors hover:bg-blue-50 hover:text-blue-900 focus:outline-none"

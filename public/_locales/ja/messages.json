@@ -143,9 +143,6 @@
   "content_close": {
     "message": "閉じる"
   },
-  "content_swapLanguages": {
-    "message": "言語を入れ替え"
-  },
   "content_copyFailed": {
     "message": "コピー失敗"
   },

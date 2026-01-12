@@ -43,25 +43,17 @@ export function TranslationCardHeader({
     await saveSettings({ targetLanguage: lang });
   };
 
-  const onSwap = async () => {
-    await saveSettings({
-      sourceLanguage: targetLanguage,
-      targetLanguage: sourceLanguage,
-    });
-  };
-
   return (
     <div className="sticky top-0 z-10 flex min-h-10 items-stretch justify-between rounded-t-xl border-b border-none px-3">
       <LanguageSelector
         isAutoDetected={autoDetectEnabled && detectedLanguage !== null}
         isDetecting={isDetecting}
         onSourceChange={onSourceChange}
-        onSwap={onSwap}
         onTargetChange={onTargetChange}
         sourceLanguage={sourceLanguage}
         targetLanguage={targetLanguage}
       />
-      <div className="flex items-stretch">
+      <div className="flex items-stretch gap-1">
         <ExcludeSiteButton onExcluded={onExcludeSite} />
         <button
           aria-label={getMessage("content_openSettings")}
