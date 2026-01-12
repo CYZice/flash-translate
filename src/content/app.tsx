@@ -1,91 +1,23 @@
-import { useLanguageDetectorAvailability } from "@/shared/hooks/use-language-detector-availability";
-import { useSettings } from "@/shared/hooks/use-settings";
-import { getPageLanguage, isUrlExcluded } from "@/shared/storage/settings";
-import { selectContentAppSettings } from "@/shared/storage/settings-selectors";
 import { TranslationCard } from "./components/translation-card";
-import { evaluateSkipRules } from "./hooks/skip-rules";
-import { useLanguageDetection } from "./hooks/use-language-detection";
-import {
-  type SelectionInfo,
-  useTextSelection,
-} from "./hooks/use-text-selection";
-
-function getCurrentUrl(): string {
-  return window.location.origin + window.location.pathname;
-}
-
-function canDisplayCard(
-  selection: SelectionInfo | null,
-  isVisible: boolean,
-  isExcluded: boolean,
-  isDetectorPending: boolean
-): selection is SelectionInfo {
-  return Boolean(selection) && isVisible && !isExcluded && !isDetectorPending;
-}
+import { useTranslationFlow } from "./hooks/use-translation-flow";
 
 export default function App() {
-  const { selection, isVisible, dismissCard, clearSelection } =
-    useTextSelection();
-  const [settings, isLoading] = useSettings(selectContentAppSettings);
-  const autoDetectSetting = settings?.autoDetectLanguage ?? false;
-  const { availability } = useLanguageDetectorAvailability({
-    enabled: autoDetectSetting,
-  });
-  const isDetectorUnavailable =
-    availability === "unavailable" || availability === "unsupported";
-  const autoDetectEnabled = autoDetectSetting && !isDetectorUnavailable;
-
-  const detectionText = selection?.text ?? "";
-  const detectionEnabled =
-    Boolean(selection?.text) &&
-    isVisible &&
-    autoDetectEnabled &&
-    availability !== null;
-
   const {
-    effectiveSourceLanguage,
-    detectedLanguage,
-    confidence,
-    isDetecting,
-    setOverriddenLanguage,
-  } = useLanguageDetection({
-    text: detectionText,
-    enabled: detectionEnabled,
-    fallbackLanguage: settings?.sourceLanguage ?? "en",
-  });
-
-  // Wait for settings to load
-  if (isLoading || !settings) {
-    return null;
-  }
-
-  const {
-    sourceLanguage: fallbackSourceLanguage,
+    selection,
+    sourceLanguage,
     targetLanguage,
-    skipSameLanguage,
-    exclusionPatterns,
-  } = settings;
-
-  const isExcluded = isUrlExcluded(getCurrentUrl(), exclusionPatterns);
-  const isDetectorPending = autoDetectSetting && availability === null;
-
-  // Display gating
-  if (!canDisplayCard(selection, isVisible, isExcluded, isDetectorPending)) {
-    return null;
-  }
-
-  // Evaluate skip rules using unified logic
-  const skipResult = evaluateSkipRules({
-    targetLanguage,
-    skipSameLanguage,
     autoDetectEnabled,
     detectedLanguage,
-    confidence,
-    pageLanguage: autoDetectEnabled ? null : getPageLanguage(),
     isDetecting,
-  });
+    canDisplay,
+    skipResult,
+    dismissCard,
+    clearSelection,
+    setOverriddenLanguage,
+  } = useTranslationFlow();
 
-  if (skipResult.shouldSkip) {
+  // Early return if cannot display
+  if (!canDisplay || skipResult.shouldSkip || !selection) {
     return null;
   }
 
@@ -98,9 +30,7 @@ export default function App() {
       onExcludeSite={clearSelection}
       onSourceLanguageOverride={setOverriddenLanguage}
       selection={selection}
-      sourceLanguage={
-        autoDetectEnabled ? effectiveSourceLanguage : fallbackSourceLanguage
-      }
+      sourceLanguage={sourceLanguage}
       targetLanguage={targetLanguage}
     />
   );
