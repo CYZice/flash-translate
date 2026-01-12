@@ -23,7 +23,7 @@ export function LanguageSelector({
 }: LanguageSelectorProps) {
   return (
     <div className="flex items-stretch gap-1">
-      <div className="relative flex items-center">
+      <div className="relative flex items-stretch">
         {isDetecting && (
           <Loader2
             className="absolute left-0.5 animate-spin text-blue-400"
@@ -32,7 +32,7 @@ export function LanguageSelector({
         )}
         <select
           aria-label={getMessage("content_sourceLanguage")}
-          className="flex min-w-10 cursor-pointer appearance-none items-center justify-center rounded border-none bg-transparent px-1 text-center font-medium text-blue-700 text-xs transition-colors hover:bg-blue-50 hover:text-blue-900 focus:outline-none disabled:cursor-wait disabled:opacity-50"
+          className="flex min-w-10 cursor-pointer appearance-none items-center justify-center rounded border-none bg-white/70 px-1 text-center font-medium text-blue-700 text-xs backdrop-blur-sm transition-colors hover:bg-blue-50 hover:text-blue-900 focus:outline-none disabled:cursor-wait disabled:opacity-50"
           disabled={isDetecting}
           onChange={(e) => onSourceChange(e.target.value)}
           value={sourceLanguage}
@@ -47,7 +47,7 @@ export function LanguageSelector({
       </div>
       <button
         aria-label={getMessage("content_swapLanguages")}
-        className="flex cursor-pointer items-center justify-center rounded border-none bg-transparent p-1 text-center text-blue-400 transition-colors hover:bg-blue-50 hover:text-blue-600"
+        className="flex cursor-pointer items-center justify-center rounded border-none bg-white/70 p-1 text-center text-blue-400 backdrop-blur-sm transition-colors hover:bg-blue-50 hover:text-blue-600"
         onClick={onSwap}
         type="button"
       >
@@ -55,7 +55,7 @@ export function LanguageSelector({
       </button>
       <select
         aria-label={getMessage("content_targetLanguage")}
-        className="flex min-w-10 cursor-pointer appearance-none items-center justify-center rounded border-none bg-transparent px-1 text-center font-medium text-blue-700 text-xs transition-colors hover:bg-blue-50 hover:text-blue-900 focus:outline-none"
+        className="flex min-w-10 cursor-pointer appearance-none items-center justify-center rounded border-none bg-white/70 px-1 text-center font-medium text-blue-700 text-xs backdrop-blur-sm transition-colors hover:bg-blue-50 hover:text-blue-900 focus:outline-none"
         onChange={(e) => onTargetChange(e.target.value)}
         value={targetLanguage}
       >

@@ -81,26 +81,27 @@ export function TranslationCard({
           onMouseDown={layout.handleRightMouseDown}
           side="right"
         />
-        <TranslationCardHeader
-          autoDetectEnabled={autoDetectEnabled}
-          detectedLanguage={detectedLanguage}
-          isDetecting={isDetecting}
-          onClose={onClose}
-          onExcludeSite={onExcludeSite}
-          onSourceLanguageOverride={onSourceLanguageOverride}
-          sourceLanguage={sourceLanguage}
-          targetLanguage={targetLanguage}
-        />
-
-        <div className="min-h-10 flex-1 overflow-y-auto px-4 py-1">
-          <TranslationContent
-            availability={availability}
-            error={error}
-            isLoading={isLoading}
-            result={result}
+        <div className="min-h-10 flex-1 overflow-y-auto">
+          <TranslationCardHeader
+            autoDetectEnabled={autoDetectEnabled}
+            detectedLanguage={detectedLanguage}
+            isDetecting={isDetecting}
+            onClose={onClose}
+            onExcludeSite={onExcludeSite}
+            onSourceLanguageOverride={onSourceLanguageOverride}
             sourceLanguage={sourceLanguage}
             targetLanguage={targetLanguage}
           />
+          <div className="px-4 py-1">
+            <TranslationContent
+              availability={availability}
+              error={error}
+              isLoading={isLoading}
+              result={result}
+              sourceLanguage={sourceLanguage}
+              targetLanguage={targetLanguage}
+            />
+          </div>
         </div>
 
         <TranslationCardFooter result={result} />

@@ -51,7 +51,7 @@ export function TranslationCardHeader({
   };
 
   return (
-    <div className="relative flex min-h-10 items-stretch justify-between rounded-t-xl border-b border-none px-3">
+    <div className="sticky top-0 z-10 flex min-h-10 items-stretch justify-between rounded-t-xl border-b border-none px-3">
       <LanguageSelector
         isAutoDetected={autoDetectEnabled && detectedLanguage !== null}
         isDetecting={isDetecting}
@@ -65,7 +65,7 @@ export function TranslationCardHeader({
         <ExcludeSiteButton onExcluded={onExcludeSite} />
         <button
           aria-label={getMessage("content_openSettings")}
-          className="flex min-w-10 cursor-pointer items-center justify-center rounded border-none bg-transparent p-1 text-center text-gray-400 transition-colors hover:bg-blue-50 hover:text-blue-600"
+          className="flex min-w-10 cursor-pointer items-center justify-center rounded border-none bg-white/70 p-1 text-center text-gray-400 backdrop-blur-sm transition-colors hover:bg-blue-50 hover:text-blue-600"
           onClick={onOpenSettings}
           type="button"
         >
@@ -73,7 +73,7 @@ export function TranslationCardHeader({
         </button>
         <button
           aria-label={getMessage("content_close")}
-          className="flex min-w-10 cursor-pointer items-center justify-center rounded border-none bg-transparent p-1 text-center text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+          className="flex min-w-10 cursor-pointer items-center justify-center rounded border-none bg-white/70 p-1 text-center text-gray-400 backdrop-blur-sm transition-colors hover:bg-gray-100 hover:text-gray-600"
           onClick={onClose}
           type="button"
         >
