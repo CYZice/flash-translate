@@ -38,7 +38,7 @@
     "message": "ページの言語がターゲットと一致する場合、ポップアップを表示しない"
   },
   "popup_behavior_skipSameLanguageAutoDetectNote": {
-    "message": "自動検出が有効な時は、検出された言語で自動判定されます"
+    "message": "自動検出が有効な時は、同一言語と判定されると常にスキップされます"
   },
 
   "popup_exclusion_title": {

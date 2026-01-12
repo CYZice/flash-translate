@@ -25,8 +25,7 @@ interface TranslationCardProps {
   selection: SelectionInfo;
   sourceLanguage: string;
   targetLanguage: string;
-  autoDetectLanguage: boolean;
-  skipSameLanguage: boolean;
+  autoDetectEnabled: boolean;
   onClose: () => void;
   onExcludeSite: () => void;
 }
@@ -35,8 +34,7 @@ export function TranslationCard({
   selection,
   sourceLanguage,
   targetLanguage,
-  autoDetectLanguage,
-  skipSameLanguage,
+  autoDetectEnabled,
   onClose,
   onExcludeSite,
 }: TranslationCardProps) {
@@ -49,7 +47,7 @@ export function TranslationCard({
     setOverriddenLanguage,
   } = useLanguageDetection({
     text: selection.text,
-    enabled: autoDetectLanguage,
+    enabled: autoDetectEnabled,
     fallbackLanguage: sourceLanguage,
   });
 
@@ -60,8 +58,7 @@ export function TranslationCard({
     });
 
   const shouldSkipDetectedTranslation =
-    skipSameLanguage &&
-    autoDetectLanguage &&
+    autoDetectEnabled &&
     detectedLanguage !== null &&
     confidence >= DEFAULT_CONFIDENCE_THRESHOLD &&
     isLanguageMatch(detectedLanguage, targetLanguage);
@@ -204,7 +201,7 @@ export function TranslationCard({
           side="right"
         />
         <TranslationCardHeader
-          autoDetectEnabled={autoDetectLanguage}
+          autoDetectEnabled={autoDetectEnabled}
           detectedLanguage={detectedLanguage}
           isDetecting={isDetecting}
           onClose={onClose}

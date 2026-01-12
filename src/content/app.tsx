@@ -1,3 +1,4 @@
+import { useLanguageDetectorAvailability } from "@/shared/hooks/use-language-detector-availability";
 import { useSettings } from "@/shared/hooks/use-settings";
 import {
   getPageLanguage,
@@ -16,6 +17,10 @@ export default function App() {
   const { selection, isVisible, dismissCard, clearSelection } =
     useTextSelection();
   const [settings, isLoading] = useSettings(selectContentAppSettings);
+  const autoDetectSetting = settings?.autoDetectLanguage ?? false;
+  const { availability } = useLanguageDetectorAvailability({
+    enabled: autoDetectSetting,
+  });
 
   // Wait for settings to load
   if (isLoading || !settings) {
@@ -39,19 +44,26 @@ export default function App() {
     return null;
   }
 
-  // Skip translation based on HTML lang only when auto-detect is disabled
-  const pageLanguage = autoDetectLanguage ? null : getPageLanguage();
+  if (autoDetectLanguage && availability === null) {
+    return null;
+  }
+
+  const isDetectorUnavailable =
+    availability === "unavailable" || availability === "unsupported";
+  const autoDetectEnabled = autoDetectLanguage && !isDetectorUnavailable;
+
+  // Skip translation based on HTML lang only when auto-detect is disabled/unavailable
+  const pageLanguage = autoDetectEnabled ? null : getPageLanguage();
   if (shouldSkipTranslation(targetLanguage, skipSameLanguage, pageLanguage)) {
     return null;
   }
 
   return (
     <TranslationCard
-      autoDetectLanguage={autoDetectLanguage}
+      autoDetectEnabled={autoDetectEnabled}
       onClose={dismissCard}
       onExcludeSite={clearSelection}
       selection={selection}
-      skipSameLanguage={skipSameLanguage}
       sourceLanguage={sourceLanguage}
       targetLanguage={targetLanguage}
     />
