@@ -30,7 +30,7 @@ export function LanguageSelector({
         )}
         <select
           aria-label={getMessage("content_sourceLanguage")}
-          className="flex min-w-10 cursor-pointer appearance-none items-center justify-center rounded border-none bg-white/70 px-1 text-center font-medium text-blue-700 text-xs backdrop-blur-sm transition-colors hover:bg-blue-50 hover:text-blue-900 focus:outline-none disabled:cursor-wait disabled:opacity-50"
+          className="flex min-h-8 min-w-10 cursor-pointer appearance-none items-center justify-center rounded border-none bg-white/70 px-2 text-center font-medium text-blue-700 text-xs backdrop-blur-sm transition-colors hover:bg-blue-50 hover:text-blue-900 focus:outline-none disabled:cursor-wait disabled:opacity-50"
           disabled={isDetecting}
           onChange={(e) => onSourceChange(e.target.value)}
           value={sourceLanguage}
@@ -50,7 +50,7 @@ export function LanguageSelector({
 
       <select
         aria-label={getMessage("content_targetLanguage")}
-        className="flex min-w-10 cursor-pointer appearance-none items-center justify-center rounded border-none bg-white/70 px-1 text-center font-medium text-blue-700 text-xs backdrop-blur-sm transition-colors hover:bg-blue-50 hover:text-blue-900 focus:outline-none"
+        className="flex min-h-8 min-w-10 cursor-pointer appearance-none items-center justify-center rounded border-none bg-white/70 px-2 text-center font-medium text-blue-700 text-xs backdrop-blur-sm transition-colors hover:bg-blue-50 hover:text-blue-900 focus:outline-none"
         onChange={(e) => onTargetChange(e.target.value)}
         value={targetLanguage}
       >

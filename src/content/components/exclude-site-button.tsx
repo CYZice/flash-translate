@@ -1,5 +1,6 @@
 import { Ban, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/shared/components/button";
 import {
   generatePatternId,
   getSettings,
@@ -64,15 +65,14 @@ export function ExcludeSiteButton({ onExcluded }: ExcludeSiteButtonProps) {
 
   return (
     <>
-      <button
+      <Button
         aria-label={getMessage("content_excludeSite")}
-        className="flex min-w-10 cursor-pointer items-center justify-center rounded border-none bg-white/70 p-1 text-gray-400 backdrop-blur-sm transition-colors hover:bg-red-200 hover:text-red-500"
         onClick={handleClick}
         title={getMessage("content_excludeSite")}
-        type="button"
+        variant="danger"
       >
         <Ban size={14} />
-      </button>
+      </Button>
       {isConfirming && (
         <div
           aria-labelledby={dialogTitleId}
@@ -87,22 +87,22 @@ export function ExcludeSiteButton({ onExcluded }: ExcludeSiteButtonProps) {
             {getMessage("content_disableOnSite")}
           </span>
           <div className="flex items-stretch gap-2 py-0">
-            <button
-              className="flex cursor-pointer items-center rounded border-none bg-red-500 px-2 text-white text-xs transition-colors hover:bg-red-600"
+            <Button
+              className="min-w-auto px-2 text-xs"
               onClick={handleConfirm}
               ref={confirmButtonRef}
-              type="button"
+              variant="destructive"
             >
               {getMessage("content_disable")}
-            </button>
-            <button
+            </Button>
+            <Button
               aria-label={getMessage("content_cancel")}
-              className="flex cursor-pointer items-center rounded border-none bg-transparent p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+              className="bg-transparent"
               onClick={handleCancel}
-              type="button"
+              variant="muted"
             >
               <X size={16} />
-            </button>
+            </Button>
           </div>
         </div>
       )}
