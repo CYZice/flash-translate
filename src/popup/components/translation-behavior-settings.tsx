@@ -82,15 +82,23 @@ export function TranslationBehaviorSettings() {
       </div>
       <div className="flex items-center justify-between">
         <div className="flex-1 pr-3">
-          <span className="text-gray-700 text-sm">
+          <span
+            className={cn(
+              "text-sm",
+              autoDetectLanguage ? "text-gray-400" : "text-gray-700"
+            )}
+          >
             {getMessage("popup_behavior_skipSameLanguage")}
           </span>
           <p className="mt-0.5 text-gray-400 text-xs">
-            {getMessage("popup_behavior_skipSameLanguageDesc")}
+            {autoDetectLanguage
+              ? getMessage("popup_behavior_skipSameLanguageAutoDetectNote")
+              : getMessage("popup_behavior_skipSameLanguageDesc")}
           </p>
         </div>
         <ToggleSwitch
           checked={skipSameLanguage}
+          disabled={autoDetectLanguage}
           onChange={handleSkipSameLanguageToggle}
         />
       </div>

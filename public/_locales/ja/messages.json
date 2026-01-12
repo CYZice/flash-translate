@@ -37,6 +37,9 @@
   "popup_behavior_skipSameLanguageDesc": {
     "message": "ページの言語がターゲットと一致する場合、ポップアップを表示しない"
   },
+  "popup_behavior_skipSameLanguageAutoDetectNote": {
+    "message": "自動検出が有効な時は、検出された言語で自動判定されます"
+  },
 
   "popup_exclusion_title": {
     "message": "除外サイト"

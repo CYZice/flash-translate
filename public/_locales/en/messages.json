@@ -37,6 +37,9 @@
   "popup_behavior_skipSameLanguageDesc": {
     "message": "Don't show popup when page language matches target"
   },
+  "popup_behavior_skipSameLanguageAutoDetectNote": {
+    "message": "When auto-detect is enabled, this is determined automatically based on detected language"
+  },
 
   "popup_exclusion_title": {
     "message": "Excluded Sites"
