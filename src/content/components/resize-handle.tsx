@@ -44,7 +44,7 @@ export function ResizeHandle({
       aria-valuemin={0}
       aria-valuenow={Math.round(sizePercent)}
       className={cn(
-        "fixed z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
+        "fixed z-10 bg-white/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
         side === "left" && "left-0 h-full w-2 cursor-ew-resize",
         side === "right" && "right-0 h-full w-2 cursor-ew-resize",
         side === "bottom" && "bottom-0 h-2 w-full cursor-ns-resize"

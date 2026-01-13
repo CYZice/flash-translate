@@ -77,7 +77,7 @@ export function ExcludeSiteButton({ onExcluded }: ExcludeSiteButtonProps) {
         <div
           aria-labelledby={dialogTitleId}
           aria-modal="true"
-          className="absolute inset-0 z-50 flex animate-dialog-slide-in items-stretch justify-between bg-white px-3"
+          className="absolute inset-0 z-50 flex animate-dialog-slide-in items-stretch justify-between bg-white/90 px-3"
           role="dialog"
         >
           <span
