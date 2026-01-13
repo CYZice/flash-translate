@@ -20,7 +20,7 @@ export function ExcludeSiteButton({ onExcluded }: ExcludeSiteButtonProps) {
   const handleClick = () => {
     setIsConfirming(true);
     // Auto-reset after 3 seconds
-    setTimeout(() => setIsConfirming(false), 3000);
+    setTimeout(() => setIsConfirming(false), 8000);
   };
 
   // Focus confirm button when dialog opens and handle Escape key
@@ -77,7 +77,7 @@ export function ExcludeSiteButton({ onExcluded }: ExcludeSiteButtonProps) {
         <div
           aria-labelledby={dialogTitleId}
           aria-modal="true"
-          className="absolute inset-0 flex items-stretch justify-between rounded-xl border border-red-200 border-solid bg-white px-3 py-2"
+          className="absolute inset-0 z-50 flex items-stretch justify-between bg-white px-3"
           role="dialog"
         >
           <span
