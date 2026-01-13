@@ -4,10 +4,10 @@
 
 A Chrome extension for instant translation using the browser's built-in Translator API.
 
-
 ## Features
 
 - **Instant translation on text selection**: Select text to view translations immediately
+- **Auto-detect source language**: Automatically detects the language of selected text using Chrome's Language Detection API
 - **Handles long text**: Translate large paragraphs without length limits
 - **Unlimited translations**: Translate long passages as often as you like
 - **Site exclusion**: Disable translation on specific websites
