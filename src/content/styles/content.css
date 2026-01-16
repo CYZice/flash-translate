@@ -48,11 +48,7 @@
 }
 
 .language-select::picker-icon {
-  transition: rotate 150ms ease-out;
-}
-
-.language-select:open::picker-icon {
-  rotate: 180deg;
+  display: none;
 }
 
 .language-select::picker(select) {
@@ -87,6 +83,7 @@
 .language-select option {
   padding: 6px 10px;
   border-radius: 4px;
+  color: #374151;
   transition: background 150ms;
 }
 
