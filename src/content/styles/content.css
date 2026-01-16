@@ -40,3 +40,61 @@
 .animate-dialog-slide-in {
   animation: dialog-slide-in 150ms ease-out;
 }
+
+/* Customizable Select (Chrome 135+) */
+.language-select,
+.language-select::picker(select) {
+  appearance: base-select;
+}
+
+.language-select::picker-icon {
+  transition: rotate 150ms ease-out;
+}
+
+.language-select:open::picker-icon {
+  rotate: 180deg;
+}
+
+.language-select::picker(select) {
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  padding: 4px;
+
+  /* Animation */
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity 150ms ease-out,
+    transform 150ms ease-out,
+    display 150ms ease-out allow-discrete,
+    overlay 150ms ease-out allow-discrete;
+}
+
+.language-select::picker(select):popover-open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@starting-style {
+  .language-select::picker(select):popover-open {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.language-select option {
+  padding: 6px 10px;
+  border-radius: 4px;
+  transition: background 150ms;
+}
+
+.language-select option:hover {
+  background: #eff6ff;
+}
+
+.language-select option:checked {
+  font-weight: 600;
+  color: #1d4ed8;
+}
