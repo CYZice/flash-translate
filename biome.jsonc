@@ -3,5 +3,14 @@
   "extends": ["ultracite/core", "ultracite/react"],
   "javascript": {
     "globals": ["chrome", "Translator", "LanguageDetector"]
+  },
+  "linter": {
+    "rules": {
+      "correctness": {
+        // Chrome 135+ の Customizable Select で使用する新しい疑似要素
+        // ::picker(select), ::picker-icon
+        "noUnknownPseudoElement": "off"
+      }
+    }
   }
 }
