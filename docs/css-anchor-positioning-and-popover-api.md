@@ -287,39 +287,33 @@ Anchor Positioning 非対応ブラウザ向けに `@supports` を使用できま
 }
 ```
 
-## Flash Translate への適用検討
+## Flash Translate への適用
 
-### 現在の実装
+### 適用済みの箇所
 
-Flash Translate では、テキスト選択位置に翻訳カードを表示するため、以下のJavaScript実装を使用しています：
+#### 1. Popup: 言語ダウンロードドロップダウン
 
-- `calculateCardPosition()`: 選択テキストの `DOMRect` を基に位置計算
-- ビューポート境界チェック
-- 上下配置の自動切替（スペース不足時）
-- `useResizable` / `useDraggable`: リサイズ・ドラッグ対応
+Popover API + CSS Anchor Positioning を適用。
 
-```typescript
-// 現在の実装例（card-position.ts）
-export function calculateCardPosition(
-  selectionRect: RectLike,
-  options: CardPositionOptions,
-  viewport: ViewportSize
-): CardPosition {
-  const x = calculateHorizontalPosition(/* ... */);
-  const { y, placement, maxHeight } = calculateVerticalPosition(/* ... */);
-  return { x, y, placement, maxHeight };
-}
-```
+- `useState` による開閉状態管理が不要に
+- `useEffect` による Escape キー監視が不要に
+- 背景クリックでの閉鎖（Light Dismiss）が自動化
+- JavaScript による位置計算が不要に（`dropdown-position.ts` を削除）
 
-### 適用可能な箇所
+#### 2. Content: 言語セレクター
 
-1. **言語選択ドロップダウン**: ボタンに対して固定位置のドロップダウンなので、Anchor Positioning が適用可能
-2. **設定メニュー**: 同様に固定アンカーに対するポップオーバー
-3. **ツールチップ**: ヘルプアイコンなどに対するツールチップ
+Customizable Select（`appearance: base-select`）を適用。
 
-### 現時点での制限事項
+- ネイティブ `<select>` 要素のままカスタムスタイリングが可能
+- `::picker(select)` 疑似要素でドロップダウン部分をスタイル
+- アクセシビリティが自動的に確保される
 
-**翻訳カード本体への適用は難しい理由**：
+### 今後の適用候補
+
+1. **設定メニュー**: 同様に固定アンカーに対するポップオーバー
+2. **ツールチップ**: ヘルプアイコンなどに対するツールチップ
+
+### 翻訳カード本体への適用は難しい理由
 
 1. **動的なアンカー位置**: テキスト選択の位置は毎回変わるため、CSS の `anchor-name` で静的に定義できない
 2. **Selection API との連携**: `window.getSelection()` から取得した `DOMRect` を CSS アンカーとして使用する標準的な方法がない
