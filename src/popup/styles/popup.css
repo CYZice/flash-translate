@@ -10,3 +10,52 @@ body {
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
     Arial, sans-serif;
 }
+
+/* CSS Anchor Positioning for dropdown */
+.download-dropdown-anchor {
+  anchor-name: --download-dropdown;
+}
+
+.download-dropdown-popover {
+  /* Reset default popover styles */
+  border: none;
+  padding: 0;
+
+  /* Anchor positioning */
+  position-anchor: --download-dropdown;
+  top: anchor(bottom);
+  left: anchor(left);
+  margin-top: 4px;
+
+  /* Animation */
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity 150ms ease-out,
+    transform 150ms ease-out,
+    display 150ms ease-out allow-discrete,
+    overlay 150ms ease-out allow-discrete;
+
+  &:popover-open {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Starting style for animation */
+  @starting-style {
+    &:popover-open {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+}
+
+/* Fallback for browsers without Anchor Positioning */
+@supports not (anchor-name: --test) {
+  .download-dropdown-popover {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+  }
+}
