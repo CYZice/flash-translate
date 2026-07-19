@@ -1,6 +1,18 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "extends": ["ultracite/core", "ultracite/react"],
+  "extends": ["ultracite/biome/core", "ultracite/biome/react"],
+  "assist": {
+    "actions": {
+      "source": {
+        // Preserve semantic grouping instead of enforcing alphabetical member and prop order.
+        "useSortedAttributes": "off",
+        "useSortedInterfaceMembers": "off",
+        "useSortedKeys": "off",
+        "useSortedProperties": "off",
+        "useSortedTypeFields": "off"
+      }
+    }
+  },
   "javascript": {
     "globals": ["chrome", "Translator", "LanguageDetector"]
   },
@@ -10,7 +22,37 @@
         // Chrome 135+ の Customizable Select で使用する新しい疑似要素
         // ::picker(select), ::picker-icon
         "noUnknownPseudoElement": "off"
+      },
+      "performance": {
+        // Translation streams are intentionally consumed in order.
+        "noAwaitInLoops": "off",
+        // React Compiler owns routine function memoization in this project.
+        "noJsxPropsBind": "off"
+      },
+      "style": {
+        "noIncrementDecrement": "off",
+        "noNegationElse": "off",
+        "useConsistentArrowReturn": "off",
+        "useDestructuring": "off"
+      },
+      "suspicious": {
+        // Optional Chrome APIs require runtime guards despite ambient declarations.
+        "noUnnecessaryConditions": "off",
+        // All short-circuit JSX conditions in this project are booleans.
+        "noLeakedRender": "off",
+        // A single null comparison intentionally covers null and undefined.
+        "noEqualsToNull": "off"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["public/icons/icon.svg"],
+      // This standalone extension asset is not rendered as inline accessible SVG.
+      "formatter": { "enabled": false },
+      "linter": {
+        "rules": { "a11y": { "noSvgWithoutTitle": "off" } }
+      }
+    }
+  ]
 }
