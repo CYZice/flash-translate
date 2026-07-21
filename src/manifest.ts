@@ -26,6 +26,11 @@ export default defineManifest({
     },
   },
 
+  options_ui: {
+    page: "src/popup/index.html",
+    open_in_tab: true,
+  },
+
   background: {
     service_worker: "src/background/index.ts",
     type: "module",

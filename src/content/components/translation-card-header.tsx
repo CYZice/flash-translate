@@ -1,9 +1,13 @@
 import { Settings, X } from "lucide-react";
 import { Button } from "@/shared/components/button";
+import { OPEN_SETTINGS_MESSAGE } from "@/shared/constants/runtime-messages";
 import { saveSettings } from "@/shared/storage/settings";
 import { getMessage } from "@/shared/utils/i18n";
+import { createPrefixedLogger } from "@/shared/utils/logger";
 import { ExcludeSiteButton } from "./exclude-site-button";
 import { LanguageSelector } from "./language-selector";
+
+const log = createPrefixedLogger("TranslationCardHeader");
 
 interface TranslationCardHeaderProps {
   sourceLanguage: string;
@@ -27,8 +31,9 @@ export function TranslationCardHeader({
   onSourceLanguageOverride,
 }: TranslationCardHeaderProps) {
   const onOpenSettings = () => {
-    const settingsUrl = chrome.runtime.getURL("src/popup/index.html");
-    window.open(settingsUrl, "_blank");
+    chrome.runtime
+      .sendMessage(OPEN_SETTINGS_MESSAGE)
+      .catch((error) => log.error("Failed to request options page:", error));
   };
 
   const onSourceChange = async (lang: string) => {
