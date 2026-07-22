@@ -56,7 +56,7 @@ export function TranslationCard({
       }}
     >
       <div
-        className="relative flex animate-card-expand flex-col overflow-hidden rounded-xl border border-stone-400/60 border-solid bg-white/90 pt-3 shadow-2xl backdrop-blur transition-[width,height] duration-150 ease-out"
+        className="relative flex animate-card-expand flex-col overflow-hidden rounded-xl border border-stone-400/60 border-solid bg-white/75 pt-3 shadow-2xl backdrop-blur-md transition-[width,height] duration-150 ease-out"
         style={{
           width: `${layout.width}px`,
           height: `${layout.height}px`,
