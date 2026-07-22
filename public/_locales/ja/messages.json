@@ -149,11 +149,11 @@
   "content_copyTranslation": {
     "message": "翻訳をコピー"
   },
-  "content_excludeSite": {
-    "message": "このサイトを除外"
+  "content_temporarilyDisablePage": {
+    "message": "このページで一時的に無効"
   },
-  "content_disableOnSite": {
-    "message": "このサイトで無効にしますか？"
+  "content_confirmTemporaryDisable": {
+    "message": "このページで一時的に無効にしますか？"
   },
   "content_disable": {
     "message": "無効にする"

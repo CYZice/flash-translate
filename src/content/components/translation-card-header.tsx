@@ -4,8 +4,8 @@ import { OPEN_SETTINGS_MESSAGE } from "@/shared/constants/runtime-messages";
 import { saveSettings } from "@/shared/storage/settings";
 import { getMessage } from "@/shared/utils/i18n";
 import { createPrefixedLogger } from "@/shared/utils/logger";
-import { ExcludeSiteButton } from "./exclude-site-button";
 import { LanguageSelector } from "./language-selector";
+import { TemporaryDisableButton } from "./temporary-disable-button";
 
 const log = createPrefixedLogger("TranslationCardHeader");
 
@@ -16,7 +16,7 @@ interface TranslationCardHeaderProps {
   isDetecting: boolean;
   autoDetectEnabled: boolean;
   onClose: () => void;
-  onExcludeSite: () => void;
+  onDisablePage: () => void;
   onSourceLanguageOverride: (lang: string | null) => void;
 }
 
@@ -27,7 +27,7 @@ export function TranslationCardHeader({
   isDetecting,
   autoDetectEnabled,
   onClose,
-  onExcludeSite,
+  onDisablePage,
   onSourceLanguageOverride,
 }: TranslationCardHeaderProps) {
   const onOpenSettings = () => {
@@ -60,7 +60,7 @@ export function TranslationCardHeader({
         targetLanguage={targetLanguage}
       />
       <div className="flex items-stretch gap-1">
-        <ExcludeSiteButton onExcluded={onExcludeSite} />
+        <TemporaryDisableButton onDisabled={onDisablePage} />
         <Button
           aria-label={getMessage("content_openSettings")}
           onClick={onOpenSettings}

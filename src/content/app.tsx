@@ -12,7 +12,7 @@ export default function App() {
     canDisplay,
     skipResult,
     dismissCard,
-    clearSelection,
+    temporarilyDisablePage,
     setOverriddenLanguage,
   } = useTranslationFlow();
 
@@ -27,7 +27,7 @@ export default function App() {
       detectedLanguage={detectedLanguage}
       isDetecting={isDetecting}
       onClose={dismissCard}
-      onExcludeSite={clearSelection}
+      onDisablePage={temporarilyDisablePage}
       onSourceLanguageOverride={setOverriddenLanguage}
       selection={selection}
       sourceLanguage={sourceLanguage}

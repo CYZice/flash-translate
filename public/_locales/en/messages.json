@@ -149,11 +149,11 @@
   "content_copyTranslation": {
     "message": "Copy translation"
   },
-  "content_excludeSite": {
-    "message": "Exclude this site"
+  "content_temporarilyDisablePage": {
+    "message": "Temporarily disable on this page"
   },
-  "content_disableOnSite": {
-    "message": "Disable on this site?"
+  "content_confirmTemporaryDisable": {
+    "message": "Temporarily disable on this page?"
   },
   "content_disable": {
     "message": "Disable"

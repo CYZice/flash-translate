@@ -127,7 +127,7 @@ export function useTextSelection() {
     setIsVisible(false);
   };
 
-  // Clear selection completely (used when excluding sites)
+  // Clear selection completely (used when temporarily disabling a page)
   const clearSelection = () => {
     setSelection(null);
     setIsVisible(false);

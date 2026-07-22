@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { useLanguageDetectorAvailability } from "@/shared/hooks/use-language-detector-availability";
 import { useSettings } from "@/shared/hooks/use-settings";
 import { getPageLanguage, isUrlExcluded } from "@/shared/storage/settings";
 import { selectContentAppSettings } from "@/shared/storage/settings-selectors";
 import { evaluateSkipRules, type SkipResult } from "./skip-rules";
 import { useLanguageDetection } from "./use-language-detection";
+import { usePageRevision } from "./use-page-revision";
 import { type SelectionInfo, useTextSelection } from "./use-text-selection";
 
 function getCurrentUrl(): string {
@@ -29,7 +31,7 @@ export interface TranslationFlowState {
 
   // Actions
   dismissCard: () => void;
-  clearSelection: () => void;
+  temporarilyDisablePage: () => void;
   setOverriddenLanguage: (lang: string | null) => void;
 }
 
@@ -47,6 +49,10 @@ export interface TranslationFlowState {
 export function useTranslationFlow(): TranslationFlowState {
   const { selection, isVisible, dismissCard, clearSelection } =
     useTextSelection();
+  const pageRevision = usePageRevision();
+  const [disabledPageRevision, setDisabledPageRevision] = useState<
+    number | null
+  >(null);
 
   const [settings, isLoading] = useSettings(selectContentAppSettings);
 
@@ -84,6 +90,7 @@ export function useTranslationFlow(): TranslationFlowState {
   const exclusionPatterns = settings?.exclusionPatterns ?? [];
 
   const isExcluded = isUrlExcluded(getCurrentUrl(), exclusionPatterns);
+  const isTemporarilyDisabled = disabledPageRevision === pageRevision;
   const isDetectorPending = autoDetectSetting && availability === null;
 
   // Base display conditions
@@ -93,6 +100,7 @@ export function useTranslationFlow(): TranslationFlowState {
     selection !== null &&
     isVisible &&
     !isExcluded &&
+    !isTemporarilyDisabled &&
     !isDetectorPending;
 
   // Evaluate skip rules
@@ -110,6 +118,11 @@ export function useTranslationFlow(): TranslationFlowState {
   const sourceLanguage = autoDetectEnabled
     ? effectiveSourceLanguage
     : (settings?.sourceLanguage ?? "en");
+
+  const temporarilyDisablePage = () => {
+    setDisabledPageRevision(pageRevision);
+    clearSelection();
+  };
 
   return {
     // Selection
@@ -130,7 +143,7 @@ export function useTranslationFlow(): TranslationFlowState {
 
     // Actions
     dismissCard,
-    clearSelection,
+    temporarilyDisablePage,
     setOverriddenLanguage,
   };
 }

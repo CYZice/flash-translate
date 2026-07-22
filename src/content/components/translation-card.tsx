@@ -17,7 +17,7 @@ interface TranslationCardProps {
   isDetecting: boolean;
   onSourceLanguageOverride: (lang: string | null) => void;
   onClose: () => void;
-  onExcludeSite: () => void;
+  onDisablePage: () => void;
 }
 
 export function TranslationCard({
@@ -29,7 +29,7 @@ export function TranslationCard({
   isDetecting,
   onSourceLanguageOverride,
   onClose,
-  onExcludeSite,
+  onDisablePage,
 }: TranslationCardProps) {
   const { result, isLoading, error, translate, availability } = useTranslator({
     sourceLanguage,
@@ -87,7 +87,7 @@ export function TranslationCard({
             detectedLanguage={detectedLanguage}
             isDetecting={isDetecting}
             onClose={onClose}
-            onExcludeSite={onExcludeSite}
+            onDisablePage={onDisablePage}
             onSourceLanguageOverride={onSourceLanguageOverride}
             sourceLanguage={sourceLanguage}
             targetLanguage={targetLanguage}

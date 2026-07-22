@@ -1,62 +1,46 @@
 import { Ban, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/shared/components/button";
-import {
-  generatePatternId,
-  getSettings,
-  saveSettings,
-} from "@/shared/storage/settings";
 import { getMessage } from "@/shared/utils/i18n";
 
-interface ExcludeSiteButtonProps {
-  onExcluded: () => void;
+interface TemporaryDisableButtonProps {
+  onDisabled: () => void;
 }
 
-export function ExcludeSiteButton({ onExcluded }: ExcludeSiteButtonProps) {
+export function TemporaryDisableButton({
+  onDisabled,
+}: TemporaryDisableButtonProps) {
   const [isConfirming, setIsConfirming] = useState(false);
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
-  const dialogTitleId = "exclude-site-dialog-title";
+  const dialogTitleId = "temporary-disable-dialog-title";
 
   const handleClick = () => {
     setIsConfirming(true);
-    // Auto-reset after 3 seconds
-    setTimeout(() => setIsConfirming(false), 8000);
   };
 
-  // Focus confirm button when dialog opens and handle Escape key
   useEffect(() => {
     if (!isConfirming) {
       return;
     }
 
-    if (confirmButtonRef.current) {
-      confirmButtonRef.current.focus();
-    }
+    confirmButtonRef.current?.focus();
+    const resetTimer = window.setTimeout(() => setIsConfirming(false), 8000);
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
         setIsConfirming(false);
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => {
+      window.clearTimeout(resetTimer);
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isConfirming]);
 
-  const handleConfirm = async () => {
-    const currentOrigin = window.location.origin;
-    const settings = await getSettings();
-    const newPattern = {
-      id: generatePatternId(),
-      pattern: currentOrigin,
-      enabled: true,
-    };
-    await saveSettings({
-      exclusionPatterns: [newPattern, ...settings.exclusionPatterns],
-    });
-    onExcluded();
+  const handleConfirm = () => {
+    onDisabled();
   };
 
   const handleCancel = () => {
@@ -66,9 +50,9 @@ export function ExcludeSiteButton({ onExcluded }: ExcludeSiteButtonProps) {
   return (
     <>
       <Button
-        aria-label={getMessage("content_excludeSite")}
+        aria-label={getMessage("content_temporarilyDisablePage")}
         onClick={handleClick}
-        title={getMessage("content_excludeSite")}
+        title={getMessage("content_temporarilyDisablePage")}
         variant="danger"
       >
         <Ban size={14} />
@@ -84,7 +68,7 @@ export function ExcludeSiteButton({ onExcluded }: ExcludeSiteButtonProps) {
             className="flex items-center text-gray-600 text-xs"
             id={dialogTitleId}
           >
-            {getMessage("content_disableOnSite")}
+            {getMessage("content_confirmTemporaryDisable")}
           </span>
           <div className="flex items-stretch gap-2 py-0">
             <Button
