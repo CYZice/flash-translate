@@ -1,4 +1,4 @@
-import { Ban, X } from "lucide-react";
+import { Ban } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/shared/components/button";
 import { getMessage } from "@/shared/utils/i18n";
@@ -43,16 +43,12 @@ export function TemporaryDisableButton({
     onDisabled();
   };
 
-  const handleCancel = () => {
-    setIsConfirming(false);
-  };
-
   return (
     <>
       <Button
-        aria-label={getMessage("content_temporarilyDisablePage")}
+        aria-label={getMessage("content_pauseTranslationOnPage")}
         onClick={handleClick}
-        title={getMessage("content_temporarilyDisablePage")}
+        title={getMessage("content_pauseTranslationOnPage")}
         variant="danger"
       >
         <Ban size={14} />
@@ -61,33 +57,23 @@ export function TemporaryDisableButton({
         <div
           aria-labelledby={dialogTitleId}
           aria-modal="true"
-          className="absolute inset-0 z-50 flex animate-dialog-slide-in items-stretch justify-between bg-white/90 px-3"
+          className="absolute inset-0 z-50 flex animate-dialog-slide-in items-center gap-2 bg-white/95 px-3"
           role="dialog"
         >
           <span
-            className="flex items-center text-gray-600 text-xs"
+            className="min-w-0 flex-1 text-gray-600 text-xs leading-4"
             id={dialogTitleId}
           >
-            {getMessage("content_confirmTemporaryDisable")}
+            {getMessage("content_confirmPauseTranslationOnPage")}
           </span>
-          <div className="flex items-stretch gap-2 py-0">
-            <Button
-              className="min-w-auto px-2 text-xs"
-              onClick={handleConfirm}
-              ref={confirmButtonRef}
-              variant="destructive"
-            >
-              {getMessage("content_disable")}
-            </Button>
-            <Button
-              aria-label={getMessage("content_cancel")}
-              className="bg-transparent"
-              onClick={handleCancel}
-              variant="muted"
-            >
-              <X size={16} />
-            </Button>
-          </div>
+          <Button
+            className="shrink-0 whitespace-nowrap px-2 text-xs"
+            onClick={handleConfirm}
+            ref={confirmButtonRef}
+            variant="destructive"
+          >
+            {getMessage("content_pause")}
+          </Button>
         </div>
       )}
     </>

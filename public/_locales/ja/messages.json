@@ -149,17 +149,14 @@
   "content_copyTranslation": {
     "message": "翻訳をコピー"
   },
-  "content_temporarilyDisablePage": {
-    "message": "このページで一時的に無効"
+  "content_pauseTranslationOnPage": {
+    "message": "このページの翻訳を一時停止"
   },
-  "content_confirmTemporaryDisable": {
-    "message": "このページで一時的に無効にしますか？"
+  "content_confirmPauseTranslationOnPage": {
+    "message": "このページで翻訳を停止しますか？"
   },
-  "content_disable": {
-    "message": "無効にする"
-  },
-  "content_cancel": {
-    "message": "キャンセル"
+  "content_pause": {
+    "message": "停止"
   },
   "content_moveCard": {
     "message": "カードを移動"

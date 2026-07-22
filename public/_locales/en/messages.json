@@ -149,17 +149,14 @@
   "content_copyTranslation": {
     "message": "Copy translation"
   },
-  "content_temporarilyDisablePage": {
-    "message": "Temporarily disable on this page"
+  "content_pauseTranslationOnPage": {
+    "message": "Pause translation on this page"
   },
-  "content_confirmTemporaryDisable": {
-    "message": "Temporarily disable on this page?"
+  "content_confirmPauseTranslationOnPage": {
+    "message": "Pause translation on this page?"
   },
-  "content_disable": {
-    "message": "Disable"
-  },
-  "content_cancel": {
-    "message": "Cancel"
+  "content_pause": {
+    "message": "Pause"
   },
   "content_moveCard": {
     "message": "Move card"
