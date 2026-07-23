@@ -15,6 +15,8 @@ describe("isolateContentHost", () => {
 
     isolateContentHost(host);
 
-    expect(host.getAttribute("style")).toBe("all: initial !important");
+    expect(host.getAttribute("style")).toBe(
+      "all: initial !important; position: relative !important; z-index: 2147483647 !important"
+    );
   });
 });

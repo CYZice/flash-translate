@@ -30,13 +30,8 @@ let container: HTMLDivElement;
 let root: Root;
 
 const MESSAGES: Record<string, string> = {
-  content_close: "Close",
-  content_termCoreMeaning: "Core meaning",
   content_termInsight: "Meaning in context",
-  content_termInsightDetails: "AI vocabulary insight",
-  content_termInsightLoading: "Analyzing context and core meaning...",
-  content_termPartOfSpeech: "Part of speech",
-  content_termRoleInContext: "Role in this context",
+  content_termInsightLoading: "Analyzing context...",
   content_termTranslation: "Term translation",
   content_translating: "Translating...",
 };
@@ -123,10 +118,8 @@ describe("HoveredTermTooltip", () => {
       "[data-flash-translate-term-tooltip]"
     );
     expect(tooltip?.textContent).toContain("翻訳する");
-    expect(tooltip?.textContent).toContain("AI vocabulary insight");
-    expect(tooltip?.textContent).toContain(
-      "Analyzing context and core meaning..."
-    );
+    expect(tooltip?.textContent).not.toContain("AI vocabulary insight");
+    expect(tooltip?.textContent).toContain("Analyzing context...");
     expect(tooltip?.getAttribute("aria-label")).toBe("Term translation");
     expect(tooltip?.style.transform).toBe("translateX(-50%)");
   });
@@ -145,7 +138,6 @@ describe("HoveredTermTooltip", () => {
       insightStatus: "streaming",
       insightProgress: {
         contextualMeaning: "訳す",
-        coreMeaning: "別の言語で意味を表す",
       },
     });
 
@@ -154,7 +146,8 @@ describe("HoveredTermTooltip", () => {
     );
     expect(tooltip?.textContent).toContain("翻訳する");
     expect(tooltip?.textContent).toContain("訳す");
-    expect(tooltip?.textContent).toContain("別の言語で意味を表す");
+    expect(tooltip?.textContent).not.toContain("Analyzing context...");
+    expect(tooltip?.textContent).not.toContain("別の言語で意味を表す");
     expect(tooltip?.textContent).not.toContain("Part of speech");
   });
 
@@ -171,12 +164,7 @@ describe("HoveredTermTooltip", () => {
       isLoading: false,
       insightStatus: "ready",
       insightProgress: {
-        expression: "translate",
         contextualMeaning: "訳す",
-        coreMeaning: "別の言語で意味を表す",
-        roleInContext: "依頼している動作を表す",
-        partOfSpeech: "動詞",
-        isMultiwordExpression: false,
       },
       insightResult: {
         sourceText: "translate",
@@ -189,12 +177,7 @@ describe("HoveredTermTooltip", () => {
           strategy: "neighboring-sentences",
         },
         insight: {
-          expression: "translate",
           contextualMeaning: "訳す",
-          coreMeaning: "別の言語で意味を表す",
-          roleInContext: "依頼している動作を表す",
-          partOfSpeech: "動詞",
-          isMultiwordExpression: false,
         },
       },
     });
@@ -203,9 +186,9 @@ describe("HoveredTermTooltip", () => {
       "[data-flash-translate-term-tooltip]"
     );
     expect(tooltip?.textContent).toContain("訳す");
-    expect(tooltip?.textContent).toContain("別の言語で意味を表す");
-    expect(tooltip?.textContent).toContain("依頼している動作を表す");
-    expect(tooltip?.textContent).toContain("動詞");
+    expect(tooltip?.textContent).not.toContain("別の言語で意味を表す");
+    expect(tooltip?.textContent).not.toContain("依頼している動作を表す");
+    expect(tooltip?.textContent).not.toContain("動詞");
     expect(tooltip?.textContent).toContain("翻訳する");
   });
 });

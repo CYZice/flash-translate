@@ -1,4 +1,3 @@
-import { Sparkles } from "lucide-react";
 import { getMessage } from "@/shared/utils/i18n";
 import { getTermTooltipPosition } from "./term-tooltip-position";
 import type { HoveredTermTranslationState } from "./use-hovered-term-translation";
@@ -9,73 +8,37 @@ interface HoveredTermTooltipProps {
 
 const DETAIL_TOOLTIP_SIZE = {
   width: 384,
-  height: 320,
+  height: 180,
 };
-
-function InsightRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | undefined;
-}) {
-  if (!value) {
-    return null;
-  }
-
-  return (
-    <div>
-      <dt className="font-medium text-gray-500 text-xs">{label}</dt>
-      <dd className="wrap-break-word mt-0.5 text-gray-800" dir="auto">
-        {value}
-      </dd>
-    </div>
-  );
-}
 
 function TermInsightContent({ state }: { state: HoveredTermTranslationState }) {
   const insight = state.insightResult?.insight ?? state.insightProgress;
   const isGenerating =
     state.insightStatus === "loading" || state.insightStatus === "streaming";
+  const contextualMeaning = insight.contextualMeaning;
 
   return (
     <div className="mt-3 border-stone-200 border-t border-solid pt-3">
-      <div className="flex items-center gap-1.5 font-medium text-blue-700 text-xs">
-        <Sparkles aria-hidden="true" className="h-3.5 w-3.5" />
-        <span>{getMessage("content_termInsightDetails")}</span>
-      </div>
-
-      {isGenerating && (
-        <div className="mt-4 flex items-center gap-2 text-gray-500">
+      {isGenerating && !contextualMeaning && (
+        <div className="flex items-center gap-2 text-gray-500">
           <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />
           <span>{getMessage("content_termInsightLoading")}</span>
         </div>
       )}
 
-      <dl className="mt-3 grid gap-3">
-        <InsightRow
-          label={getMessage("content_termInsight")}
-          value={insight.contextualMeaning}
-        />
-        {insight.isMultiwordExpression && (
-          <InsightRow
-            label={getMessage("content_termExpression")}
-            value={insight.expression}
-          />
-        )}
-        <InsightRow
-          label={getMessage("content_termCoreMeaning")}
-          value={insight.coreMeaning}
-        />
-        <InsightRow
-          label={getMessage("content_termRoleInContext")}
-          value={insight.roleInContext}
-        />
-        <InsightRow
-          label={getMessage("content_termPartOfSpeech")}
-          value={insight.partOfSpeech}
-        />
-      </dl>
+      {contextualMeaning && (
+        <div>
+          <div className="font-medium text-gray-500 text-xs">
+            {getMessage("content_termInsight")}
+          </div>
+          <div
+            className="wrap-break-word mt-1 text-gray-800 leading-relaxed"
+            dir="auto"
+          >
+            {contextualMeaning}
+          </div>
+        </div>
+      )}
 
       {(state.insightStatus === "unavailable" ||
         state.insightStatus === "error") && (

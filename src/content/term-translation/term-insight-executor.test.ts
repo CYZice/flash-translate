@@ -30,12 +30,7 @@ const TRANSLATION: TermTranslationResult = {
 };
 
 const INSIGHT = {
-  expression: "fairly",
   contextualMeaning: "かなり",
-  coreMeaning: "程度を穏やかに示す",
-  roleInContext: "large の程度を説明する",
-  partOfSpeech: "副詞",
-  isMultiwordExpression: false,
 };
 
 describe("executeTermInsight", () => {

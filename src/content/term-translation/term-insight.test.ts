@@ -6,51 +6,35 @@ import {
 } from "./term-insight";
 
 describe("parseTermInsight", () => {
-  it("validates a structured Prompt API response", () => {
+  it("accepts a concise explanation in the requested language", () => {
     expect(
-      parseTermInsight(
-        JSON.stringify({
-          expression: "fairly",
-          contextualMeaning: "かなり",
-          coreMeaning: "程度を穏やかに示す",
-          roleInContext: "large の程度を説明する",
-          partOfSpeech: "副詞",
-          isMultiwordExpression: false,
-        })
-      )
+      parseTermInsight("この文脈では「かなり」という意味。", "ja")
     ).toEqual({
-      expression: "fairly",
-      contextualMeaning: "かなり",
-      coreMeaning: "程度を穏やかに示す",
-      roleInContext: "large の程度を説明する",
-      partOfSpeech: "副詞",
-      isMultiwordExpression: false,
+      contextualMeaning: "この文脈では「かなり」という意味。",
+    });
+    expect(
+      parseTermInsight("In this context, it means considerably.", "en")
+    ).toEqual({
+      contextualMeaning: "In this context, it means considerably.",
     });
   });
 
-  it("rejects malformed output at the integration boundary", () => {
-    expect(() => parseTermInsight('{"contextualMeaning":"かなり"}')).toThrow(
+  it("rejects a response in the wrong output language", () => {
+    expect(() =>
+      parseTermInsight("In this context, it means considerably.", "ja")
+    ).toThrow(TermInsightUnavailableError);
+  });
+
+  it("streams only content that matches the requested language", () => {
+    expect(parseTermInsightProgress("In this context", "ja")).toEqual({});
+    expect(parseTermInsightProgress("この文脈では「かなり」", "ja")).toEqual({
+      contextualMeaning: "この文脈では「かなり」",
+    });
+  });
+
+  it("rejects empty output at the integration boundary", () => {
+    expect(() => parseTermInsight("   ", "ja")).toThrow(
       TermInsightUnavailableError
     );
-  });
-
-  it("extracts only completed fields from a partial structured stream", () => {
-    expect(
-      parseTermInsightProgress(
-        '{"contextualMeaning":"かなり","coreMeaning":"程度を穏やか'
-      )
-    ).toEqual({
-      contextualMeaning: "かなり",
-    });
-
-    expect(
-      parseTermInsightProgress(
-        '{"contextualMeaning":"かなり","coreMeaning":"程度を\\n穏やかに示す","isMultiwordExpression":false'
-      )
-    ).toEqual({
-      contextualMeaning: "かなり",
-      coreMeaning: "程度を\n穏やかに示す",
-      isMultiwordExpression: false,
-    });
   });
 });

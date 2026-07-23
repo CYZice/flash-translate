@@ -220,23 +220,8 @@
   "content_termInsight": {
     "message": "文脈での意味"
   },
-  "content_termInsightDetails": {
-    "message": "AI語句解説"
-  },
   "content_termInsightLoading": {
-    "message": "文脈とコアを解析中..."
-  },
-  "content_termExpression": {
-    "message": "表現のまとまり"
-  },
-  "content_termCoreMeaning": {
-    "message": "コア"
-  },
-  "content_termRoleInContext": {
-    "message": "この文での働き"
-  },
-  "content_termPartOfSpeech": {
-    "message": "品詞"
+    "message": "文脈を解析中..."
   },
   "content_termInsightUnavailable": {
     "message": "この環境または言語ではAI解説を利用できません。即時訳はそのまま利用できます。"

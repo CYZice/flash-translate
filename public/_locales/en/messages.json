@@ -220,23 +220,8 @@
   "content_termInsight": {
     "message": "Meaning in context"
   },
-  "content_termInsightDetails": {
-    "message": "AI vocabulary insight"
-  },
   "content_termInsightLoading": {
-    "message": "Analyzing context and core meaning..."
-  },
-  "content_termExpression": {
-    "message": "Expression"
-  },
-  "content_termCoreMeaning": {
-    "message": "Core meaning"
-  },
-  "content_termRoleInContext": {
-    "message": "Role in this context"
-  },
-  "content_termPartOfSpeech": {
-    "message": "Part of speech"
+    "message": "Analyzing context..."
   },
   "content_termInsightUnavailable": {
     "message": "AI details aren't available for this environment or language. The quick translation still works."
