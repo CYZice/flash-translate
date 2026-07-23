@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import ErrorBoundary from "@/shared/components/error-boundary";
 import App from "./app";
+import { isolateContentHost } from "./content-host";
 import contentStyles from "./styles/content.css?inline";
 
 const HOST_ID = "flash-translate-root";
@@ -23,6 +24,7 @@ function initializeContentScript() {
   // Create Shadow DOM host
   const host = document.createElement("div");
   host.id = HOST_ID;
+  isolateContentHost(host);
   document.body.appendChild(host);
 
   const shadow = host.attachShadow({ mode: "open" });
