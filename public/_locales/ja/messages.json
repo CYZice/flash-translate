@@ -190,7 +190,7 @@
   },
 
   "content_translatorUnsupported": {
-    "message": "Translator API はこのブラウザでサポートされていません。API を有効にした Chrome 138 以降をお使いください。"
+    "message": "Translator API はこのブラウザでサポートされていません。API を有効にした Chrome 150 以降をお使いください。"
   },
   "content_translationUnavailable": {
     "message": "$SOURCE$ から $TARGET$ への翻訳は利用できません。",

@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Flash Translate is a Chrome extension that provides instant translation using the Chrome built-in Translator API. Users can select text on any webpage to see translations in a popup, or use the extension popup for manual translation.
 
-**Requirements**: Chrome 138+ with Translator API enabled (`chrome://flags` → "Translator API" → Enabled)
+**Requirements**: Chrome 150+ with Translator API enabled (`chrome://flags` → "Translator API" → Enabled)
 
 ## Commands
 

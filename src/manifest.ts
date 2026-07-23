@@ -44,6 +44,6 @@ export default defineManifest({
     },
   ],
 
-  minimum_chrome_version: "138",
+  minimum_chrome_version: "150",
   homepage_url: "https://github.com/yoshikouki/flash-translate",
 });

@@ -190,7 +190,7 @@
   },
 
   "content_translatorUnsupported": {
-    "message": "Translator API is not supported in this browser. Please use Chrome 138+ with the API enabled."
+    "message": "Translator API is not supported in this browser. Please use Chrome 150+ with the API enabled."
   },
   "content_translationUnavailable": {
     "message": "Translation from $SOURCE$ to $TARGET$ is not available.",

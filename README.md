@@ -16,7 +16,7 @@ A Chrome extension for instant translation using the browser's built-in Translat
 
 ## Requirements
 
-- **Chrome 138+** (Translator API support)
+- **Chrome 150+** (Translator API and element-scoped View Transition support)
 - **Enable Translator API**:
   1. Open `chrome://flags`
   2. Search for "Translator API"

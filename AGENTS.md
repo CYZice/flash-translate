@@ -11,7 +11,7 @@ with Chrome's built-in Translator and Language Detector APIs. It translates
 selected text in a page-injected card and provides language and exclusion
 settings through the extension popup.
 
-The extension requires Chrome 138 or later with the Translator API enabled in
+The extension requires Chrome 150 or later with the Translator API enabled in
 `chrome://flags`.
 
 ## Commands
