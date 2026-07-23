@@ -60,7 +60,6 @@ export function TranslationCardHeader({
         targetLanguage={targetLanguage}
       />
       <div className="flex items-stretch gap-1">
-        <TemporaryDisableButton onDisabled={onDisablePage} />
         <Button
           aria-label={getMessage("content_openSettings")}
           onClick={onOpenSettings}
@@ -68,6 +67,7 @@ export function TranslationCardHeader({
         >
           <Settings size={14} />
         </Button>
+        <TemporaryDisableButton onDisabled={onDisablePage} />
         <Button
           aria-label={getMessage("content_close")}
           onClick={onClose}

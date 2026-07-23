@@ -1,4 +1,4 @@
-import { Ban } from "lucide-react";
+import { Pause } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/shared/components/button";
 import { getMessage } from "@/shared/utils/i18n";
@@ -51,7 +51,7 @@ export function TemporaryDisableButton({
         title={getMessage("content_pauseTranslationOnPage")}
         variant="danger"
       >
-        <Ban size={14} />
+        <Pause size={14} />
       </Button>
       {isConfirming && (
         <div
