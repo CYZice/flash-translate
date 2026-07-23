@@ -63,6 +63,7 @@ export default function App() {
         />
         <HoveredTermTooltip
           onDismissInsight={hoveredTermTranslation.dismissInsight}
+          onRequestInsight={hoveredTermTranslation.requestInsight}
           state={hoveredTermTranslation}
         />
       </div>

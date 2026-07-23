@@ -32,6 +32,7 @@ interface UseTermInsightOptions {
 
 interface TermInsightController extends TermInsightViewState {
   isPinnedRef: RefObject<boolean>;
+  requestInsight: () => void;
   dismissInsight: () => void;
   resetInsight: () => void;
 }
@@ -42,24 +43,6 @@ const IDLE_INSIGHT_STATE: TermInsightViewState = {
   insightResult: null,
   insightUnavailableReason: null,
 };
-
-function isPointInsideHoveredTerm(
-  hoveredTerm: HoveredTerm | null,
-  x: number,
-  y: number
-): boolean {
-  if (!hoveredTerm) {
-    return false;
-  }
-
-  const { anchorRect } = hoveredTerm;
-  return (
-    anchorRect.left <= x &&
-    x <= anchorRect.right &&
-    anchorRect.top <= y &&
-    y <= anchorRect.bottom
-  );
-}
 
 function isRequestActive(
   requestId: number,
@@ -102,127 +85,91 @@ export function useTermInsight({
     resetInsight();
   }, [resetInsight]);
 
-  useEffect(() => {
+  const requestInsight = useCallback(() => {
+    const hoveredTerm = hoveredTermRef.current;
+    const translation = translationResultRef.current;
+    if (isPinnedRef.current || !hoveredTerm || !translation) {
+      return;
+    }
+
+    clearPendingInsight();
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+    isPinnedRef.current = true;
     const transitionToState = (nextState: TermInsightViewState) => {
       return runTermViewTransition(document, transitionScopeRef.current, () => {
         flushSync(() => setState(nextState));
       });
     };
+    const loadingStateReady = transitionToState({
+      isPinned: true,
+      insightStatus: "loading",
+      insightResult: null,
+      insightUnavailableReason: null,
+    });
+    const insight = executeTermInsight({
+      hoveredTerm,
+      translation,
+      signal: abortController.signal,
+      cache: cacheRef.current,
+      provider: promptTermInsightProvider,
+    });
 
-    const analyzeCurrentTerm = (
-      hoveredTerm: HoveredTerm,
-      translation: TermTranslationResult
-    ) => {
-      clearPendingInsight();
-      const requestId = requestIdRef.current + 1;
-      requestIdRef.current = requestId;
-      const abortController = new AbortController();
-      abortControllerRef.current = abortController;
-      isPinnedRef.current = true;
-      const loadingStateReady = transitionToState({
-        isPinned: true,
-        insightStatus: "loading",
-        insightResult: null,
-        insightUnavailableReason: null,
-      });
-      const insight = executeTermInsight({
-        hoveredTerm,
-        translation,
-        signal: abortController.signal,
-        cache: cacheRef.current,
-        provider: promptTermInsightProvider,
-      });
+    Promise.all([loadingStateReady, insight])
+      .then(([, insightResult]) => {
+        if (
+          !isRequestActive(
+            requestId,
+            requestIdRef.current,
+            abortController.signal
+          )
+        ) {
+          return;
+        }
 
-      return Promise.all([loadingStateReady, insight])
-        .then(([, insightResult]) => {
-          if (
-            !isRequestActive(
-              requestId,
-              requestIdRef.current,
-              abortController.signal
-            )
-          ) {
-            return;
-          }
-
-          return transitionToState({
-            isPinned: true,
-            insightStatus: "ready",
-            insightResult,
-            insightUnavailableReason: null,
-          });
-        })
-        .catch((error: unknown) => {
-          if (isCanceledRequest(error, abortController.signal)) {
-            return;
-          }
-
-          const unavailableReason =
-            error instanceof TermInsightUnavailableError ? error.reason : null;
-          setState({
-            isPinned: true,
-            insightStatus: unavailableReason ? "unavailable" : "error",
-            insightResult: null,
-            insightUnavailableReason: unavailableReason,
-          });
-        })
-        .finally(() => {
-          if (requestId === requestIdRef.current) {
-            abortControllerRef.current = null;
-          }
+        return transitionToState({
+          isPinned: true,
+          insightStatus: "ready",
+          insightResult,
+          insightUnavailableReason: null,
         });
-    };
+      })
+      .catch((error: unknown) => {
+        if (isCanceledRequest(error, abortController.signal)) {
+          return;
+        }
 
-    const handleTermMouseDown = (event: MouseEvent) => {
-      if (
-        translationResultRef.current &&
-        isPointInsideHoveredTerm(
-          hoveredTermRef.current,
-          event.clientX,
-          event.clientY
-        )
-      ) {
-        event.preventDefault();
-      }
-    };
-
-    const handleTermClick = (event: MouseEvent) => {
-      const hoveredTerm = hoveredTermRef.current;
-      const translation = translationResultRef.current;
-      if (
-        isPinnedRef.current ||
-        !hoveredTerm ||
-        !translation ||
-        !isPointInsideHoveredTerm(hoveredTerm, event.clientX, event.clientY)
-      ) {
-        return;
-      }
-
-      event.preventDefault();
-      event.stopPropagation();
-      analyzeCurrentTerm(hoveredTerm, translation).catch(resetInsight);
-    };
-
-    document.addEventListener("mousedown", handleTermMouseDown, true);
-    document.addEventListener("click", handleTermClick, true);
-
-    return () => {
-      document.removeEventListener("mousedown", handleTermMouseDown, true);
-      document.removeEventListener("click", handleTermClick, true);
-      clearPendingInsight();
-      isPinnedRef.current = false;
-    };
+        const unavailableReason =
+          error instanceof TermInsightUnavailableError ? error.reason : null;
+        setState({
+          isPinned: true,
+          insightStatus: unavailableReason ? "unavailable" : "error",
+          insightResult: null,
+          insightUnavailableReason: unavailableReason,
+        });
+      })
+      .finally(() => {
+        if (requestId === requestIdRef.current) {
+          abortControllerRef.current = null;
+        }
+      });
   }, [
     clearPendingInsight,
     hoveredTermRef,
-    resetInsight,
     transitionScopeRef,
     translationResultRef,
   ]);
 
+  useEffect(() => {
+    return () => clearPendingInsight();
+  }, [clearPendingInsight]);
+
   return {
     ...state,
     isPinnedRef,
+    requestInsight,
     dismissInsight,
     resetInsight,
   };

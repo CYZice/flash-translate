@@ -3,7 +3,7 @@ import type { ViewportRect } from "./hovered-term";
 const TOOLTIP_WIDTH = 288;
 const TOOLTIP_HEIGHT = 56;
 const VIEWPORT_MARGIN = 8;
-const ANCHOR_GAP = 8;
+const ANCHOR_GAP = 0;
 
 interface ViewportSize {
   width: number;

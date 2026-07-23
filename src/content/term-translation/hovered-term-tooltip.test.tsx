@@ -3,7 +3,7 @@
  */
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { HoveredTermTooltip } from "./hovered-term-tooltip";
 import type { HoveredTermTranslationState } from "./use-hovered-term-translation";
 
@@ -45,11 +45,13 @@ function render(
     HoveredTermTranslationState,
     "hoveredTerm" | "result" | "isLoading"
   > &
-    Partial<HoveredTermTranslationState>
+    Partial<HoveredTermTranslationState>,
+  onRequestInsight?: () => void
 ) {
   act(() => {
     root.render(
       <HoveredTermTooltip
+        onRequestInsight={onRequestInsight}
         state={{
           isPinned: false,
           insightStatus: "idle",
@@ -105,23 +107,31 @@ describe("HoveredTermTooltip", () => {
   });
 
   it("renders only the translated term", () => {
-    render({
-      hoveredTerm: HOVERED_TERM,
-      result: {
-        sourceText: "translate",
-        translatedText: "翻訳する",
-        contextText: "Please translate this sentence.",
-        sourceLanguage: "en",
-        targetLanguage: "ja",
+    const onRequestInsight = vi.fn();
+    render(
+      {
+        hoveredTerm: HOVERED_TERM,
+        result: {
+          sourceText: "translate",
+          translatedText: "翻訳する",
+          contextText: "Please translate this sentence.",
+          sourceLanguage: "en",
+          targetLanguage: "ja",
+        },
+        isLoading: false,
       },
-      isLoading: false,
-    });
+      onRequestInsight
+    );
 
-    const tooltip = container.querySelector(
+    const tooltip = container.querySelector<HTMLButtonElement>(
       "[data-flash-translate-term-tooltip]"
     );
     expect(tooltip?.textContent).toBe("翻訳するClick the term for details");
     expect(tooltip?.getAttribute("aria-label")).toBe("Term translation");
+    expect(tooltip?.type).toBe("button");
+
+    act(() => tooltip?.click());
+    expect(onRequestInsight).toHaveBeenCalledOnce();
   });
 
   it("renders the contextual meaning and learning details when pinned", () => {

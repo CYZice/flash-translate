@@ -32,6 +32,7 @@ export interface HoveredTermTranslationState
 
 export interface HoveredTermTranslationController
   extends HoveredTermTranslationState {
+  requestInsight: () => void;
   dismissInsight: () => void;
 }
 
@@ -91,6 +92,17 @@ function resolvePointerMoveAction({
   sourceLanguage: string;
   currentHoveredTerm: HoveredTerm | null;
 }): PointerMoveAction {
+  const isInsideTooltip = event
+    .composedPath()
+    .some(
+      (node) =>
+        node instanceof HTMLElement &&
+        node.hasAttribute("data-flash-translate-term-tooltip")
+    );
+  if (isInsideTooltip) {
+    return { type: "keep" };
+  }
+
   if (!(enabled && selection) || event.pointerType === "touch") {
     return { type: "clear" };
   }
@@ -272,6 +284,7 @@ export function useHoveredTermTranslation({
     insightStatus: termInsight.insightStatus,
     insightResult: termInsight.insightResult,
     insightUnavailableReason: termInsight.insightUnavailableReason,
+    requestInsight: termInsight.requestInsight,
     dismissInsight: termInsight.dismissInsight,
   };
 }

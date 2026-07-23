@@ -8,6 +8,7 @@ import type {
 
 interface HoveredTermTooltipProps {
   state: HoveredTermTranslationState;
+  onRequestInsight?: HoveredTermTranslationController["requestInsight"];
   onDismissInsight?: HoveredTermTranslationController["dismissInsight"];
 }
 
@@ -19,7 +20,10 @@ const DETAIL_TOOLTIP_SIZE = {
 function TermInsightContent({
   state,
   onDismissInsight,
-}: Required<HoveredTermTooltipProps>) {
+}: {
+  state: HoveredTermTranslationState;
+  onDismissInsight: HoveredTermTranslationController["dismissInsight"];
+}) {
   const insight = state.insightResult?.insight;
 
   return (
@@ -137,6 +141,7 @@ function QuickTranslationContent({
 
 export function HoveredTermTooltip({
   state,
+  onRequestInsight = () => undefined,
   onDismissInsight = () => undefined,
 }: HoveredTermTooltipProps) {
   if (!state.hoveredTerm) {
@@ -152,26 +157,36 @@ export function HoveredTermTooltip({
     },
     isDetailed ? DETAIL_TOOLTIP_SIZE : undefined
   );
+  const tooltipStyle = {
+    left: `${position.left}px`,
+    top: `${position.top}px`,
+    viewTransitionName: "flash-translate-term-tooltip",
+    zIndex: 2_147_483_647,
+  };
+
+  if (!isDetailed) {
+    return (
+      <button
+        aria-label={getMessage("content_termTranslation")}
+        className="pointer-events-auto fixed w-72 max-w-[calc(100vw-1rem)] -translate-x-1/2 cursor-pointer rounded-lg border border-stone-300/80 border-solid bg-white/90 px-3 py-2 text-left font-sans text-gray-800 text-sm leading-normal shadow-xl backdrop-blur-md hover:border-blue-300"
+        data-flash-translate-term-tooltip=""
+        onClick={onRequestInsight}
+        style={tooltipStyle}
+        type="button"
+      >
+        <QuickTranslationContent state={state} />
+      </button>
+    );
+  }
 
   return (
     <output
       aria-label={getMessage("content_termTranslation")}
-      className={`fixed max-w-[calc(100vw-1rem)] -translate-x-1/2 rounded-lg border border-stone-300/80 border-solid bg-white/90 px-3 py-2 font-sans text-gray-800 text-sm leading-normal shadow-xl backdrop-blur-md ${
-        isDetailed ? "pointer-events-auto w-96" : "pointer-events-none w-72"
-      }`}
+      className="pointer-events-auto fixed w-96 max-w-[calc(100vw-1rem)] -translate-x-1/2 rounded-lg border border-stone-300/80 border-solid bg-white/90 px-3 py-2 font-sans text-gray-800 text-sm leading-normal shadow-xl backdrop-blur-md"
       data-flash-translate-term-tooltip=""
-      style={{
-        left: `${position.left}px`,
-        top: `${position.top}px`,
-        viewTransitionName: "flash-translate-term-tooltip",
-        zIndex: 2_147_483_647,
-      }}
+      style={tooltipStyle}
     >
-      {isDetailed ? (
-        <TermInsightContent onDismissInsight={onDismissInsight} state={state} />
-      ) : (
-        <QuickTranslationContent state={state} />
-      )}
+      <TermInsightContent onDismissInsight={onDismissInsight} state={state} />
     </output>
   );
 }
