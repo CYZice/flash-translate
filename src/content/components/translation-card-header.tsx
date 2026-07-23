@@ -1,13 +1,9 @@
 import { Settings, X } from "lucide-react";
 import { Button } from "@/shared/components/button";
-import { OPEN_SETTINGS_MESSAGE } from "@/shared/constants/runtime-messages";
 import { saveSettings } from "@/shared/storage/settings";
 import { getMessage } from "@/shared/utils/i18n";
-import { createPrefixedLogger } from "@/shared/utils/logger";
 import { LanguageSelector } from "./language-selector";
 import { TemporaryDisableButton } from "./temporary-disable-button";
-
-const log = createPrefixedLogger("TranslationCardHeader");
 
 interface TranslationCardHeaderProps {
   sourceLanguage: string;
@@ -15,8 +11,10 @@ interface TranslationCardHeaderProps {
   detectedLanguage: string | null;
   isDetecting: boolean;
   autoDetectEnabled: boolean;
+  isSettingsOpen: boolean;
   onClose: () => void;
   onDisablePage: () => void;
+  onSettingsToggle: () => void;
   onSourceLanguageOverride: (lang: string | null) => void;
 }
 
@@ -26,16 +24,12 @@ export function TranslationCardHeader({
   detectedLanguage,
   isDetecting,
   autoDetectEnabled,
+  isSettingsOpen,
   onClose,
   onDisablePage,
+  onSettingsToggle,
   onSourceLanguageOverride,
 }: TranslationCardHeaderProps) {
-  const onOpenSettings = () => {
-    chrome.runtime
-      .sendMessage(OPEN_SETTINGS_MESSAGE)
-      .catch((error) => log.error("Failed to request options page:", error));
-  };
-
   const onSourceChange = async (lang: string) => {
     // When auto-detect is enabled, override the detected language
     if (autoDetectEnabled) {
@@ -61,8 +55,12 @@ export function TranslationCardHeader({
       />
       <div className="flex items-stretch gap-1">
         <Button
-          aria-label={getMessage("content_openSettings")}
-          onClick={onOpenSettings}
+          aria-controls="translation-card-body"
+          aria-expanded={isSettingsOpen}
+          aria-label={getMessage("content_toggleSettings")}
+          aria-pressed={isSettingsOpen}
+          className={isSettingsOpen ? "bg-blue-50 text-blue-600" : undefined}
+          onClick={onSettingsToggle}
           variant="default"
         >
           <Settings size={14} />

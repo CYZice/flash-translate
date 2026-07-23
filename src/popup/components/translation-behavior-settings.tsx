@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { ToggleSwitch } from "@/shared/components/toggle-switch";
 import { useLanguageDetectorAvailability } from "@/shared/hooks/use-language-detector-availability";
 import { getSettings, saveSettings } from "@/shared/storage/settings";
 import { getMessage } from "@/shared/utils/i18n";
-import { ToggleSwitch } from "./toggle-switch";
 
 const CHROME_FLAGS_URL = "chrome://flags/#language-detection-api";
 

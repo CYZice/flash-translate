@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useCardLayout } from "../hooks/use-card-layout";
 import type { SelectionInfo } from "../hooks/use-text-selection";
 import { useTranslator } from "../hooks/use-translator";
+import { CardSettings } from "./card-settings";
 import { DragHandle } from "./drag-handle";
 import { ResizeHandle } from "./resize-handle";
 import { TranslationCardFooter } from "./translation-card-footer";
@@ -18,6 +19,7 @@ interface TranslationCardProps {
   onSourceLanguageOverride: (lang: string | null) => void;
   onClose: () => void;
   onDisablePage: () => void;
+  onExcludeSite: () => Promise<void>;
 }
 
 export function TranslationCard({
@@ -30,7 +32,9 @@ export function TranslationCard({
   onSourceLanguageOverride,
   onClose,
   onDisablePage,
+  onExcludeSite,
 }: TranslationCardProps) {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { result, isLoading, error, translate, availability } = useTranslator({
     sourceLanguage,
     targetLanguage,
@@ -81,30 +85,39 @@ export function TranslationCard({
           onMouseDown={layout.handleRightMouseDown}
           side="right"
         />
-        <div className="min-h-10 flex-1 overflow-y-auto">
+        <div
+          className="min-h-10 flex-1 overflow-y-auto"
+          id="translation-card-body"
+        >
           <TranslationCardHeader
             autoDetectEnabled={autoDetectEnabled}
             detectedLanguage={detectedLanguage}
             isDetecting={isDetecting}
+            isSettingsOpen={isSettingsOpen}
             onClose={onClose}
             onDisablePage={onDisablePage}
+            onSettingsToggle={() => setIsSettingsOpen((isOpen) => !isOpen)}
             onSourceLanguageOverride={onSourceLanguageOverride}
             sourceLanguage={sourceLanguage}
             targetLanguage={targetLanguage}
           />
-          <div className="px-4 py-1">
-            <TranslationContent
-              availability={availability}
-              error={error}
-              isLoading={isLoading}
-              result={result}
-              sourceLanguage={sourceLanguage}
-              targetLanguage={targetLanguage}
-            />
-          </div>
+          {isSettingsOpen ? (
+            <CardSettings onExcludeSite={onExcludeSite} />
+          ) : (
+            <div className="px-4 py-1">
+              <TranslationContent
+                availability={availability}
+                error={error}
+                isLoading={isLoading}
+                result={result}
+                sourceLanguage={sourceLanguage}
+                targetLanguage={targetLanguage}
+              />
+            </div>
+          )}
         </div>
 
-        <TranslationCardFooter result={result} />
+        {!isSettingsOpen && <TranslationCardFooter result={result} />}
         <ResizeHandle
           onKeyDown={layout.handleBottomKeyDown}
           onMouseDown={layout.handleBottomMouseDown}

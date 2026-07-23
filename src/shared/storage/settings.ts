@@ -131,6 +131,28 @@ export function generatePatternId(): string {
   return `pattern_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
+export function enableExclusionPattern(
+  patterns: ExclusionPattern[],
+  pattern: string,
+  newPatternId: string
+): ExclusionPattern[] {
+  const existingIndex = patterns.findIndex(
+    (existing) => existing.pattern === pattern
+  );
+
+  if (existingIndex === -1) {
+    return [{ id: newPatternId, pattern, enabled: true }, ...patterns];
+  }
+
+  if (patterns[existingIndex]?.enabled) {
+    return patterns;
+  }
+
+  return patterns.map((existing, index) =>
+    index === existingIndex ? { ...existing, enabled: true } : existing
+  );
+}
+
 // Check if extension context is still valid
 function isContextValid(): boolean {
   try {

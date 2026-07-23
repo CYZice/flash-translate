@@ -137,8 +137,20 @@
     "message": "利用不可"
   },
 
-  "content_openSettings": {
-    "message": "設定を開く"
+  "content_toggleSettings": {
+    "message": "カード内の設定を表示"
+  },
+  "content_settings": {
+    "message": "設定"
+  },
+  "content_openDetailedSettings": {
+    "message": "詳細設定を開く"
+  },
+  "content_excludeCurrentSite": {
+    "message": "このサイトでは翻訳しない"
+  },
+  "content_excludeCurrentSiteDescription": {
+    "message": "詳細設定から解除できます"
   },
   "content_close": {
     "message": "閉じる"

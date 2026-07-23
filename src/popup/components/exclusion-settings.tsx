@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   type ExclusionPattern,
+  enableExclusionPattern,
   generatePatternId,
   getSettings,
   saveSettings,
@@ -37,12 +38,9 @@ export function ExclusionSettings() {
       return;
     }
 
-    const newPattern: ExclusionPattern = {
-      id: generatePatternId(),
-      pattern: currentTabUrl,
-      enabled: true,
-    };
-    savePatterns([newPattern, ...patterns]);
+    savePatterns(
+      enableExclusionPattern(patterns, currentTabUrl, generatePatternId())
+    );
   };
 
   const handlePatternChange = (updated: ExclusionPattern) => {

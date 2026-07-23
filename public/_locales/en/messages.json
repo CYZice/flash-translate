@@ -137,8 +137,20 @@
     "message": "Unavailable"
   },
 
-  "content_openSettings": {
-    "message": "Open settings"
+  "content_toggleSettings": {
+    "message": "Show settings in the card"
+  },
+  "content_settings": {
+    "message": "Settings"
+  },
+  "content_openDetailedSettings": {
+    "message": "Open detailed settings"
+  },
+  "content_excludeCurrentSite": {
+    "message": "Don't translate on this site"
+  },
+  "content_excludeCurrentSiteDescription": {
+    "message": "You can undo this in detailed settings"
   },
   "content_close": {
     "message": "Close"

@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { useLanguageDetectorAvailability } from "@/shared/hooks/use-language-detector-availability";
 import { useSettings } from "@/shared/hooks/use-settings";
-import { getPageLanguage, isUrlExcluded } from "@/shared/storage/settings";
+import {
+  enableExclusionPattern,
+  generatePatternId,
+  getPageLanguage,
+  isUrlExcluded,
+  saveSettings,
+} from "@/shared/storage/settings";
 import { selectContentAppSettings } from "@/shared/storage/settings-selectors";
 import { evaluateSkipRules, type SkipResult } from "./skip-rules";
 import { useLanguageDetection } from "./use-language-detection";
@@ -32,6 +38,7 @@ export interface TranslationFlowState {
   // Actions
   dismissCard: () => void;
   temporarilyDisablePage: () => void;
+  permanentlyExcludeSite: () => Promise<void>;
   setOverriddenLanguage: (lang: string | null) => void;
 }
 
@@ -124,6 +131,20 @@ export function useTranslationFlow(): TranslationFlowState {
     clearSelection();
   };
 
+  const permanentlyExcludeSite = async () => {
+    if (!settings) {
+      return;
+    }
+
+    await saveSettings({
+      exclusionPatterns: enableExclusionPattern(
+        settings.exclusionPatterns,
+        window.location.origin,
+        generatePatternId()
+      ),
+    });
+  };
+
   return {
     // Selection
     selection,
@@ -144,6 +165,7 @@ export function useTranslationFlow(): TranslationFlowState {
     // Actions
     dismissCard,
     temporarilyDisablePage,
+    permanentlyExcludeSite,
     setOverriddenLanguage,
   };
 }

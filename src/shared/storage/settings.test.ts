@@ -1,11 +1,51 @@
 import { describe, expect, it } from "vitest";
 import {
   type ExclusionPattern,
+  enableExclusionPattern,
   isLanguageMatch,
   isUrlExcluded,
   normalizeLanguageCode,
   shouldSkipTranslation,
 } from "./settings";
+
+describe("enableExclusionPattern", () => {
+  it("prepends a new enabled pattern", () => {
+    const patterns: ExclusionPattern[] = [
+      { id: "existing", pattern: "https://other.com", enabled: true },
+    ];
+
+    expect(
+      enableExclusionPattern(patterns, "https://example.com", "new")
+    ).toEqual([
+      { id: "new", pattern: "https://example.com", enabled: true },
+      ...patterns,
+    ]);
+  });
+
+  it("enables an existing disabled pattern without adding a duplicate", () => {
+    const patterns: ExclusionPattern[] = [
+      { id: "existing", pattern: "https://example.com", enabled: false },
+      { id: "other", pattern: "https://other.com", enabled: true },
+    ];
+
+    expect(
+      enableExclusionPattern(patterns, "https://example.com", "unused")
+    ).toEqual([
+      { id: "existing", pattern: "https://example.com", enabled: true },
+      patterns[1],
+    ]);
+  });
+
+  it("returns the original patterns when the site is already excluded", () => {
+    const patterns: ExclusionPattern[] = [
+      { id: "existing", pattern: "https://example.com", enabled: true },
+    ];
+
+    expect(
+      enableExclusionPattern(patterns, "https://example.com", "unused")
+    ).toBe(patterns);
+  });
+});
 
 describe("normalizeLanguageCode", () => {
   it("returns lowercase primary language code", () => {
