@@ -48,7 +48,7 @@ describe("runTermViewTransition", () => {
     });
     const update = vi.fn();
 
-    runTermViewTransition(document, update);
+    runTermViewTransition(document, null, update);
 
     expect(update).toHaveBeenCalledOnce();
   });
@@ -69,7 +69,7 @@ describe("runTermViewTransition", () => {
     });
     const update = vi.fn();
 
-    runTermViewTransition(document, update);
+    runTermViewTransition(document, null, update);
 
     expect(
       document.documentElement.style.getPropertyValue("view-transition-name")
@@ -106,13 +106,40 @@ describe("runTermViewTransition", () => {
     const firstUpdate = vi.fn();
     const secondUpdate = vi.fn();
 
-    runTermViewTransition(document, firstUpdate);
-    runTermViewTransition(document, secondUpdate);
+    runTermViewTransition(document, null, firstUpdate);
+    runTermViewTransition(document, null, secondUpdate);
     updates[0]?.();
     updates[1]?.();
 
     expect(first.skipTransition).toHaveBeenCalledOnce();
     expect(firstUpdate).not.toHaveBeenCalled();
     expect(secondUpdate).toHaveBeenCalledOnce();
+  });
+
+  it("uses an element-scoped transition when the scope supports it", () => {
+    const deferred = createDeferredTransition();
+    let transitionUpdate = () => undefined;
+    const startViewTransition = vi.fn(
+      ({ callback }: { callback: ViewTransitionUpdateCallback }) => {
+        transitionUpdate = callback;
+        return deferred.transition;
+      }
+    );
+    const scope = Object.assign(document.createElement("div"), {
+      startViewTransition,
+    });
+    const documentTransition = vi.fn();
+    Object.defineProperty(document, "startViewTransition", {
+      configurable: true,
+      value: documentTransition,
+    });
+    const update = vi.fn();
+
+    runTermViewTransition(document, scope, update);
+    transitionUpdate();
+
+    expect(startViewTransition).toHaveBeenCalledOnce();
+    expect(documentTransition).not.toHaveBeenCalled();
+    expect(update).toHaveBeenCalledOnce();
   });
 });

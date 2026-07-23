@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { type RefObject, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { translatorManager } from "@/shared/utils/translator";
 import type { SelectionInfo } from "../hooks/use-text-selection";
@@ -15,6 +15,7 @@ interface UseHoveredTermTranslationOptions {
   selection: SelectionInfo | null;
   sourceLanguage: string;
   targetLanguage: string;
+  transitionScopeRef: RefObject<HTMLElement | null>;
   enabled: boolean;
 }
 
@@ -65,6 +66,7 @@ export function useHoveredTermTranslation({
   selection,
   sourceLanguage,
   targetLanguage,
+  transitionScopeRef,
   enabled,
 }: UseHoveredTermTranslationOptions): HoveredTermTranslationState {
   const [state, setState] = useState<HoveredTermTranslationState>(IDLE_STATE);
@@ -81,7 +83,7 @@ export function useHoveredTermTranslation({
     };
 
     const transitionToState = (nextState: HoveredTermTranslationState) => {
-      return runTermViewTransition(document, () => {
+      return runTermViewTransition(document, transitionScopeRef.current, () => {
         flushSync(() => setState(nextState));
       });
     };
@@ -200,7 +202,7 @@ export function useHoveredTermTranslation({
       clearPendingTranslation();
       hoveredTermRef.current = null;
     };
-  }, [enabled, selection, sourceLanguage, targetLanguage]);
+  }, [enabled, selection, sourceLanguage, targetLanguage, transitionScopeRef]);
 
   return state;
 }

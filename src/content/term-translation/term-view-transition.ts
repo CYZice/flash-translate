@@ -5,6 +5,13 @@ interface ActiveTermViewTransition {
 }
 
 const activeTransitions = new WeakMap<Document, ActiveTermViewTransition>();
+const activeScopedTransitions = new WeakMap<HTMLElement, ViewTransition>();
+
+interface ScopedViewTransitionElement extends HTMLElement {
+  startViewTransition?: (options: {
+    callback: ViewTransitionUpdateCallback;
+  }) => ViewTransition;
+}
 
 function prefersReducedMotion(document: Document): boolean {
   return (
@@ -30,14 +37,11 @@ function restoreRootTransitionName(
   style.removeProperty("view-transition-name");
 }
 
-export function runTermViewTransition(
+function runDocumentTermViewTransition(
   document: Document,
   update: () => void
 ): Promise<void> {
-  if (
-    typeof document.startViewTransition !== "function" ||
-    prefersReducedMotion(document)
-  ) {
+  if (typeof document.startViewTransition !== "function") {
     update();
     return Promise.resolve();
   }
@@ -98,4 +102,69 @@ export function runTermViewTransition(
   transition.ready.then(restoreStyles, restoreStyles);
   transition.finished.catch(() => undefined);
   return transition.updateCallbackDone;
+}
+
+function runScopedTermViewTransition(
+  scope: ScopedViewTransitionElement,
+  update: () => void
+): Promise<void> {
+  const startViewTransition = scope.startViewTransition;
+  if (!startViewTransition) {
+    update();
+    return Promise.resolve();
+  }
+
+  activeScopedTransitions.get(scope)?.skipTransition();
+
+  let updateWasCalled = false;
+  let transition: ViewTransition;
+
+  try {
+    transition = startViewTransition.call(scope, {
+      callback: () => {
+        if (activeScopedTransitions.get(scope) !== transition) {
+          return;
+        }
+
+        updateWasCalled = true;
+        update();
+      },
+    });
+  } catch {
+    activeScopedTransitions.delete(scope);
+    if (!updateWasCalled) {
+      update();
+    }
+    return Promise.resolve();
+  }
+
+  activeScopedTransitions.set(scope, transition);
+
+  const clearActiveTransition = () => {
+    if (activeScopedTransitions.get(scope) === transition) {
+      activeScopedTransitions.delete(scope);
+    }
+  };
+
+  transition.ready.then(clearActiveTransition, clearActiveTransition);
+  transition.finished.catch(() => undefined);
+  return transition.updateCallbackDone;
+}
+
+export function runTermViewTransition(
+  document: Document,
+  scope: HTMLElement | null,
+  update: () => void
+): Promise<void> {
+  if (prefersReducedMotion(document)) {
+    update();
+    return Promise.resolve();
+  }
+
+  const scopedElement = scope as ScopedViewTransitionElement | null;
+  if (scopedElement?.startViewTransition) {
+    return runScopedTermViewTransition(scopedElement, update);
+  }
+
+  return runDocumentTermViewTransition(document, update);
 }
