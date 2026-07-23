@@ -9,6 +9,7 @@ import { HoveredTermHighlight } from "./hovered-term-highlight";
 const HOVERED_TERM = {
   sourceText: "fairly",
   contextText: "They are fairly large.",
+  termOffset: 9,
   anchorRect: {
     top: 200,
     right: 140,

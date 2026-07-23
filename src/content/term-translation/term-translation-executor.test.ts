@@ -9,6 +9,7 @@ import {
 const HOVERED_TERM: HoveredTerm = {
   sourceText: "translate",
   contextText: "Please translate this sentence.",
+  termOffset: 7,
   anchorRect: {
     top: 10,
     right: 30,

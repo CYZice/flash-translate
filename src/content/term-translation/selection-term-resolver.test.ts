@@ -66,6 +66,7 @@ describe("resolveHoveredTermAtPoint", () => {
     ).toEqual({
       sourceText: "hello",
       contextText: "hello world",
+      termOffset: 0,
       anchorRect: {
         top: 20,
         right: 60,
@@ -92,6 +93,23 @@ describe("resolveHoveredTermAtPoint", () => {
         sourceLanguage: "en",
       })
     ).toBeNull();
+  });
+
+  it("records the hovered word offset inside the plain selection text", () => {
+    const textNode = document.createTextNode("hello world");
+    document.body.append(textNode);
+    setCaret(textNode, 8);
+
+    expect(
+      resolveHoveredTermAtPoint({
+        document,
+        x: 30,
+        y: 28,
+        selectionRanges: [createSelectionRange(textNode, 0, 11)],
+        contextText: "hello world",
+        sourceLanguage: "en",
+      })?.termOffset
+    ).toBe(6);
   });
 
   it("rejects a caret whose word rectangle is not under the pointer", () => {

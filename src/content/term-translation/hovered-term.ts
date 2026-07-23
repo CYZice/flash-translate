@@ -10,6 +10,7 @@ export interface ViewportRect {
 export interface HoveredTerm {
   sourceText: string;
   contextText: string;
+  termOffset: number;
   anchorRect: ViewportRect;
 }
 

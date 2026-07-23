@@ -87,6 +87,44 @@ function isSegmentInsideSelection(
   });
 }
 
+function getSegmentOffsetInSelection(
+  node: Text,
+  startOffset: number,
+  endOffset: number,
+  selectionRanges: readonly Range[],
+  contextText: string,
+  segmentText: string
+): number | null {
+  let precedingTextLength = 0;
+
+  for (const selectionRange of selectionRanges) {
+    try {
+      const containsSegment =
+        selectionRange.comparePoint(node, startOffset) === 0 &&
+        selectionRange.comparePoint(node, endOffset) === 0;
+      if (!containsSegment) {
+        precedingTextLength += selectionRange.toString().length;
+        continue;
+      }
+
+      const prefixRange = selectionRange.cloneRange();
+      prefixRange.setEnd(node, startOffset);
+      const offset = precedingTextLength + prefixRange.toString().length;
+      if (
+        contextText.slice(offset, offset + segmentText.length) === segmentText
+      ) {
+        return offset;
+      }
+
+      return contextText.indexOf(segmentText);
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
 function getAnchorRect(
   document: Document,
   node: Text,
@@ -149,6 +187,18 @@ export function resolveHoveredTermAtPoint({
     return null;
   }
 
+  const termOffset = getSegmentOffsetInSelection(
+    caret.node,
+    segment.startOffset,
+    segment.endOffset,
+    selectionRanges,
+    contextText,
+    segment.text
+  );
+  if (termOffset === null || termOffset < 0) {
+    return null;
+  }
+
   const anchorRect = getAnchorRect(
     document,
     caret.node,
@@ -164,6 +214,7 @@ export function resolveHoveredTermAtPoint({
   return {
     sourceText: segment.text,
     contextText,
+    termOffset,
     anchorRect,
   };
 }

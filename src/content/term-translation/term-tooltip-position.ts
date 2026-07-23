@@ -10,6 +10,11 @@ interface ViewportSize {
   height: number;
 }
 
+interface TooltipSize {
+  width: number;
+  height: number;
+}
+
 export interface TermTooltipPosition {
   left: number;
   top: number;
@@ -21,10 +26,14 @@ function clamp(value: number, minimum: number, maximum: number): number {
 
 export function getTermTooltipPosition(
   anchorRect: ViewportRect,
-  viewport: ViewportSize
+  viewport: ViewportSize,
+  tooltipSize: TooltipSize = {
+    width: TOOLTIP_WIDTH,
+    height: TOOLTIP_HEIGHT,
+  }
 ): TermTooltipPosition {
   const tooltipWidth = Math.min(
-    TOOLTIP_WIDTH,
+    tooltipSize.width,
     Math.max(0, viewport.width - VIEWPORT_MARGIN * 2)
   );
   const halfTooltipWidth = tooltipWidth / 2;
@@ -34,13 +43,13 @@ export function getTermTooltipPosition(
     viewport.width - VIEWPORT_MARGIN - halfTooltipWidth
   );
 
-  const topAbove = anchorRect.top - ANCHOR_GAP - TOOLTIP_HEIGHT;
+  const topAbove = anchorRect.top - ANCHOR_GAP - tooltipSize.height;
   const top =
     topAbove >= VIEWPORT_MARGIN
       ? topAbove
       : Math.min(
           anchorRect.bottom + ANCHOR_GAP,
-          viewport.height - VIEWPORT_MARGIN - TOOLTIP_HEIGHT
+          viewport.height - VIEWPORT_MARGIN - tooltipSize.height
         );
 
   return {

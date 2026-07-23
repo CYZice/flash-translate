@@ -217,6 +217,33 @@
   "content_termTranslation": {
     "message": "Term translation"
   },
+  "content_termInsightHint": {
+    "message": "Click the term for details"
+  },
+  "content_termInsight": {
+    "message": "Meaning in context"
+  },
+  "content_termInsightLoading": {
+    "message": "Analyzing context and core meaning..."
+  },
+  "content_termExpression": {
+    "message": "Expression"
+  },
+  "content_termCoreMeaning": {
+    "message": "Core meaning"
+  },
+  "content_termRoleInContext": {
+    "message": "Role in this context"
+  },
+  "content_termPartOfSpeech": {
+    "message": "Part of speech"
+  },
+  "content_termInsightUnavailable": {
+    "message": "AI details aren't available for this environment or language. The quick translation still works."
+  },
+  "content_termInsightFailed": {
+    "message": "Couldn't generate AI details. The quick translation still works."
+  },
 
   "action_edit": {
     "message": "Edit"
