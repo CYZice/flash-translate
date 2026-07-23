@@ -57,7 +57,7 @@ export function TemporaryDisableButton({
         <div
           aria-labelledby={dialogTitleId}
           aria-modal="true"
-          className="absolute inset-0 z-50 flex animate-dialog-slide-in items-center gap-2 bg-white/95 px-3"
+          className="absolute inset-0 z-50 flex animate-dialog-slide-in items-center gap-2 px-3 backdrop-blur-md"
           role="dialog"
         >
           <span
