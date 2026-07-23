@@ -2,11 +2,7 @@ import { type RefObject, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { translatorManager } from "@/shared/utils/translator";
 import type { SelectionInfo } from "../hooks/use-text-selection";
-import {
-  type HoveredTerm,
-  isPointInsideViewportRect,
-  type TermTranslationResult,
-} from "./hovered-term";
+import type { HoveredTerm, TermTranslationResult } from "./hovered-term";
 import {
   isPointInsideSelectionRanges,
   resolveHoveredTermAtPoint,
@@ -34,11 +30,7 @@ export interface HoveredTermTranslationState
   extends QuickTermTranslationState,
     TermInsightViewState {}
 
-export interface HoveredTermTranslationController
-  extends HoveredTermTranslationState {
-  requestInsight: () => void;
-  dismissInsight: () => void;
-}
+export type HoveredTermTranslationController = HoveredTermTranslationState;
 
 const IDLE_STATE: QuickTermTranslationState = {
   hoveredTerm: null,
@@ -144,15 +136,10 @@ export function useHoveredTermTranslation({
 }: UseHoveredTermTranslationOptions): HoveredTermTranslationController {
   const [state, setState] = useState<QuickTermTranslationState>(IDLE_STATE);
   const hoveredTermRef = useRef<HoveredTerm | null>(null);
-  const translationResultRef = useRef<TermTranslationResult | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestIdRef = useRef(0);
   const cacheRef = useRef(new TermTranslationCache());
-  const termInsight = useTermInsight({
-    hoveredTermRef,
-    translationResultRef,
-    transitionScopeRef,
-  });
+  const termInsight = useTermInsight({ transitionScopeRef });
 
   useEffect(() => {
     const clearPendingTranslation = () => {
@@ -175,7 +162,6 @@ export function useHoveredTermTranslation({
       }
 
       hoveredTermRef.current = null;
-      translationResultRef.current = null;
       transitionToState(IDLE_STATE).catch(() => setState(IDLE_STATE));
     };
 
@@ -189,7 +175,6 @@ export function useHoveredTermTranslation({
         result: null,
         isLoading: true,
       });
-      translationResultRef.current = null;
       const translation = executeTermTranslation({
         hoveredTerm,
         sourceLanguage,
@@ -211,12 +196,12 @@ export function useHoveredTermTranslation({
             return;
           }
 
-          translationResultRef.current = result;
           setState({
             hoveredTerm,
             result,
             isLoading: false,
           });
+          termInsight.startInsight(hoveredTerm, result);
         })
         .catch((error: unknown) => {
           if (
@@ -234,10 +219,6 @@ export function useHoveredTermTranslation({
     };
 
     const handlePointerMove = (event: PointerEvent) => {
-      if (termInsight.isPinnedRef.current) {
-        return;
-      }
-
       const action = resolvePointerMoveAction({
         event,
         enabled,
@@ -254,65 +235,39 @@ export function useHoveredTermTranslation({
       }
 
       clearPendingTranslation();
+      termInsight.resetInsight();
       hoveredTermRef.current = action.hoveredTerm;
       translateHoveredTerm(action.hoveredTerm).catch(clearHoveredTerm);
-    };
-
-    const handleTermPointerDown = (event: PointerEvent) => {
-      const hoveredTerm = hoveredTermRef.current;
-      if (
-        event.button !== 0 ||
-        termInsight.isPinnedRef.current ||
-        !translationResultRef.current ||
-        !hoveredTerm ||
-        !isPointInsideViewportRect(
-          hoveredTerm.anchorRect,
-          event.clientX,
-          event.clientY
-        )
-      ) {
-        return;
-      }
-
-      event.preventDefault();
-      event.stopPropagation();
-      termInsight.requestInsight();
     };
 
     document.addEventListener("pointermove", handlePointerMove, {
       passive: true,
     });
-    document.addEventListener("pointerdown", handleTermPointerDown, true);
     window.addEventListener("resize", clearHoveredTerm);
     window.addEventListener("scroll", clearHoveredTerm, true);
 
     return () => {
       document.removeEventListener("pointermove", handlePointerMove);
-      document.removeEventListener("pointerdown", handleTermPointerDown, true);
       window.removeEventListener("resize", clearHoveredTerm);
       window.removeEventListener("scroll", clearHoveredTerm, true);
       clearPendingTranslation();
       hoveredTermRef.current = null;
-      translationResultRef.current = null;
     };
   }, [
     enabled,
     selection,
     sourceLanguage,
     targetLanguage,
-    termInsight.isPinnedRef,
-    termInsight.requestInsight,
+    termInsight.startInsight,
     termInsight.resetInsight,
     transitionScopeRef,
   ]);
 
   return {
     ...state,
-    isPinned: termInsight.isPinned,
     insightStatus: termInsight.insightStatus,
     insightResult: termInsight.insightResult,
+    insightProgress: termInsight.insightProgress,
     insightUnavailableReason: termInsight.insightUnavailableReason,
-    requestInsight: termInsight.requestInsight,
-    dismissInsight: termInsight.dismissInsight,
   };
 }

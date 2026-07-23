@@ -1,6 +1,10 @@
 import type { HoveredTerm, TermTranslationResult } from "./hovered-term";
 import { resolveTermContext, type TermContext } from "./term-context";
-import type { TermInsight, TermInsightResult } from "./term-insight";
+import type {
+  TermInsight,
+  TermInsightProgress,
+  TermInsightResult,
+} from "./term-insight";
 import type { TermInsightCache } from "./term-insight-cache";
 
 export interface TermInsightProvider {
@@ -12,7 +16,8 @@ export interface TermInsightProvider {
       targetLanguage: string;
       context: TermContext;
     },
-    signal: AbortSignal
+    signal: AbortSignal,
+    onProgress: (progress: TermInsightProgress) => void
   ) => Promise<TermInsight>;
 }
 
@@ -22,6 +27,7 @@ interface ExecuteTermInsightOptions {
   signal: AbortSignal;
   cache: TermInsightCache;
   provider: TermInsightProvider;
+  onProgress: (progress: TermInsightProgress) => void;
 }
 
 export async function executeTermInsight({
@@ -30,6 +36,7 @@ export async function executeTermInsight({
   signal,
   cache,
   provider,
+  onProgress,
 }: ExecuteTermInsightOptions): Promise<TermInsightResult> {
   const context = resolveTermContext({
     selectedText: hoveredTerm.contextText,
@@ -47,6 +54,7 @@ export async function executeTermInsight({
   };
   const cachedResult = cache.get(cacheKey);
   if (cachedResult) {
+    onProgress(cachedResult.insight);
     return cachedResult;
   }
 
@@ -58,7 +66,8 @@ export async function executeTermInsight({
       targetLanguage: translation.targetLanguage,
       context,
     },
-    signal
+    signal,
+    onProgress
   );
   const result = {
     sourceText: hoveredTerm.sourceText,

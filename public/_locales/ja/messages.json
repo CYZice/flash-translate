@@ -217,11 +217,11 @@
   "content_termTranslation": {
     "message": "語句の翻訳"
   },
-  "content_termInsightHint": {
-    "message": "語句をクリックして詳しく見る"
-  },
   "content_termInsight": {
     "message": "文脈での意味"
+  },
+  "content_termInsightDetails": {
+    "message": "AI語句解説"
   },
   "content_termInsightLoading": {
     "message": "文脈とコアを解析中..."

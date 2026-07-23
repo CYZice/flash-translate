@@ -50,6 +50,7 @@ describe("executeTermInsight", () => {
       signal: new AbortController().signal,
       cache: new TermInsightCache(),
       provider: { analyze },
+      onProgress: vi.fn(),
     });
 
     expect(analyze).toHaveBeenCalledWith(
@@ -62,7 +63,8 @@ describe("executeTermInsight", () => {
           strategy: "neighboring-sentences",
         },
       }),
-      expect.any(AbortSignal)
+      expect.any(AbortSignal),
+      expect.any(Function)
     );
     expect(result.insight).toEqual(INSIGHT);
   });
@@ -77,6 +79,7 @@ describe("executeTermInsight", () => {
       signal: new AbortController().signal,
       cache: new TermInsightCache(),
       provider: { analyze },
+      onProgress: vi.fn(),
     };
 
     await executeTermInsight(options);

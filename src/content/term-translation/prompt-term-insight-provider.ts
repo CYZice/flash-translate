@@ -2,7 +2,9 @@ import { createPrefixedLogger } from "@/shared/utils/logger";
 import type { TermContext } from "./term-context";
 import {
   parseTermInsight,
+  parseTermInsightProgress,
   type TermInsight,
+  type TermInsightProgress,
   TermInsightUnavailableError,
 } from "./term-insight";
 import type { TermInsightProvider } from "./term-insight-executor";
@@ -122,7 +124,8 @@ class PromptTermInsightProvider implements TermInsightProvider {
 
   async analyze(
     input: AnalyzeInput,
-    signal: AbortSignal
+    signal: AbortSignal,
+    onProgress: (progress: TermInsightProgress) => void
   ): Promise<TermInsight> {
     assertSupportedLanguages(input.sourceLanguage, input.targetLanguage);
     const baseSession = await this.getSession(
@@ -152,7 +155,21 @@ class PromptTermInsightProvider implements TermInsightProvider {
         );
       }
 
-      const response = await session.prompt(prompt, promptOptions);
+      const stream = session.promptStreaming(prompt, promptOptions);
+      const reader = stream.getReader();
+      let response = "";
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
+          response += value;
+          onProgress(parseTermInsightProgress(response));
+        }
+      } finally {
+        reader.releaseLock();
+      }
       return parseTermInsight(response);
     } finally {
       session.destroy();

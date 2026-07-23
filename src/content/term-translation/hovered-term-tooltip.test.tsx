@@ -3,7 +3,7 @@
  */
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { HoveredTermTooltip } from "./hovered-term-tooltip";
 import type { HoveredTermTranslationState } from "./use-hovered-term-translation";
 
@@ -33,7 +33,8 @@ const MESSAGES: Record<string, string> = {
   content_close: "Close",
   content_termCoreMeaning: "Core meaning",
   content_termInsight: "Meaning in context",
-  content_termInsightHint: "Click the term for details",
+  content_termInsightDetails: "AI vocabulary insight",
+  content_termInsightLoading: "Analyzing context and core meaning...",
   content_termPartOfSpeech: "Part of speech",
   content_termRoleInContext: "Role in this context",
   content_termTranslation: "Term translation",
@@ -45,17 +46,15 @@ function render(
     HoveredTermTranslationState,
     "hoveredTerm" | "result" | "isLoading"
   > &
-    Partial<HoveredTermTranslationState>,
-  onRequestInsight?: () => void
+    Partial<HoveredTermTranslationState>
 ) {
   act(() => {
     root.render(
       <HoveredTermTooltip
-        onRequestInsight={onRequestInsight}
         state={{
-          isPinned: false,
           insightStatus: "idle",
           insightResult: null,
+          insightProgress: {},
           insightUnavailableReason: null,
           ...state,
         }}
@@ -106,44 +105,7 @@ describe("HoveredTermTooltip", () => {
     );
   });
 
-  it("renders only the translated term", () => {
-    const onRequestInsight = vi.fn();
-    render(
-      {
-        hoveredTerm: HOVERED_TERM,
-        result: {
-          sourceText: "translate",
-          translatedText: "翻訳する",
-          contextText: "Please translate this sentence.",
-          sourceLanguage: "en",
-          targetLanguage: "ja",
-        },
-        isLoading: false,
-      },
-      onRequestInsight
-    );
-
-    const tooltip = container.querySelector<HTMLButtonElement>(
-      "[data-flash-translate-term-tooltip]"
-    );
-    expect(tooltip?.textContent).toBe("翻訳するClick the term for details");
-    expect(tooltip?.getAttribute("aria-label")).toBe("Term translation");
-    expect(tooltip?.type).toBe("button");
-    expect(tooltip?.style.transform).toBe("translateX(-50%)");
-
-    act(() => {
-      tooltip?.dispatchEvent(
-        new MouseEvent("pointerdown", { bubbles: true, button: 0 })
-      );
-    });
-    expect(onRequestInsight).toHaveBeenCalledOnce();
-
-    onRequestInsight.mockClear();
-    act(() => tooltip?.click());
-    expect(onRequestInsight).toHaveBeenCalledOnce();
-  });
-
-  it("renders the contextual meaning and learning details when pinned", () => {
+  it("keeps the quick translation visible while AI details load automatically", () => {
     render({
       hoveredTerm: HOVERED_TERM,
       result: {
@@ -154,8 +116,68 @@ describe("HoveredTermTooltip", () => {
         targetLanguage: "ja",
       },
       isLoading: false,
-      isPinned: true,
+      insightStatus: "loading",
+    });
+
+    const tooltip = container.querySelector<HTMLOutputElement>(
+      "[data-flash-translate-term-tooltip]"
+    );
+    expect(tooltip?.textContent).toContain("翻訳する");
+    expect(tooltip?.textContent).toContain("AI vocabulary insight");
+    expect(tooltip?.textContent).toContain(
+      "Analyzing context and core meaning..."
+    );
+    expect(tooltip?.getAttribute("aria-label")).toBe("Term translation");
+    expect(tooltip?.style.transform).toBe("translateX(-50%)");
+  });
+
+  it("reveals completed insight fields while the response is streaming", () => {
+    render({
+      hoveredTerm: HOVERED_TERM,
+      result: {
+        sourceText: "translate",
+        translatedText: "翻訳する",
+        contextText: "Please translate this sentence.",
+        sourceLanguage: "en",
+        targetLanguage: "ja",
+      },
+      isLoading: false,
+      insightStatus: "streaming",
+      insightProgress: {
+        contextualMeaning: "訳す",
+        coreMeaning: "別の言語で意味を表す",
+      },
+    });
+
+    const tooltip = container.querySelector(
+      "[data-flash-translate-term-tooltip]"
+    );
+    expect(tooltip?.textContent).toContain("翻訳する");
+    expect(tooltip?.textContent).toContain("訳す");
+    expect(tooltip?.textContent).toContain("別の言語で意味を表す");
+    expect(tooltip?.textContent).not.toContain("Part of speech");
+  });
+
+  it("renders the completed contextual meaning and learning details", () => {
+    render({
+      hoveredTerm: HOVERED_TERM,
+      result: {
+        sourceText: "translate",
+        translatedText: "翻訳する",
+        contextText: "Please translate this sentence.",
+        sourceLanguage: "en",
+        targetLanguage: "ja",
+      },
+      isLoading: false,
       insightStatus: "ready",
+      insightProgress: {
+        expression: "translate",
+        contextualMeaning: "訳す",
+        coreMeaning: "別の言語で意味を表す",
+        roleInContext: "依頼している動作を表す",
+        partOfSpeech: "動詞",
+        isMultiwordExpression: false,
+      },
       insightResult: {
         sourceText: "translate",
         quickTranslation: "翻訳する",
@@ -184,8 +206,6 @@ describe("HoveredTermTooltip", () => {
     expect(tooltip?.textContent).toContain("別の言語で意味を表す");
     expect(tooltip?.textContent).toContain("依頼している動作を表す");
     expect(tooltip?.textContent).toContain("動詞");
-    expect(
-      container.querySelector<HTMLButtonElement>('button[aria-label="Close"]')
-    ).not.toBeNull();
+    expect(tooltip?.textContent).toContain("翻訳する");
   });
 });

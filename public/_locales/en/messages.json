@@ -217,11 +217,11 @@
   "content_termTranslation": {
     "message": "Term translation"
   },
-  "content_termInsightHint": {
-    "message": "Click the term for details"
-  },
   "content_termInsight": {
     "message": "Meaning in context"
+  },
+  "content_termInsightDetails": {
+    "message": "AI vocabulary insight"
   },
   "content_termInsightLoading": {
     "message": "Analyzing context and core meaning..."

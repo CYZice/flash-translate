@@ -61,11 +61,7 @@ export default function App() {
         <HoveredTermHighlight
           hoveredTerm={hoveredTermTranslation.hoveredTerm}
         />
-        <HoveredTermTooltip
-          onDismissInsight={hoveredTermTranslation.dismissInsight}
-          onRequestInsight={hoveredTermTranslation.requestInsight}
-          state={hoveredTermTranslation}
-        />
+        <HoveredTermTooltip state={hoveredTermTranslation} />
       </div>
     </>
   );
