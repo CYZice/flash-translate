@@ -2,7 +2,11 @@ import { type RefObject, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { translatorManager } from "@/shared/utils/translator";
 import type { SelectionInfo } from "../hooks/use-text-selection";
-import type { HoveredTerm, TermTranslationResult } from "./hovered-term";
+import {
+  type HoveredTerm,
+  isPointInsideViewportRect,
+  type TermTranslationResult,
+} from "./hovered-term";
 import {
   isPointInsideSelectionRanges,
   resolveHoveredTermAtPoint,
@@ -254,14 +258,37 @@ export function useHoveredTermTranslation({
       translateHoveredTerm(action.hoveredTerm).catch(clearHoveredTerm);
     };
 
+    const handleTermPointerDown = (event: PointerEvent) => {
+      const hoveredTerm = hoveredTermRef.current;
+      if (
+        event.button !== 0 ||
+        termInsight.isPinnedRef.current ||
+        !translationResultRef.current ||
+        !hoveredTerm ||
+        !isPointInsideViewportRect(
+          hoveredTerm.anchorRect,
+          event.clientX,
+          event.clientY
+        )
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      termInsight.requestInsight();
+    };
+
     document.addEventListener("pointermove", handlePointerMove, {
       passive: true,
     });
+    document.addEventListener("pointerdown", handleTermPointerDown, true);
     window.addEventListener("resize", clearHoveredTerm);
     window.addEventListener("scroll", clearHoveredTerm, true);
 
     return () => {
       document.removeEventListener("pointermove", handlePointerMove);
+      document.removeEventListener("pointerdown", handleTermPointerDown, true);
       window.removeEventListener("resize", clearHoveredTerm);
       window.removeEventListener("scroll", clearHoveredTerm, true);
       clearPendingTranslation();
@@ -274,6 +301,7 @@ export function useHoveredTermTranslation({
     sourceLanguage,
     targetLanguage,
     termInsight.isPinnedRef,
+    termInsight.requestInsight,
     termInsight.resetInsight,
     transitionScopeRef,
   ]);

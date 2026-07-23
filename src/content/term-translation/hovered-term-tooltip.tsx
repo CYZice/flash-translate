@@ -160,6 +160,7 @@ export function HoveredTermTooltip({
   const tooltipStyle = {
     left: `${position.left}px`,
     top: `${position.top}px`,
+    transform: "translateX(-50%)",
     viewTransitionName: "flash-translate-term-tooltip",
     zIndex: 2_147_483_647,
   };
@@ -168,9 +169,17 @@ export function HoveredTermTooltip({
     return (
       <button
         aria-label={getMessage("content_termTranslation")}
-        className="pointer-events-auto fixed w-72 max-w-[calc(100vw-1rem)] -translate-x-1/2 cursor-pointer rounded-lg border border-stone-300/80 border-solid bg-white/90 px-3 py-2 text-left font-sans text-gray-800 text-sm leading-normal shadow-xl backdrop-blur-md hover:border-blue-300"
+        className="pointer-events-auto fixed w-72 max-w-[calc(100vw-1rem)] cursor-pointer rounded-lg border border-stone-300/80 border-solid bg-white/90 px-3 py-2 text-left font-sans text-gray-800 text-sm leading-normal shadow-xl backdrop-blur-md hover:border-blue-300"
         data-flash-translate-term-tooltip=""
         onClick={onRequestInsight}
+        onPointerDown={(event) => {
+          if (event.button !== 0) {
+            return;
+          }
+          event.preventDefault();
+          event.stopPropagation();
+          onRequestInsight();
+        }}
         style={tooltipStyle}
         type="button"
       >
@@ -182,7 +191,7 @@ export function HoveredTermTooltip({
   return (
     <output
       aria-label={getMessage("content_termTranslation")}
-      className="pointer-events-auto fixed w-96 max-w-[calc(100vw-1rem)] -translate-x-1/2 rounded-lg border border-stone-300/80 border-solid bg-white/90 px-3 py-2 font-sans text-gray-800 text-sm leading-normal shadow-xl backdrop-blur-md"
+      className="pointer-events-auto fixed w-96 max-w-[calc(100vw-1rem)] rounded-lg border border-stone-300/80 border-solid bg-white/90 px-3 py-2 font-sans text-gray-800 text-sm leading-normal shadow-xl backdrop-blur-md"
       data-flash-translate-term-tooltip=""
       style={tooltipStyle}
     >

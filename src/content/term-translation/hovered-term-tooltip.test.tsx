@@ -129,7 +129,16 @@ describe("HoveredTermTooltip", () => {
     expect(tooltip?.textContent).toBe("翻訳するClick the term for details");
     expect(tooltip?.getAttribute("aria-label")).toBe("Term translation");
     expect(tooltip?.type).toBe("button");
+    expect(tooltip?.style.transform).toBe("translateX(-50%)");
 
+    act(() => {
+      tooltip?.dispatchEvent(
+        new MouseEvent("pointerdown", { bubbles: true, button: 0 })
+      );
+    });
+    expect(onRequestInsight).toHaveBeenCalledOnce();
+
+    onRequestInsight.mockClear();
     act(() => tooltip?.click());
     expect(onRequestInsight).toHaveBeenCalledOnce();
   });

@@ -21,3 +21,11 @@ export interface TermTranslationResult {
   sourceLanguage: string;
   targetLanguage: string;
 }
+
+export function isPointInsideViewportRect(
+  rect: ViewportRect,
+  x: number,
+  y: number
+): boolean {
+  return rect.left <= x && x <= rect.right && rect.top <= y && y <= rect.bottom;
+}
