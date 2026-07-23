@@ -19,7 +19,7 @@ describe("getTermTooltipPosition", () => {
       })
     ).toEqual({
       left: 152,
-      top: 104,
+      top: 136,
     });
   });
 
@@ -57,7 +57,7 @@ describe("getTermTooltipPosition", () => {
       )
     ).toEqual({
       left: 152,
-      top: 104,
+      top: 136,
     });
   });
 });

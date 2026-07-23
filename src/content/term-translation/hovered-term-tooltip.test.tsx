@@ -61,7 +61,7 @@ afterEach(() => {
 });
 
 describe("HoveredTermTooltip", () => {
-  it("renders the hovered source term while translation is loading", () => {
+  it("uses the page highlight instead of repeating the source term while loading", () => {
     render({
       hoveredTerm: HOVERED_TERM,
       result: null,
@@ -71,11 +71,10 @@ describe("HoveredTermTooltip", () => {
     const tooltip = container.querySelector(
       "[data-flash-translate-term-tooltip]"
     );
-    expect(tooltip?.textContent).toContain("translate");
-    expect(tooltip?.textContent).toContain("Translating...");
+    expect(tooltip?.textContent).toBe("Translating...");
   });
 
-  it("renders the translated term without exposing DOM data in the result", () => {
+  it("renders only the translated term", () => {
     render({
       hoveredTerm: HOVERED_TERM,
       result: {
@@ -91,8 +90,7 @@ describe("HoveredTermTooltip", () => {
     const tooltip = container.querySelector(
       "[data-flash-translate-term-tooltip]"
     );
-    expect(tooltip?.textContent).toContain("translate");
-    expect(tooltip?.textContent).toContain("翻訳する");
+    expect(tooltip?.textContent).toBe("翻訳する");
     expect(tooltip?.getAttribute("aria-label")).toBe("Term translation");
   });
 });

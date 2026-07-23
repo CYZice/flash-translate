@@ -27,16 +27,13 @@ export function HoveredTermTooltip({ state }: HoveredTermTooltipProps) {
         zIndex: 2_147_483_647,
       }}
     >
-      <div className="truncate text-gray-500 text-xs" dir="auto">
-        {state.hoveredTerm.sourceText}
-      </div>
       {state.isLoading ? (
-        <div className="mt-1 flex items-center gap-2 text-gray-500">
+        <div className="flex items-center gap-2 text-gray-500">
           <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />
           <span>{getMessage("content_translating")}</span>
         </div>
       ) : (
-        <div className="wrap-break-word mt-1 text-base leading-snug" dir="auto">
+        <div className="wrap-break-word text-base leading-snug" dir="auto">
           {state.result?.translatedText}
         </div>
       )}
