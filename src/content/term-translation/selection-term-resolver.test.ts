@@ -2,7 +2,10 @@
  * @vitest-environment jsdom
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { resolveHoveredTermAtPoint } from "./selection-term-resolver";
+import {
+  isPointInsideSelectionRanges,
+  resolveHoveredTermAtPoint,
+} from "./selection-term-resolver";
 
 const TERM_RECT = new DOMRect(10, 20, 50, 18);
 const originalCaretPositionFromPoint = document.caretPositionFromPoint;
@@ -106,5 +109,18 @@ describe("resolveHoveredTermAtPoint", () => {
         sourceLanguage: "en",
       })
     ).toBeNull();
+  });
+});
+
+describe("isPointInsideSelectionRanges", () => {
+  it("keeps the current term while crossing whitespace inside the selection", () => {
+    const textNode = document.createTextNode("hello world");
+    document.body.append(textNode);
+    const selectionRange = createSelectionRange(textNode, 0, 11);
+
+    expect(isPointInsideSelectionRanges([selectionRange], 30, 28)).toBe(true);
+    expect(isPointInsideSelectionRanges([selectionRange], 200, 200)).toBe(
+      false
+    );
   });
 });

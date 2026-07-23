@@ -72,6 +72,9 @@ describe("HoveredTermTooltip", () => {
       "[data-flash-translate-term-tooltip]"
     );
     expect(tooltip?.textContent).toBe("Translating...");
+    expect((tooltip as HTMLElement | null)?.style.viewTransitionName).toBe(
+      "flash-translate-term-tooltip"
+    );
   });
 
   it("renders only the translated term", () => {

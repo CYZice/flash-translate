@@ -52,6 +52,23 @@ function isPointInsideRect(rect: ViewportRect, x: number, y: number): boolean {
   return rect.left <= x && x <= rect.right && rect.top <= y && y <= rect.bottom;
 }
 
+export function isPointInsideSelectionRanges(
+  selectionRanges: readonly Range[],
+  x: number,
+  y: number
+): boolean {
+  return selectionRanges.some((selectionRange) => {
+    try {
+      return Array.from(selectionRange.getClientRects()).some(
+        (rect) =>
+          rect.width > 0 && rect.height > 0 && isPointInsideRect(rect, x, y)
+      );
+    } catch {
+      return false;
+    }
+  });
+}
+
 function isSegmentInsideSelection(
   node: Text,
   startOffset: number,

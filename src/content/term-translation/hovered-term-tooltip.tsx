@@ -24,6 +24,7 @@ export function HoveredTermTooltip({ state }: HoveredTermTooltipProps) {
       style={{
         left: `${position.left}px`,
         top: `${position.top}px`,
+        viewTransitionName: "flash-translate-term-tooltip",
         zIndex: 2_147_483_647,
       }}
     >

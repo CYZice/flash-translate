@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { translatorManager } from "@/shared/utils/translator";
 import type { SelectionInfo } from "../hooks/use-text-selection";
 import type { HoveredTerm, TermTranslationResult } from "./hovered-term";
-import { resolveHoveredTermAtPoint } from "./selection-term-resolver";
+import {
+  isPointInsideSelectionRanges,
+  resolveHoveredTermAtPoint,
+} from "./selection-term-resolver";
 import { TermTranslationCache } from "./term-translation-cache";
 import { executeTermTranslation } from "./term-translation-executor";
-
-const HOVER_DELAY_MS = 250;
+import { runTermViewTransition } from "./term-view-transition";
 
 interface UseHoveredTermTranslationOptions {
   selection: SelectionInfo | null;
@@ -66,26 +69,31 @@ export function useHoveredTermTranslation({
 }: UseHoveredTermTranslationOptions): HoveredTermTranslationState {
   const [state, setState] = useState<HoveredTermTranslationState>(IDLE_STATE);
   const hoveredTermRef = useRef<HoveredTerm | null>(null);
-  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestIdRef = useRef(0);
   const cacheRef = useRef(new TermTranslationCache());
 
   useEffect(() => {
     const clearPendingTranslation = () => {
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current);
-        hoverTimeoutRef.current = null;
-      }
       abortControllerRef.current?.abort();
       abortControllerRef.current = null;
       requestIdRef.current += 1;
     };
 
+    const transitionToState = (nextState: HoveredTermTranslationState) => {
+      return runTermViewTransition(document, () => {
+        flushSync(() => setState(nextState));
+      });
+    };
+
     const clearHoveredTerm = () => {
       clearPendingTranslation();
+      if (!hoveredTermRef.current) {
+        return;
+      }
+
       hoveredTermRef.current = null;
-      setState(IDLE_STATE);
+      transitionToState(IDLE_STATE).catch(() => setState(IDLE_STATE));
     };
 
     const translateHoveredTerm = (hoveredTerm: HoveredTerm) => {
@@ -93,21 +101,22 @@ export function useHoveredTermTranslation({
       requestIdRef.current = requestId;
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
-      setState({
+      const loadingStateReady = transitionToState({
         hoveredTerm,
         result: null,
         isLoading: true,
       });
-
-      return executeTermTranslation({
+      const translation = executeTermTranslation({
         hoveredTerm,
         sourceLanguage,
         targetLanguage,
         signal: abortController.signal,
         cache: cacheRef.current,
         translator: translatorManager,
-      })
-        .then((result) => {
+      });
+
+      return Promise.all([loadingStateReady, translation])
+        .then(([, result]) => {
           if (
             !isRequestActive(
               requestId,
@@ -158,17 +167,24 @@ export function useHoveredTermTranslation({
         return;
       }
 
-      clearPendingTranslation();
-      hoveredTermRef.current = hoveredTerm;
-      setState(IDLE_STATE);
       if (!hoveredTerm) {
+        if (
+          isPointInsideSelectionRanges(
+            selection.ranges,
+            event.clientX,
+            event.clientY
+          )
+        ) {
+          return;
+        }
+
+        clearHoveredTerm();
         return;
       }
 
-      hoverTimeoutRef.current = setTimeout(() => {
-        hoverTimeoutRef.current = null;
-        translateHoveredTerm(hoveredTerm).catch(clearHoveredTerm);
-      }, HOVER_DELAY_MS);
+      clearPendingTranslation();
+      hoveredTermRef.current = hoveredTerm;
+      translateHoveredTerm(hoveredTerm).catch(clearHoveredTerm);
     };
 
     document.addEventListener("pointermove", handlePointerMove, {

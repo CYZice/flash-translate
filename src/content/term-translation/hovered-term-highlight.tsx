@@ -25,6 +25,7 @@ export function HoveredTermHighlight({
         left: `${anchorRect.left - HIGHLIGHT_PADDING}px`,
         width: `${anchorRect.width + HIGHLIGHT_PADDING * 2}px`,
         height: `${anchorRect.height + HIGHLIGHT_PADDING * 2}px`,
+        viewTransitionName: "flash-translate-term-highlight",
         zIndex: 2_147_483_647,
       }}
     />
