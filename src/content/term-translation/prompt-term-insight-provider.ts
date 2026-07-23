@@ -1,5 +1,4 @@
 import { createPrefixedLogger } from "@/shared/utils/logger";
-import type { TermContext } from "./term-context";
 import {
   parseTermInsight,
   parseTermInsightProgress,
@@ -8,6 +7,10 @@ import {
   TermInsightUnavailableError,
 } from "./term-insight";
 import type { TermInsightProvider } from "./term-insight-executor";
+import {
+  createTermInsightPrompt,
+  type TermInsightPromptInput,
+} from "./term-insight-prompt";
 
 const log = createPrefixedLogger("term-insight");
 
@@ -21,13 +24,7 @@ const LANGUAGE_NAMES: Record<string, string> = {
   ja: "Japanese",
 };
 
-interface AnalyzeInput {
-  sourceText: string;
-  quickTranslation: string;
-  sourceLanguage: string;
-  targetLanguage: string;
-  context: TermContext;
-}
+type AnalyzeInput = TermInsightPromptInput;
 
 interface CachedSession {
   key: string;
@@ -64,6 +61,7 @@ function createSessionOptions(
           `Respond only in ${targetLanguageName} (${targetLanguage}).`,
           "Return one concise sentence with no heading, label, list, JSON, markdown, part of speech, etymology, or general dictionary definition.",
           "Explain only what the target expression means in the supplied context.",
+          "Do not explain prompt instructions, data field names, encodings, indexes, or positions.",
         ].join(" "),
       },
     ],
@@ -73,21 +71,6 @@ function createSessionOptions(
       });
     },
   };
-}
-
-function createPrompt(input: AnalyzeInput): string {
-  return [
-    `Write one short explanation in ${LANGUAGE_NAMES[input.targetLanguage] ?? input.targetLanguage}.`,
-    "The targetTermOffset is a UTF-16 character offset into context.",
-    JSON.stringify({
-      sourceLanguage: input.sourceLanguage,
-      targetLanguage: input.targetLanguage,
-      targetTerm: input.sourceText,
-      targetTermOffset: input.context.termOffset,
-      context: input.context.text,
-      quickTranslation: input.quickTranslation,
-    }),
-  ].join("\n");
 }
 
 function assertSupportedLanguages(
@@ -122,7 +105,7 @@ class PromptTermInsightProvider implements TermInsightProvider {
       input.targetLanguage
     );
     const session = await baseSession.clone({ signal });
-    const prompt = createPrompt(input);
+    const prompt = createTermInsightPrompt(input);
     const promptOptions = { signal };
 
     try {
