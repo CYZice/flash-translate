@@ -9,6 +9,7 @@ interface RectLike {
 export interface SelectionInfo {
   text: string;
   rect: DOMRect;
+  ranges: readonly Range[];
 }
 
 /**
@@ -63,6 +64,22 @@ export function getSelectionRect(
     // Fallback to provided rect if range fails
     return fallbackRect;
   }
+}
+
+export function cloneSelectionRanges(selection: Selection | null): Range[] {
+  if (!selection) {
+    return [];
+  }
+
+  const ranges: Range[] = [];
+  for (let index = 0; index < selection.rangeCount; index += 1) {
+    try {
+      ranges.push(selection.getRangeAt(index).cloneRange());
+    } catch {
+      return ranges;
+    }
+  }
+  return ranges;
 }
 
 /**

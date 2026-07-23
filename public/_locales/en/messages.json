@@ -214,6 +214,9 @@
   "content_translationPlaceholder": {
     "message": "Translation..."
   },
+  "content_termTranslation": {
+    "message": "Term translation"
+  },
 
   "action_edit": {
     "message": "Edit"

@@ -47,6 +47,12 @@ describe("executeStreamingTranslation", () => {
     expect(onChunk).toHaveBeenCalledTimes(2);
     expect(onChunk).toHaveBeenNthCalledWith(1, "chunk1");
     expect(onChunk).toHaveBeenNthCalledWith(2, "chunk1 chunk2");
+    expect(translator.translateStreaming).toHaveBeenCalledWith(
+      "hello",
+      "en",
+      "ja",
+      controller.signal
+    );
   });
 
   it("returns aborted when signal is already aborted", async () => {

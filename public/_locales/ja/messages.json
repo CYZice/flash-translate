@@ -214,6 +214,9 @@
   "content_translationPlaceholder": {
     "message": "翻訳..."
   },
+  "content_termTranslation": {
+    "message": "語句の翻訳"
+  },
 
   "action_edit": {
     "message": "編集"

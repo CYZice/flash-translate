@@ -162,20 +162,33 @@ class TranslatorManager {
   async *translateStreaming(
     text: string,
     sourceLanguage: string,
-    targetLanguage: string
+    targetLanguage: string,
+    signal?: AbortSignal
   ): AsyncGenerator<string> {
     const translator = await this.getTranslator(sourceLanguage, targetLanguage);
     const paragraphs = splitTextIntoParagraphs(text);
 
     if (paragraphs.length === 1) {
       // Single paragraph - stream normally
-      yield* readStreamAccumulated(translator.translateStreaming(text));
+      yield* readStreamAccumulated(
+        translator.translateStreaming(text, { signal })
+      );
     } else {
       // Multiple paragraphs - translate each and join with line breaks
       yield* streamMultipleParagraphs(paragraphs, (paragraph) =>
-        translator.translateStreaming(paragraph)
+        translator.translateStreaming(paragraph, { signal })
       );
     }
+  }
+
+  async translate(
+    text: string,
+    sourceLanguage: string,
+    targetLanguage: string,
+    signal?: AbortSignal
+  ): Promise<string> {
+    const translator = await this.getTranslator(sourceLanguage, targetLanguage);
+    return translator.translate(text, { signal });
   }
 
   destroy(): void {

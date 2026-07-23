@@ -3,12 +3,35 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  cloneSelectionRanges,
   getSelectionRect,
   getValidSelectionText,
   isNodeInContentEditable,
   isValidRect,
   shouldShowCardForSelection,
 } from "./text-selection";
+
+describe("cloneSelectionRanges", () => {
+  it("clones every current selection range", () => {
+    const textNode = document.createTextNode("hello world");
+    document.body.append(textNode);
+    const range = document.createRange();
+    range.setStart(textNode, 0);
+    range.setEnd(textNode, 5);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    const ranges = cloneSelectionRanges(selection);
+
+    expect(ranges).toHaveLength(1);
+    expect(ranges[0]).not.toBe(range);
+    expect(ranges[0]?.toString()).toBe("hello");
+
+    selection?.removeAllRanges();
+    document.body.replaceChildren();
+  });
+});
 
 describe("getValidSelectionText", () => {
   it("returns null for null or undefined", () => {

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  cloneSelectionRanges,
   getSelectionRect,
   getValidSelectionText,
   isClickInsideShadowHost,
@@ -16,6 +17,7 @@ const HOST_ID = "flash-translate-root";
 interface SelectionDetails {
   text: string;
   rect: DOMRect;
+  ranges: readonly Range[];
 }
 
 function buildSelectionInfo(
@@ -33,7 +35,11 @@ function buildSelectionInfo(
     return null;
   }
 
-  return { text: validText, rect };
+  return {
+    text: validText,
+    rect,
+    ranges: cloneSelectionRanges(selection),
+  };
 }
 
 function clearSelectionState(
@@ -96,7 +102,7 @@ export function useTextSelection() {
         setIsVisible(true);
       }
       lastSelectionTextRef.current = selectionInfo.text;
-      setSelection({ text: selectionInfo.text, rect: selectionInfo.rect });
+      setSelection(selectionInfo);
     }, SELECTION_DELAY_MS);
   };
 

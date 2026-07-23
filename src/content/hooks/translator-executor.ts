@@ -33,7 +33,8 @@ export interface TranslationFunctions {
   translateStreaming: (
     text: string,
     sourceLanguage: string,
-    targetLanguage: string
+    targetLanguage: string,
+    signal?: AbortSignal
   ) => AsyncIterable<string>;
 }
 
@@ -53,7 +54,8 @@ export async function executeStreamingTranslation(
     for await (const chunk of translator.translateStreaming(
       text,
       sourceLanguage,
-      targetLanguage
+      targetLanguage,
+      signal
     )) {
       if (signal.aborted) {
         return { type: "aborted" };
