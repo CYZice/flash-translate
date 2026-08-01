@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useCardLayout } from "../hooks/use-card-layout";
 import type { SelectionInfo } from "../hooks/use-text-selection";
 import { useTranslator } from "../hooks/use-translator";
+import type { HoveredTermTranslationState } from "../term-translation/use-hovered-term-translation";
 import { CardSettings } from "./card-settings";
 import { DragHandle } from "./drag-handle";
 import { ResizeHandle } from "./resize-handle";
@@ -16,6 +17,7 @@ interface TranslationCardProps {
   autoDetectEnabled: boolean;
   detectedLanguage: string | null;
   isDetecting: boolean;
+  termTranslation: HoveredTermTranslationState;
   onSourceLanguageOverride: (lang: string | null) => void;
   onClose: () => void;
   onDisablePage: () => void;
@@ -29,6 +31,7 @@ export function TranslationCard({
   autoDetectEnabled,
   detectedLanguage,
   isDetecting,
+  termTranslation,
   onSourceLanguageOverride,
   onClose,
   onDisablePage,
@@ -100,6 +103,7 @@ export function TranslationCard({
             onSourceLanguageOverride={onSourceLanguageOverride}
             sourceLanguage={sourceLanguage}
             targetLanguage={targetLanguage}
+            termTranslation={termTranslation}
           />
           {isSettingsOpen ? (
             <CardSettings onExcludeSite={onExcludeSite} />

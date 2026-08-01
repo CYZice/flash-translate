@@ -217,18 +217,6 @@
   "content_termTranslation": {
     "message": "Term translation"
   },
-  "content_termInsight": {
-    "message": "Meaning in context"
-  },
-  "content_termInsightLoading": {
-    "message": "Analyzing context..."
-  },
-  "content_termInsightUnavailable": {
-    "message": "AI details aren't available for this environment or language. The quick translation still works."
-  },
-  "content_termInsightFailed": {
-    "message": "Couldn't generate AI details. The quick translation still works."
-  },
 
   "action_edit": {
     "message": "Edit"

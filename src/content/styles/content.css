@@ -8,10 +8,6 @@
   box-sizing: border-box;
 }
 
-[data-flash-translate-term-overlay] {
-  view-transition-name: none;
-}
-
 /* Translation card animation - fade in from top-left */
 @keyframes card-expand {
   from {

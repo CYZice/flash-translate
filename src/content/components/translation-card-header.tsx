@@ -2,8 +2,10 @@ import { Settings, X } from "lucide-react";
 import { Button } from "@/shared/components/button";
 import { saveSettings } from "@/shared/storage/settings";
 import { getMessage } from "@/shared/utils/i18n";
+import type { HoveredTermTranslationState } from "../term-translation/use-hovered-term-translation";
 import { LanguageSelector } from "./language-selector";
 import { TemporaryDisableButton } from "./temporary-disable-button";
+import { TermTranslationStatus } from "./term-translation-status";
 
 interface TranslationCardHeaderProps {
   sourceLanguage: string;
@@ -12,6 +14,7 @@ interface TranslationCardHeaderProps {
   isDetecting: boolean;
   autoDetectEnabled: boolean;
   isSettingsOpen: boolean;
+  termTranslation: HoveredTermTranslationState;
   onClose: () => void;
   onDisablePage: () => void;
   onSettingsToggle: () => void;
@@ -25,6 +28,7 @@ export function TranslationCardHeader({
   isDetecting,
   autoDetectEnabled,
   isSettingsOpen,
+  termTranslation,
   onClose,
   onDisablePage,
   onSettingsToggle,
@@ -44,16 +48,22 @@ export function TranslationCardHeader({
   };
 
   return (
-    <div className="sticky top-0 z-10 flex min-h-8 items-center justify-between rounded-t-xl border-b border-none px-3">
-      <LanguageSelector
-        isAutoDetected={autoDetectEnabled && detectedLanguage !== null}
-        isDetecting={isDetecting}
-        onSourceChange={onSourceChange}
-        onTargetChange={onTargetChange}
-        sourceLanguage={sourceLanguage}
-        targetLanguage={targetLanguage}
-      />
-      <div className="flex items-stretch gap-1">
+    <div className="sticky top-0 z-10 flex min-h-8 items-center justify-between gap-2 rounded-t-xl border-b border-none px-3">
+      <div className="min-w-0 flex-1">
+        {termTranslation.hoveredTerm ? (
+          <TermTranslationStatus state={termTranslation} />
+        ) : (
+          <LanguageSelector
+            isAutoDetected={autoDetectEnabled && detectedLanguage !== null}
+            isDetecting={isDetecting}
+            onSourceChange={onSourceChange}
+            onTargetChange={onTargetChange}
+            sourceLanguage={sourceLanguage}
+            targetLanguage={targetLanguage}
+          />
+        )}
+      </div>
+      <div className="flex shrink-0 items-stretch gap-1">
         <Button
           aria-controls="translation-card-body"
           aria-expanded={isSettingsOpen}

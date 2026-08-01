@@ -217,18 +217,6 @@
   "content_termTranslation": {
     "message": "語句の翻訳"
   },
-  "content_termInsight": {
-    "message": "文脈での意味"
-  },
-  "content_termInsightLoading": {
-    "message": "文脈を解析中..."
-  },
-  "content_termInsightUnavailable": {
-    "message": "この環境または言語ではAI解説を利用できません。即時訳はそのまま利用できます。"
-  },
-  "content_termInsightFailed": {
-    "message": "AI解説を生成できませんでした。即時訳はそのまま利用できます。"
-  },
 
   "action_edit": {
     "message": "編集"

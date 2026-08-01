@@ -54,8 +54,5 @@ describe("HoveredTermHighlight", () => {
     expect(highlight?.style.left).toBe("98px");
     expect(highlight?.style.width).toBe("44px");
     expect(highlight?.style.height).toBe("24px");
-    expect(highlight?.style.viewTransitionName).toBe(
-      "flash-translate-term-highlight"
-    );
   });
 });
