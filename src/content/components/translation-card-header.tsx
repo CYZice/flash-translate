@@ -71,6 +71,8 @@ export function TranslationCardHeader({
           aria-pressed={isSettingsOpen}
           className={isSettingsOpen ? "bg-blue-50 text-blue-600" : undefined}
           onClick={onSettingsToggle}
+          tooltip={getMessage("content_toggleSettings")}
+          tooltipAlign="end"
           variant="default"
         >
           <Settings size={14} />
@@ -79,6 +81,8 @@ export function TranslationCardHeader({
         <Button
           aria-label={getMessage("content_close")}
           onClick={onClose}
+          tooltip={getMessage("content_close")}
+          tooltipAlign="end"
           variant="muted"
         >
           <X size={16} />

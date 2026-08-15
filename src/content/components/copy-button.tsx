@@ -42,6 +42,13 @@ export function CopyButton({ text }: CopyButtonProps) {
       )}
       disabled={!text}
       onClick={handleCopy}
+      tooltip={
+        state === "error"
+          ? getMessage("content_copyFailed")
+          : getMessage("content_copyTranslation")
+      }
+      tooltipAlign="end"
+      tooltipSide="top"
       variant="ghost"
     >
       {state === "idle" && <Copy size={14} />}

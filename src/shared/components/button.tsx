@@ -2,8 +2,13 @@ import type { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
 
 type ButtonVariant = "default" | "ghost" | "danger" | "muted" | "destructive";
+type TooltipAlign = "start" | "center" | "end";
+type TooltipSide = "top" | "bottom";
 
 interface ButtonProps extends ComponentProps<"button"> {
+  tooltip?: string;
+  tooltipAlign?: TooltipAlign;
+  tooltipSide?: TooltipSide;
   variant?: ButtonVariant;
 }
 
@@ -23,14 +28,28 @@ const variantStyles: Record<ButtonVariant, string> = {
     "bg-red-500 text-white hover:bg-red-600 disabled:hover:bg-red-500",
 };
 
+const tooltipSideStyles: Record<TooltipSide, string> = {
+  top: "bottom-full mb-1.5",
+  bottom: "top-full mt-1.5",
+};
+
+const tooltipAlignStyles: Record<TooltipAlign, string> = {
+  start: "left-0",
+  center: "left-1/2 -translate-x-1/2",
+  end: "right-0",
+};
+
 export function Button({
   variant = "default",
+  tooltip,
+  tooltipAlign = "center",
+  tooltipSide = "bottom",
   className,
   type = "button",
   children,
   ...props
 }: ButtonProps) {
-  return (
+  const button = (
     <button
       className={cn(baseStyles, variantStyles[variant], className)}
       type={type}
@@ -38,5 +57,25 @@ export function Button({
     >
       {children}
     </button>
+  );
+
+  if (!tooltip) {
+    return button;
+  }
+
+  return (
+    <span className="group relative inline-flex shrink-0">
+      {button}
+      <span
+        aria-hidden="true"
+        className={cn(
+          "pointer-events-none absolute z-50 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 font-medium text-white text-xs opacity-0 shadow-sm transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100",
+          tooltipAlignStyles[tooltipAlign],
+          tooltipSideStyles[tooltipSide]
+        )}
+      >
+        {tooltip}
+      </span>
+    </span>
   );
 }

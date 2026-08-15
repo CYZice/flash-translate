@@ -48,7 +48,8 @@ export function TemporaryDisableButton({
       <Button
         aria-label={getMessage("content_pauseTranslationOnPage")}
         onClick={handleClick}
-        title={getMessage("content_pauseTranslationOnPage")}
+        tooltip={getMessage("content_pauseTranslationOnPage")}
+        tooltipAlign="end"
         variant="danger"
       >
         <Pause size={14} />
