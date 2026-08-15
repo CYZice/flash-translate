@@ -164,11 +164,8 @@
   "content_pauseTranslationOnPage": {
     "message": "一時的に非表示にする"
   },
-  "content_confirmPauseTranslationOnPage": {
-    "message": "このページで翻訳を停止しますか？"
-  },
-  "content_pause": {
-    "message": "停止"
+  "content_hideTranslationsUntilReload": {
+    "message": "リロードするまで翻訳を表示しない"
   },
   "content_moveCard": {
     "message": "カードを移動"

@@ -6,8 +6,8 @@ import { getMessage } from "@/shared/utils/i18n";
 import type { HoveredTermTranslationState } from "../term-translation/use-hovered-term-translation";
 import { LanguageSelector } from "./language-selector";
 import {
+  TemporaryDisableAction,
   TemporaryDisableButton,
-  TemporaryDisableConfirmation,
 } from "./temporary-disable-button";
 import { TermTranslationStatus } from "./term-translation-status";
 
@@ -56,7 +56,7 @@ export function TranslationCardHeader({
   if (isConfirmingDisable) {
     return (
       <div className="sticky top-0 z-10 flex min-h-8 items-center rounded-t-xl px-3">
-        <TemporaryDisableConfirmation
+        <TemporaryDisableAction
           onCancel={() => setIsConfirmingDisable(false)}
           onDisabled={onDisablePage}
         />

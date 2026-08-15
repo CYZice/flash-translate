@@ -164,11 +164,8 @@
   "content_pauseTranslationOnPage": {
     "message": "Pause translation on this page"
   },
-  "content_confirmPauseTranslationOnPage": {
-    "message": "Pause translation on this page?"
-  },
-  "content_pause": {
-    "message": "Pause"
+  "content_hideTranslationsUntilReload": {
+    "message": "Hide translations until reload"
   },
   "content_moveCard": {
     "message": "Move card"

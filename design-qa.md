@@ -17,6 +17,8 @@
 - Implementation card crop: 450 x 181 pixels. The card width differed because it retained the user's resized width; height was matched for comparison.
 - State: selected English sentence translated to Japanese; temporary-pause confirmation visible. The hovered-term state was separately checked with `extension` translated as `拡張`.
 
+The browser captures above document the first structural fix. The later user direction supersedes its prompt-plus-action content with one right-aligned destructive action. A new Chrome capture for that follow-up is pending because the Mac was locked during the verification pass.
+
 ## Full-view comparison
 
 The confirmation now occupies the normal header slot instead of covering it. No language selectors, settings button, pause button, or close button remain behind the confirmation. The card body and footer stay in place, so entering and leaving the temporary state does not resize the card.
@@ -25,7 +27,7 @@ The page behind the translucent card differs between the source and implementati
 
 ## Focused-region comparison
 
-The combined crop confirms the requested structural change: the prompt and destructive action are the only header content in the temporary state. Typography, spacing, destructive color, rounded card edge, drag handle, body copy, and copy action remain consistent with the existing component system.
+The combined crop confirms the structural header replacement. The follow-up implementation removes the prompt and replaces the short destructive action with a self-describing, right-aligned `リロードするまで翻訳を表示しない` button. Typography, destructive color, rounded card edge, drag handle, body copy, and copy action continue to use the existing component system.
 
 ## Required fidelity surfaces
 
@@ -33,7 +35,7 @@ The combined crop confirms the requested structural change: the prompt and destr
 - Spacing and layout rhythm: Existing header height and horizontal padding are preserved. The temporary content uses the same header slot and does not introduce an overlay layer.
 - Colors and visual tokens: Existing gray text and destructive red button tokens are reused. No new opaque background token is introduced.
 - Image quality and asset fidelity: No image assets are part of this UI state. Existing Lucide icons remain unchanged in the normal state.
-- Copy and content: Japanese confirmation copy and `停止` action are unchanged.
+- Copy and content: The superseded confirmation copy and `停止` label were removed. The remaining action is `リロードするまで翻訳を表示しない`; English uses `Hide translations until reload`.
 
 ## Interaction verification
 
@@ -41,22 +43,23 @@ The combined crop confirms the requested structural change: the prompt and destr
 - Escape and the existing eight-second timeout restore the normal header.
 - The destructive action receives initial focus.
 - Hovered-term output also replaces the complete header, including the right-side controls.
-- Chrome accessibility snapshot showed only the dialog and `停止` button in confirmation mode.
+- The follow-up component test confirms there is no dialog or separate prompt, and that the destructive action is right-aligned and initially focused.
 - Chrome accessibility snapshot showed only the term status in hovered-term mode.
 - Console check found no Flash Translate errors or warnings. The observed warnings came from another installed extension.
 
 ## Findings
 
-No actionable P0, P1, or P2 visual differences remain for the requested change.
+No code-level or interaction blocker remains. Browser-rendered visual verification of the latest action-only state is pending because the Mac was locked.
 
 ## Comparison history
 
 1. Before the fix, the confirmation was an absolute overlay with backdrop blur. The normal header remained mounted underneath and became visible when the overlay background was made transparent.
 2. The fix lifted confirmation state to the header and made normal, confirmation, and hovered-term content mutually exclusive.
 3. The post-fix Chrome capture and accessibility tree confirm that hidden header controls are absent rather than merely obscured.
+4. The follow-up removes the prompt, places one self-describing destructive action at the right edge, and preserves the existing escape and timeout behavior.
 
 ## Follow-up polish
 
-None required for this scope.
+Capture the latest action-only state in Chrome after the Mac is unlocked.
 
-final result: passed
+final result: blocked

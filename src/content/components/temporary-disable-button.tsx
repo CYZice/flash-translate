@@ -23,17 +23,16 @@ export function TemporaryDisableButton({
   );
 }
 
-interface TemporaryDisableConfirmationProps {
+interface TemporaryDisableActionProps {
   onCancel: () => void;
   onDisabled: () => void;
 }
 
-export function TemporaryDisableConfirmation({
+export function TemporaryDisableAction({
   onCancel,
   onDisabled,
-}: TemporaryDisableConfirmationProps) {
+}: TemporaryDisableActionProps) {
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
-  const dialogTitleId = "temporary-disable-dialog-title";
 
   useEffect(() => {
     confirmButtonRef.current?.focus();
@@ -53,25 +52,14 @@ export function TemporaryDisableConfirmation({
   }, [onCancel]);
 
   return (
-    <div
-      aria-labelledby={dialogTitleId}
-      className="flex min-w-0 flex-1 animate-dialog-slide-in items-center gap-2"
-      role="dialog"
+    <Button
+      className="ml-auto shrink-0 animate-dialog-slide-in whitespace-nowrap px-2 text-xs"
+      data-flash-translate-temporary-disable-action=""
+      onClick={onDisabled}
+      ref={confirmButtonRef}
+      variant="destructive"
     >
-      <span
-        className="min-w-0 flex-1 text-gray-600 text-xs leading-4"
-        id={dialogTitleId}
-      >
-        {getMessage("content_confirmPauseTranslationOnPage")}
-      </span>
-      <Button
-        className="shrink-0 whitespace-nowrap px-2 text-xs"
-        onClick={onDisabled}
-        ref={confirmButtonRef}
-        variant="destructive"
-      >
-        {getMessage("content_pause")}
-      </Button>
-    </div>
+      {getMessage("content_hideTranslationsUntilReload")}
+    </Button>
   );
 }

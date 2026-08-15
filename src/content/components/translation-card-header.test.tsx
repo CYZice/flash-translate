@@ -133,7 +133,7 @@ describe("TranslationCardHeader", () => {
     expect(status?.querySelector("strong")).toBeNull();
   });
 
-  it("replaces the entire header while confirming a temporary pause", () => {
+  it("replaces the entire header with a right-aligned temporary disable action", () => {
     render(IDLE_TERM_TRANSLATION);
 
     const pauseButton = container.querySelector<HTMLButtonElement>(
@@ -141,10 +141,15 @@ describe("TranslationCardHeader", () => {
     );
     act(() => pauseButton?.click());
 
-    const dialog = container.querySelector('[role="dialog"]');
-    const confirmButton = dialog?.querySelector("button");
-    expect(dialog).not.toBeNull();
-    expect(document.activeElement).toBe(confirmButton);
+    const disableAction = container.querySelector<HTMLButtonElement>(
+      "[data-flash-translate-temporary-disable-action]"
+    );
+    expect(container.querySelector('[role="dialog"]')).toBeNull();
+    expect(disableAction?.textContent).toBe(
+      "content_hideTranslationsUntilReload"
+    );
+    expect(disableAction?.className).toContain("ml-auto");
+    expect(document.activeElement).toBe(disableAction);
     expect(container.querySelectorAll("select")).toHaveLength(0);
     expect(
       container.querySelector('[aria-label="content_toggleSettings"]')
