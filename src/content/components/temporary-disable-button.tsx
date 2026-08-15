@@ -1,34 +1,47 @@
 import { Pause } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Button } from "@/shared/components/button";
 import { getMessage } from "@/shared/utils/i18n";
 
 interface TemporaryDisableButtonProps {
-  onDisabled: () => void;
+  onConfirm: () => void;
 }
 
 export function TemporaryDisableButton({
-  onDisabled,
+  onConfirm,
 }: TemporaryDisableButtonProps) {
-  const [isConfirming, setIsConfirming] = useState(false);
+  return (
+    <Button
+      aria-label={getMessage("content_pauseTranslationOnPage")}
+      onClick={onConfirm}
+      tooltip={getMessage("content_pauseTranslationOnPage")}
+      tooltipAlign="end"
+      variant="danger"
+    >
+      <Pause size={14} />
+    </Button>
+  );
+}
+
+interface TemporaryDisableConfirmationProps {
+  onCancel: () => void;
+  onDisabled: () => void;
+}
+
+export function TemporaryDisableConfirmation({
+  onCancel,
+  onDisabled,
+}: TemporaryDisableConfirmationProps) {
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
   const dialogTitleId = "temporary-disable-dialog-title";
 
-  const handleClick = () => {
-    setIsConfirming(true);
-  };
-
   useEffect(() => {
-    if (!isConfirming) {
-      return;
-    }
-
     confirmButtonRef.current?.focus();
-    const resetTimer = window.setTimeout(() => setIsConfirming(false), 8000);
+    const resetTimer = window.setTimeout(onCancel, 8000);
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setIsConfirming(false);
+        onCancel();
       }
     };
 
@@ -37,46 +50,28 @@ export function TemporaryDisableButton({
       window.clearTimeout(resetTimer);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isConfirming]);
-
-  const handleConfirm = () => {
-    onDisabled();
-  };
+  }, [onCancel]);
 
   return (
-    <>
-      <Button
-        aria-label={getMessage("content_pauseTranslationOnPage")}
-        onClick={handleClick}
-        tooltip={getMessage("content_pauseTranslationOnPage")}
-        tooltipAlign="end"
-        variant="danger"
+    <div
+      aria-labelledby={dialogTitleId}
+      className="flex min-w-0 flex-1 animate-dialog-slide-in items-center gap-2"
+      role="dialog"
+    >
+      <span
+        className="min-w-0 flex-1 text-gray-600 text-xs leading-4"
+        id={dialogTitleId}
       >
-        <Pause size={14} />
+        {getMessage("content_confirmPauseTranslationOnPage")}
+      </span>
+      <Button
+        className="shrink-0 whitespace-nowrap px-2 text-xs"
+        onClick={onDisabled}
+        ref={confirmButtonRef}
+        variant="destructive"
+      >
+        {getMessage("content_pause")}
       </Button>
-      {isConfirming && (
-        <div
-          aria-labelledby={dialogTitleId}
-          aria-modal="true"
-          className="absolute inset-0 z-50 flex animate-dialog-slide-in items-center gap-2 px-3 backdrop-blur-md"
-          role="dialog"
-        >
-          <span
-            className="min-w-0 flex-1 text-gray-600 text-xs leading-4"
-            id={dialogTitleId}
-          >
-            {getMessage("content_confirmPauseTranslationOnPage")}
-          </span>
-          <Button
-            className="shrink-0 whitespace-nowrap px-2 text-xs"
-            onClick={handleConfirm}
-            ref={confirmButtonRef}
-            variant="destructive"
-          >
-            {getMessage("content_pause")}
-          </Button>
-        </div>
-      )}
-    </>
+    </div>
   );
 }

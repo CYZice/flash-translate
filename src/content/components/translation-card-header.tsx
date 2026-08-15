@@ -1,10 +1,14 @@
 import { Settings, X } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/shared/components/button";
 import { saveSettings } from "@/shared/storage/settings";
 import { getMessage } from "@/shared/utils/i18n";
 import type { HoveredTermTranslationState } from "../term-translation/use-hovered-term-translation";
 import { LanguageSelector } from "./language-selector";
-import { TemporaryDisableButton } from "./temporary-disable-button";
+import {
+  TemporaryDisableButton,
+  TemporaryDisableConfirmation,
+} from "./temporary-disable-button";
 import { TermTranslationStatus } from "./term-translation-status";
 
 interface TranslationCardHeaderProps {
@@ -34,6 +38,8 @@ export function TranslationCardHeader({
   onSettingsToggle,
   onSourceLanguageOverride,
 }: TranslationCardHeaderProps) {
+  const [isConfirmingDisable, setIsConfirmingDisable] = useState(false);
+
   const onSourceChange = async (lang: string) => {
     // When auto-detect is enabled, override the detected language
     if (autoDetectEnabled) {
@@ -47,21 +53,36 @@ export function TranslationCardHeader({
     await saveSettings({ targetLanguage: lang });
   };
 
+  if (isConfirmingDisable) {
+    return (
+      <div className="sticky top-0 z-10 flex min-h-8 items-center rounded-t-xl px-3">
+        <TemporaryDisableConfirmation
+          onCancel={() => setIsConfirmingDisable(false)}
+          onDisabled={onDisablePage}
+        />
+      </div>
+    );
+  }
+
+  if (termTranslation.hoveredTerm) {
+    return (
+      <div className="sticky top-0 z-10 min-h-8 rounded-t-xl px-3">
+        <TermTranslationStatus state={termTranslation} />
+      </div>
+    );
+  }
+
   return (
     <div className="sticky top-0 z-10 flex min-h-8 items-center justify-between gap-2 rounded-t-xl border-b border-none px-3">
       <div className="min-w-0 flex-1">
-        {termTranslation.hoveredTerm ? (
-          <TermTranslationStatus state={termTranslation} />
-        ) : (
-          <LanguageSelector
-            isAutoDetected={autoDetectEnabled && detectedLanguage !== null}
-            isDetecting={isDetecting}
-            onSourceChange={onSourceChange}
-            onTargetChange={onTargetChange}
-            sourceLanguage={sourceLanguage}
-            targetLanguage={targetLanguage}
-          />
-        )}
+        <LanguageSelector
+          isAutoDetected={autoDetectEnabled && detectedLanguage !== null}
+          isDetecting={isDetecting}
+          onSourceChange={onSourceChange}
+          onTargetChange={onTargetChange}
+          sourceLanguage={sourceLanguage}
+          targetLanguage={targetLanguage}
+        />
       </div>
       <div className="flex shrink-0 items-stretch gap-1">
         <Button
@@ -77,7 +98,9 @@ export function TranslationCardHeader({
         >
           <Settings size={14} />
         </Button>
-        <TemporaryDisableButton onDisabled={onDisablePage} />
+        <TemporaryDisableButton
+          onConfirm={() => setIsConfirmingDisable(true)}
+        />
         <Button
           aria-label={getMessage("content_close")}
           onClick={onClose}

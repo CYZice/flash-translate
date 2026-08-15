@@ -110,6 +110,13 @@ describe("TranslationCardHeader", () => {
     expect(status?.textContent).toBe("structured構造化された");
     expect(status?.querySelector("strong")?.textContent).toBe("構造化された");
     expect(status?.getAttribute("aria-live")).toBe("polite");
+    expect(
+      container.querySelector('[aria-label="content_toggleSettings"]')
+    ).toBeNull();
+    expect(
+      container.querySelector('[aria-label="content_pauseTranslationOnPage"]')
+    ).toBeNull();
+    expect(container.querySelector('[aria-label="content_close"]')).toBeNull();
   });
 
   it("shows the source term and a loading status before translation completes", () => {
@@ -124,5 +131,34 @@ describe("TranslationCardHeader", () => {
     );
     expect(status?.textContent).toBe("structuredcontent_translating");
     expect(status?.querySelector("strong")).toBeNull();
+  });
+
+  it("replaces the entire header while confirming a temporary pause", () => {
+    render(IDLE_TERM_TRANSLATION);
+
+    const pauseButton = container.querySelector<HTMLButtonElement>(
+      '[aria-label="content_pauseTranslationOnPage"]'
+    );
+    act(() => pauseButton?.click());
+
+    const dialog = container.querySelector('[role="dialog"]');
+    const confirmButton = dialog?.querySelector("button");
+    expect(dialog).not.toBeNull();
+    expect(document.activeElement).toBe(confirmButton);
+    expect(container.querySelectorAll("select")).toHaveLength(0);
+    expect(
+      container.querySelector('[aria-label="content_toggleSettings"]')
+    ).toBeNull();
+    expect(
+      container.querySelector('[aria-label="content_pauseTranslationOnPage"]')
+    ).toBeNull();
+    expect(container.querySelector('[aria-label="content_close"]')).toBeNull();
+
+    act(() =>
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }))
+    );
+
+    expect(container.querySelector('[role="dialog"]')).toBeNull();
+    expect(container.querySelectorAll("select")).toHaveLength(2);
   });
 });
