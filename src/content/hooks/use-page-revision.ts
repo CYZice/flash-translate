@@ -6,12 +6,18 @@ interface PageLocation {
   search: string;
 }
 
-interface WindowWithNavigation extends Window {
-  navigation?: EventTarget;
-}
-
 export function getPageIdentity(location: PageLocation): string {
   return location.origin + location.pathname + location.search;
+}
+
+export function getNavigationEventTarget(
+  target: object
+): EventTarget | undefined {
+  if (!("navigation" in target && target.navigation instanceof EventTarget)) {
+    return;
+  }
+
+  return target.navigation;
 }
 
 /**
@@ -36,7 +42,7 @@ export function usePageRevision(): number {
       setRevision((currentRevision) => currentRevision + 1);
     };
 
-    const navigation = (window as WindowWithNavigation).navigation;
+    const navigation = getNavigationEventTarget(window);
     navigation?.addEventListener("navigatesuccess", handleNavigation);
     window.addEventListener("popstate", handleNavigation);
 

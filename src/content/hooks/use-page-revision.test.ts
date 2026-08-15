@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { getPageIdentity } from "./use-page-revision";
+import { getNavigationEventTarget, getPageIdentity } from "./use-page-revision";
+
+describe("getNavigationEventTarget", () => {
+  it("returns the Navigation API event target when available", () => {
+    const navigation = new EventTarget();
+
+    expect(getNavigationEventTarget({ navigation })).toBe(navigation);
+  });
+
+  it("returns undefined when the Navigation API is unavailable", () => {
+    expect(getNavigationEventTarget({})).toBeUndefined();
+  });
+});
 
 describe("getPageIdentity", () => {
   it("identifies a page by its origin, path, and query", () => {
