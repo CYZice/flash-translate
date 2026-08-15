@@ -138,7 +138,7 @@
   },
 
   "content_toggleSettings": {
-    "message": "カード内の設定を表示"
+    "message": "設定を変更する"
   },
   "content_settings": {
     "message": "設定"
@@ -156,13 +156,13 @@
     "message": "閉じる"
   },
   "content_copyFailed": {
-    "message": "コピー失敗"
+    "message": "コピーに失敗しました"
   },
   "content_copyTranslation": {
-    "message": "翻訳をコピー"
+    "message": "翻訳結果をコピーする"
   },
   "content_pauseTranslationOnPage": {
-    "message": "このページの翻訳を一時停止"
+    "message": "一時的に非表示にする"
   },
   "content_confirmPauseTranslationOnPage": {
     "message": "このページで翻訳を停止しますか？"
