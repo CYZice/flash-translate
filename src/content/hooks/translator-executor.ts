@@ -9,6 +9,7 @@ export interface TranslationExecutionOptions {
   sourceLanguage: string;
   targetLanguage: string;
   signal: AbortSignal;
+  context?: TranslationContext;
 }
 
 /**
@@ -26,6 +27,11 @@ export interface StreamingCallbacks {
   onChunk: (result: string) => void;
 }
 
+export interface TranslationContext {
+  contextBefore: string;
+  contextAfter: string;
+}
+
 /**
  * Interface for translation functions (dependency injection)
  */
@@ -34,7 +40,8 @@ export interface TranslationFunctions {
     text: string,
     sourceLanguage: string,
     targetLanguage: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    context?: TranslationContext
   ) => AsyncIterable<string>;
 }
 
@@ -47,16 +54,14 @@ export async function executeStreamingTranslation(
   translator: TranslationFunctions,
   callbacks: StreamingCallbacks
 ): Promise<TranslationExecutionResult> {
-  const { text, sourceLanguage, targetLanguage, signal } = options;
+  const { text, sourceLanguage, targetLanguage, signal, context } = options;
 
   try {
     let result = "";
-    for await (const chunk of translator.translateStreaming(
-      text,
-      sourceLanguage,
-      targetLanguage,
-      signal
-    )) {
+    const stream = context
+      ? translator.translateStreaming(text, sourceLanguage, targetLanguage, signal, context)
+      : translator.translateStreaming(text, sourceLanguage, targetLanguage, signal);
+    for await (const chunk of stream) {
       if (signal.aborted) {
         return { type: "aborted" };
       }

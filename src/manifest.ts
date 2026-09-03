@@ -16,6 +16,7 @@ export default defineManifest({
   },
 
   permissions: ["storage", "activeTab"],
+  optional_host_permissions: ["http://*/*", "https://*/*"],
 
   action: {
     default_popup: "src/popup/index.html",

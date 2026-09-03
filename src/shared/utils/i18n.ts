@@ -10,7 +10,14 @@ export function getMessage(
   key: string,
   substitutions?: string | string[]
 ): string {
-  const message = chrome.i18n.getMessage(key, substitutions);
+  let message: string;
+
+  try {
+    message = chrome.i18n.getMessage(key, substitutions);
+  } catch (error) {
+    log.warn("Failed to get localized message:", error);
+    return key;
+  }
 
   // In development, return the key if message is empty
   // This helps identify missing translations

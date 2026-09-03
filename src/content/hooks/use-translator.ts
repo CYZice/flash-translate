@@ -4,11 +4,18 @@ import {
   translatorManager,
 } from "@/shared/utils/translator";
 import { isValidTranslationText } from "@/shared/utils/translator-utils";
-import { executeStreamingTranslation } from "./translator-executor";
+import { openAiCompatibleTranslator } from "../translation-providers/openai-compatible";
+import {
+  executeStreamingTranslation,
+  type TranslationContext,
+  type TranslationFunctions,
+} from "./translator-executor";
 
 interface UseTranslatorOptions {
   sourceLanguage: string;
   targetLanguage: string;
+  provider: "chrome-built-in" | "custom-ai";
+  resetKey?: string;
 }
 
 interface TranslatorState {
@@ -21,6 +28,8 @@ interface TranslatorState {
 export function useTranslator({
   sourceLanguage,
   targetLanguage,
+  provider,
+  resetKey,
 }: UseTranslatorOptions) {
   const [state, setState] = useState<TranslatorState>({
     result: "",
@@ -31,8 +40,24 @@ export function useTranslator({
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  useEffect(() => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    setState((prev) => ({
+      ...prev,
+      result: "",
+      isLoading: false,
+      error: null,
+    }));
+  }, [resetKey]);
+
   // Check availability when language changes
   useEffect(() => {
+    if (provider === "custom-ai") {
+      setState((prev) => ({ ...prev, availability: "available" }));
+      return;
+    }
+
     const checkAvailability = async () => {
       const availability = await translatorManager.checkAvailability(
         sourceLanguage,
@@ -42,16 +67,17 @@ export function useTranslator({
     };
 
     checkAvailability();
-  }, [sourceLanguage, targetLanguage]);
+  }, [sourceLanguage, targetLanguage, provider]);
 
-  const translate = async (text: string) => {
+  const translate = async (text: string, context?: TranslationContext) => {
     if (!isValidTranslationText(text)) {
       return;
     }
 
     // Cancel previous translation if still running
     abortControllerRef.current?.abort();
-    abortControllerRef.current = new AbortController();
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
 
     setState((prev) => ({
       ...prev,
@@ -64,19 +90,25 @@ export function useTranslator({
       text,
       sourceLanguage,
       targetLanguage,
-      signal: abortControllerRef.current.signal,
+      signal: abortController.signal,
+      context,
     };
+
+    const translator: TranslationFunctions =
+      provider === "custom-ai" ? openAiCompatibleTranslator : translatorManager;
 
     const executionResult = await executeStreamingTranslation(
       options,
-      translatorManager,
+      translator,
       {
         onChunk: (result) => setState((prev) => ({ ...prev, result })),
       }
     );
 
-    // Clean up the controller reference after execution completes
-    abortControllerRef.current = null;
+    // Avoid an older aborted request clearing a newer request's controller.
+    if (abortControllerRef.current === abortController) {
+      abortControllerRef.current = null;
+    }
 
     // Handle aborted translation (new translation started)
     if (executionResult.type === "aborted") {

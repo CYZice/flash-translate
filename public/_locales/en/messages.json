@@ -16,6 +16,19 @@
     "message": "Flash Translate"
   },
 
+  "popup_ai_baseUrl": { "message": "Base URL" },
+  "popup_ai_apiKey": { "message": "API Key" },
+  "popup_ai_apiKeyPlaceholder": { "message": "Optional for local servers" },
+  "popup_ai_model": { "message": "Model" },
+  "popup_ai_systemPrompt": { "message": "System Prompt" },
+  "popup_ai_save": { "message": "Save" },
+  "popup_ai_testConnection": { "message": "Test connection" },
+  "popup_ai_saving": { "message": "Saving..." },
+  "popup_ai_saved": { "message": "Saved" },
+  "popup_ai_testing": { "message": "Testing connection..." },
+  "popup_ai_connectionSuccess": { "message": "Connection successful" },
+  "popup_ai_hostPermissionDenied": { "message": "Host access was not granted. Custom AI requests cannot reach this Base URL." },
+
   "popup_behavior_autoDetectLanguage": {
     "message": "Auto-detect language"
   },
@@ -161,12 +174,6 @@
   "content_copyTranslation": {
     "message": "Copy translation"
   },
-  "content_pauseTranslationOnPage": {
-    "message": "Pause translation on this page"
-  },
-  "content_hideTranslationsUntilReload": {
-    "message": "Hide translations until reload"
-  },
   "content_moveCard": {
     "message": "Move card"
   },
@@ -211,9 +218,17 @@
   "content_translationPlaceholder": {
     "message": "Translation..."
   },
+  "content_resultLocal": { "message": "Local" },
+  "content_resultAi": { "message": "AI" },
+  "content_translationResults": { "message": "Translation result source" },
+  "content_aiEnhance": { "message": "Enhance with AI" },
+  "content_aiEnhanceDescription": { "message": "Use nearby sentences to refine wording and terminology." },
+  "content_aiRetry": { "message": "Retry" },
   "content_termTranslation": {
     "message": "Term translation"
   },
+  "popup_behavior_editorInputAssist": { "message": "Editor English hints" },
+  "popup_behavior_editorInputAssistDesc": { "message": "Show English above Chinese after you stop typing" },
 
   "action_edit": {
     "message": "Edit"

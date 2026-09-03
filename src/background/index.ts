@@ -1,4 +1,9 @@
 import { createPrefixedLogger } from "@/shared/utils/logger";
+import { isAiTestConnectionMessage } from "@/shared/constants/ai-translation";
+import {
+  handleAiTestConnection,
+  registerAiTranslationPortHandler,
+} from "./ai-translation-handler";
 import { handleRuntimeMessage } from "./runtime-message-handler";
 
 const log = createPrefixedLogger("Background");
@@ -16,3 +21,13 @@ chrome.runtime.onMessage.addListener((message) => {
     openOptionsPage: () => chrome.runtime.openOptionsPage(),
   });
 });
+
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (!isAiTestConnectionMessage(message)) {
+    return false;
+  }
+  handleAiTestConnection().then(sendResponse);
+  return true;
+});
+
+registerAiTranslationPortHandler();
