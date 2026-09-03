@@ -17,4 +17,13 @@ describe("manifest", () => {
       "https://*/*",
     ]);
   });
+
+  it("injects input assistance into HTTPS pages and local development apps", () => {
+    const manifestV3 = manifest as chrome.runtime.ManifestV3;
+    expect(manifestV3.content_scripts?.[0]?.matches).toEqual([
+      "https://*/*",
+      "http://127.0.0.1/*",
+      "http://localhost/*",
+    ]);
+  });
 });

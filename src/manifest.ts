@@ -39,7 +39,7 @@ export default defineManifest({
 
   content_scripts: [
     {
-      matches: ["https://*/*"],
+      matches: ["https://*/*", "http://127.0.0.1/*", "http://localhost/*"],
       js: ["src/content/index.tsx"],
       run_at: "document_idle",
     },
