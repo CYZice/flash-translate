@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import {
   cloneSelectionRanges,
+  getSelectionContext,
   getSelectionRect,
+  getSelectionText,
   getValidSelectionText,
   isClickInsideShadowHost,
-  isNodeInContentEditable,
   type SelectionInfo,
   shouldShowCardForSelection,
 } from "./text-selection";
@@ -18,6 +19,28 @@ interface SelectionDetails {
   text: string;
   rect: DOMRect;
   ranges: readonly Range[];
+  contextBefore: string;
+  contextAfter: string;
+}
+
+function getControlSelection(): SelectionDetails | null {
+  const element = document.activeElement;
+  if (!(element instanceof HTMLTextAreaElement || element instanceof HTMLInputElement)) {
+    return null;
+  }
+  if (element.type === "password") return null;
+  const start = element.selectionStart ?? 0;
+  const end = element.selectionEnd ?? 0;
+  if (start === end) return null;
+  const text = element.value.slice(start, end).trim();
+  if (!text) return null;
+  return {
+    text,
+    rect: element.getBoundingClientRect(),
+    ranges: [],
+    contextBefore: element.value.slice(Math.max(0, start - 240), start),
+    contextAfter: element.value.slice(end, end + 240),
+  };
 }
 
 function buildSelectionInfo(
@@ -35,10 +58,14 @@ function buildSelectionInfo(
     return null;
   }
 
+  const { contextBefore, contextAfter } = getSelectionContext(selection);
+
   return {
     text: validText,
     rect,
     ranges: cloneSelectionRanges(selection),
+    contextBefore,
+    contextAfter,
   };
 }
 
@@ -71,17 +98,15 @@ export function useTextSelection() {
     // Delay to ensure selection is complete
     setTimeout(() => {
       const windowSelection = window.getSelection();
-      const isContentEditable = isNodeInContentEditable(
-        windowSelection?.anchorNode ?? null
-      );
-
-      // Skip translation for contenteditable elements (text inputs, editors, etc.)
-      if (isContentEditable) {
-        handlePendingClear(pendingClearRef, setSelection, lastSelectionTextRef);
+      const controlSelection = getControlSelection();
+      if (controlSelection) {
+        pendingClearRef.current = false;
+        setIsVisible(true);
+        lastSelectionTextRef.current = controlSelection.text;
+        setSelection(controlSelection);
         return;
       }
-
-      const rawText = windowSelection?.toString();
+      const rawText = getSelectionText(windowSelection);
       const selectionInfo = buildSelectionInfo(
         windowSelection,
         rawText,
@@ -133,27 +158,20 @@ export function useTextSelection() {
     setIsVisible(false);
   };
 
-  // Clear selection completely (used when temporarily disabling a page)
-  const clearSelection = () => {
-    setSelection(null);
-    setIsVisible(false);
-    lastSelectionTextRef.current = null;
-    // Also clear the browser's text selection to prevent re-triggering
-    window.getSelection()?.removeAllRanges();
-  };
-
   // biome-ignore lint/correctness/useExhaustiveDependencies: React Compiler handles function memoization
   useEffect(() => {
-    document.addEventListener("mouseup", handleMouseUp);
-    document.addEventListener("mousedown", handleMouseDown);
-    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mouseup", handleMouseUp, true);
+    document.addEventListener("mousedown", handleMouseDown, true);
+    document.addEventListener("keydown", handleKeyDown, true);
+    document.addEventListener("selectionchange", handleMouseUp, true);
 
     return () => {
-      document.removeEventListener("mouseup", handleMouseUp);
-      document.removeEventListener("mousedown", handleMouseDown);
-      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mouseup", handleMouseUp, true);
+      document.removeEventListener("mousedown", handleMouseDown, true);
+      document.removeEventListener("keydown", handleKeyDown, true);
+      document.removeEventListener("selectionchange", handleMouseUp, true);
     };
   }, []);
 
-  return { selection, isVisible, dismissCard, clearSelection };
+  return { selection, isVisible, dismissCard };
 }

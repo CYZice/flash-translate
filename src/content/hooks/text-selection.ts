@@ -10,6 +10,157 @@ export interface SelectionInfo {
   text: string;
   rect: DOMRect;
   ranges: readonly Range[];
+  contextBefore: string;
+  contextAfter: string;
+}
+
+const CONTEXT_CONTAINER_SELECTOR =
+  "p,li,td,th,blockquote,pre,div,section,article,main";
+
+function getContextContainer(node: Node): Element | null {
+  const element =
+    node.nodeType === Node.ELEMENT_NODE
+      ? (node as Element)
+      : node.parentElement;
+  return element?.closest(CONTEXT_CONTAINER_SELECTOR) ?? element;
+}
+
+function normalizeContextText(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+const NON_VISIBLE_SELECTION_SELECTOR = [
+  "script",
+  "style",
+  "noscript",
+  "annotation[encoding='application/x-tex']",
+  "mjx-assistive-mml",
+  ".katex-mathml",
+  "[aria-hidden='true']",
+  "[hidden]",
+  "mjx-container svg",
+  ".katex svg",
+].join(",");
+
+function normalizeSelectionText(text: string): string {
+  return text
+    .replace(/[\u200b-\u200d\ufeff]/g, "")
+    .replace(/\u00a0/g, " ")
+    .replace(/\r\n?/g, "\n")
+    .replace(/[\t\f\v ]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function getRangeText(range: Range): string {
+  const container = document.createElement("div");
+  container.append(range.cloneContents());
+  for (const element of container.querySelectorAll(
+    NON_VISIBLE_SELECTION_SELECTOR
+  )) {
+    element.remove();
+  }
+  return normalizeSelectionText(container.textContent ?? "");
+}
+
+export function getSelectionText(selection: Selection | null): string | null {
+  if (!selection || selection.rangeCount === 0) {
+    return null;
+  }
+
+  const parts: string[] = [];
+  try {
+    for (let index = 0; index < selection.rangeCount; index += 1) {
+      const text = getRangeText(selection.getRangeAt(index));
+      if (text) {
+        parts.push(text);
+      }
+    }
+  } catch {
+    return getValidSelectionText(selection.toString());
+  }
+
+  const normalized = normalizeSelectionText(parts.join("\n"));
+  return getValidSelectionText(normalized || selection.toString());
+}
+
+const SENTENCE_END_REGEX =
+  /[.!?\u3002\uff01\uff1f]+(?:["'\u201d\u2019\uff09\]]*)/g;
+
+function getAdjacentSentence(
+  text: string,
+  direction: "before" | "after"
+): string {
+  const normalized = normalizeContextText(text);
+  if (!normalized) {
+    return "";
+  }
+
+  if (direction === "after") {
+    const match = SENTENCE_END_REGEX.exec(normalized);
+    return (
+      match ? normalized.slice(0, match.index + match[0].length) : normalized
+    ).trim();
+  }
+
+  let sentenceStart = 0;
+  for (const match of normalized.matchAll(SENTENCE_END_REGEX)) {
+    sentenceStart = match.index + match[0].length;
+  }
+  return normalized.slice(sentenceStart).trim();
+}
+
+function getTextBeforeRange(range: Range): string {
+  const container = getContextContainer(range.startContainer);
+  if (!container) {
+    return "";
+  }
+
+  try {
+    const contextRange = document.createRange();
+    contextRange.selectNodeContents(container);
+    contextRange.setEnd(range.startContainer, range.startOffset);
+    return getAdjacentSentence(getRangeText(contextRange), "before");
+  } catch {
+    return "";
+  }
+}
+
+function getTextAfterRange(range: Range): string {
+  const container = getContextContainer(range.endContainer);
+  if (!container) {
+    return "";
+  }
+
+  try {
+    const contextRange = document.createRange();
+    contextRange.selectNodeContents(container);
+    contextRange.setStart(range.endContainer, range.endOffset);
+    return getAdjacentSentence(getRangeText(contextRange), "after");
+  } catch {
+    return "";
+  }
+}
+
+export function getSelectionContext(selection: Selection | null): {
+  contextBefore: string;
+  contextAfter: string;
+} {
+  if (!selection || selection.rangeCount === 0) {
+    return { contextBefore: "", contextAfter: "" };
+  }
+
+  try {
+    const firstRange = selection.getRangeAt(0);
+    const lastRange = selection.getRangeAt(selection.rangeCount - 1);
+    return {
+      contextBefore: getTextBeforeRange(firstRange),
+      contextAfter: getTextAfterRange(lastRange),
+    };
+  } catch {
+    return { contextBefore: "", contextAfter: "" };
+  }
 }
 
 /**
@@ -58,6 +209,14 @@ export function getSelectionRect(
     const rect = range.getBoundingClientRect();
     if (isValidRect(rect)) {
       return rect;
+    }
+    const clientRects = Array.from(range.getClientRects()).filter(isValidRect);
+    if (clientRects.length > 0) {
+      const left = Math.min(...clientRects.map((item) => item.left));
+      const top = Math.min(...clientRects.map((item) => item.top));
+      const right = Math.max(...clientRects.map((item) => item.right));
+      const bottom = Math.max(...clientRects.map((item) => item.bottom));
+      return new DOMRect(left, top, right - left, bottom - top);
     }
     return null;
   } catch {

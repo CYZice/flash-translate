@@ -4,7 +4,9 @@
 import { describe, expect, it } from "vitest";
 import {
   cloneSelectionRanges,
+  getSelectionContext,
   getSelectionRect,
+  getSelectionText,
   getValidSelectionText,
   isNodeInContentEditable,
   isValidRect,
@@ -30,6 +32,79 @@ describe("cloneSelectionRanges", () => {
 
     selection?.removeAllRanges();
     document.body.replaceChildren();
+  });
+});
+
+describe("getSelectionContext", () => {
+  it("captures bounded text around the selected range", () => {
+    const paragraph = document.createElement("p");
+    paragraph.textContent =
+      "The propagation constant determines the phase evolution of the guided mode.";
+    document.body.append(paragraph);
+    const textNode = paragraph.firstChild;
+    if (!textNode) {
+      throw new Error("Expected paragraph text node");
+    }
+
+    const start = paragraph.textContent.indexOf("propagation");
+    const range = document.createRange();
+    range.setStart(textNode, start);
+    range.setEnd(textNode, start + "propagation".length);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    expect(getSelectionContext(selection)).toEqual({
+      contextBefore: "The",
+      contextAfter:
+        "constant determines the phase evolution of the guided mode.",
+    });
+
+    selection?.removeAllRanges();
+    paragraph.remove();
+  });
+
+  it("returns empty context without an active selection", () => {
+    expect(getSelectionContext(null)).toEqual({
+      contextBefore: "",
+      contextAfter: "",
+    });
+  });
+});
+
+describe("getSelectionText", () => {
+  it("removes duplicate assistive LaTeX content from a rendered selection", () => {
+    const paragraph = document.createElement("p");
+    paragraph.innerHTML = `few <span class="katex"><span class="katex-mathml"><math><annotation encoding="application/x-tex">duplicate source</annotation></math></span><span class="katex-html">transverse modes</span></span> to high spatial coherence`;
+    document.body.append(paragraph);
+    const range = document.createRange();
+    range.selectNodeContents(paragraph);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    expect(getSelectionText(selection)).toBe(
+      "few transverse modes to high spatial coherence"
+    );
+
+    selection?.removeAllRanges();
+    paragraph.remove();
+  });
+
+  it("ignores hidden and SVG math layers while keeping visible text", () => {
+    const paragraph = document.createElement("p");
+    paragraph.innerHTML = `before <mjx-container><svg><text>duplicate</text></svg></mjx-container><span aria-hidden="true">hidden</span>after`;
+    document.body.append(paragraph);
+    const range = document.createRange();
+    range.selectNodeContents(paragraph);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    expect(getSelectionText(selection)).toBe("before after");
+
+    selection?.removeAllRanges();
+    paragraph.remove();
   });
 });
 
