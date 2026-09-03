@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLatestRef } from "@/shared/hooks/use-latest-ref";
 import {
   calculateBottomResize,
@@ -15,6 +15,7 @@ interface UseResizableOptions {
   maxHeight?: number;
   edgeMargin?: number;
   onResizeEnd?: (width: number, height: number) => void;
+  onResizeStart?: (axis: "width" | "height") => void;
   /** Pixels to resize per arrow key press (default: 10) */
   keyboardStep?: number;
 }
@@ -27,9 +28,14 @@ interface UseResizableReturn {
   handleLeftMouseDown: (e: React.MouseEvent) => void;
   handleRightMouseDown: (e: React.MouseEvent) => void;
   handleBottomMouseDown: (e: React.MouseEvent) => void;
+  handleBottomLeftMouseDown: (e: React.MouseEvent) => void;
+  handleBottomRightMouseDown: (e: React.MouseEvent) => void;
   handleLeftKeyDown: (e: React.KeyboardEvent) => void;
   handleRightKeyDown: (e: React.KeyboardEvent) => void;
   handleBottomKeyDown: (e: React.KeyboardEvent) => void;
+  handleBottomLeftKeyDown: (e: React.KeyboardEvent) => void;
+  handleBottomRightKeyDown: (e: React.KeyboardEvent) => void;
+  setHeight: (height: number) => void;
 }
 
 export function useResizable({
@@ -41,6 +47,7 @@ export function useResizable({
   maxHeight = 600,
   edgeMargin = 8,
   onResizeEnd,
+  onResizeStart,
   keyboardStep = 10,
 }: UseResizableOptions): UseResizableReturn {
   const [width, setWidth] = useState(initialWidth);
@@ -55,7 +62,12 @@ export function useResizable({
     width: 0,
     height: 0,
     offsetX: 0,
-    side: "right" as "left" | "right" | "bottom",
+    side: "right" as
+      | "left"
+      | "right"
+      | "bottom"
+      | "bottom-left"
+      | "bottom-right",
     cardLeft: 0,
     cardRight: 0,
     cardBottom: 0,
@@ -98,9 +110,11 @@ export function useResizable({
   };
 
   const createMouseDownHandler =
-    (side: "left" | "right" | "bottom") => (e: React.MouseEvent) => {
+    (side: "left" | "right" | "bottom" | "bottom-left" | "bottom-right") =>
+    (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      onResizeStart?.(side === "left" || side === "right" ? "width" : "height");
       const cardRect = getCardRect(e);
       dragStartRef.current = {
         mouseX: e.clientX,
@@ -119,6 +133,8 @@ export function useResizable({
   const handleLeftMouseDown = createMouseDownHandler("left");
   const handleRightMouseDown = createMouseDownHandler("right");
   const handleBottomMouseDown = createMouseDownHandler("bottom");
+  const handleBottomLeftMouseDown = createMouseDownHandler("bottom-left");
+  const handleBottomRightMouseDown = createMouseDownHandler("bottom-right");
 
   const handleLeftKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
@@ -133,6 +149,7 @@ export function useResizable({
     }
 
     e.preventDefault();
+    onResizeStart?.("width");
     // Left handle: ArrowLeft expands (decreases offset, increases width)
     const delta = e.key === "ArrowLeft" ? keyboardStep : -keyboardStep;
     const newWidth = Math.max(minWidth, Math.min(maxWidth, width + delta));
@@ -156,6 +173,7 @@ export function useResizable({
     }
 
     e.preventDefault();
+    onResizeStart?.("width");
     // Right handle: ArrowRight expands
     const delta = e.key === "ArrowRight" ? keyboardStep : -keyboardStep;
     const newWidth = Math.max(minWidth, Math.min(maxWidth, width + delta));
@@ -176,6 +194,7 @@ export function useResizable({
     }
 
     e.preventDefault();
+    onResizeStart?.("height");
     // Bottom handle: ArrowDown expands (increases height)
     const delta = e.key === "ArrowDown" ? keyboardStep : -keyboardStep;
     const newHeight = Math.max(minHeight, Math.min(maxHeight, height + delta));
@@ -183,6 +202,41 @@ export function useResizable({
     setHeight(newHeight);
     onResizeEnd?.(width, newHeight);
   };
+
+  const createCornerKeyDownHandler =
+    (horizontalSide: "left" | "right") => (e: React.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setWidth(initialWidth);
+        setHeight(initialHeight);
+        if (horizontalSide === "left") {
+          setOffsetX(0);
+        }
+        onResizeEnd?.(initialWidth, initialHeight);
+        return;
+      }
+
+      if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        handleBottomKeyDown(e);
+        return;
+      }
+
+      if (horizontalSide === "left") {
+        handleLeftKeyDown(e);
+      } else {
+        handleRightKeyDown(e);
+      }
+    };
+
+  const handleBottomLeftKeyDown = createCornerKeyDownHandler("left");
+  const handleBottomRightKeyDown = createCornerKeyDownHandler("right");
+
+  const setCardHeight = useCallback(
+    (nextHeight: number) => {
+      setHeight(Math.max(minHeight, Math.min(maxHeight, nextHeight)));
+    },
+    [maxHeight, minHeight]
+  );
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: currentWidthRef.current and currentHeightRef.current are intentionally excluded - useLatestRef ensures we always have the latest value without causing effect re-runs
   useEffect(() => {
@@ -203,7 +257,7 @@ export function useResizable({
         cardBottom,
       } = dragStartRef.current;
 
-      if (side === "left") {
+      if (side === "left" || side === "bottom-left") {
         const deltaX = e.clientX - mouseX;
         const constraints = { minWidth, maxWidth, edgeMargin };
         const { newWidth, newOffsetX } = calculateLeftResize({
@@ -215,7 +269,7 @@ export function useResizable({
         });
         setWidth(newWidth);
         setOffsetX(newOffsetX);
-      } else if (side === "right") {
+      } else if (side === "right" || side === "bottom-right") {
         const deltaX = e.clientX - mouseX;
         const constraints = { minWidth, maxWidth, edgeMargin };
         const { newWidth } = calculateRightResize({
@@ -226,8 +280,13 @@ export function useResizable({
           constraints,
         });
         setWidth(newWidth);
-      } else {
-        // bottom
+      }
+
+      if (
+        side === "bottom" ||
+        side === "bottom-left" ||
+        side === "bottom-right"
+      ) {
         const deltaY = e.clientY - mouseY;
         const constraints = { minHeight, maxHeight, edgeMargin };
         const { newHeight } = calculateBottomResize({
@@ -272,8 +331,13 @@ export function useResizable({
     handleLeftMouseDown,
     handleRightMouseDown,
     handleBottomMouseDown,
+    handleBottomLeftMouseDown,
+    handleBottomRightMouseDown,
     handleLeftKeyDown,
     handleRightKeyDown,
     handleBottomKeyDown,
+    handleBottomLeftKeyDown,
+    handleBottomRightKeyDown,
+    setHeight: setCardHeight,
   };
 }

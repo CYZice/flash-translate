@@ -7,7 +7,8 @@ import {
   MIN_CARD_HEIGHT,
   MIN_CARD_WIDTH,
 } from "../components/translation-card-utils";
-import { calculateCardPosition } from "./card-position";
+import { calculateCardPosition, clampCardTop } from "./card-position";
+import { getSavedCardSize, saveCardSize } from "./card-size-storage";
 import { useDraggable } from "./use-draggable";
 import { useResizable } from "./use-resizable";
 
@@ -33,17 +34,23 @@ export interface CardLayout {
 
   // Drag state
   isDragging: boolean;
+  isResizing: boolean;
 
   // Resize handlers
   handleLeftMouseDown: (e: React.MouseEvent) => void;
   handleRightMouseDown: (e: React.MouseEvent) => void;
   handleBottomMouseDown: (e: React.MouseEvent) => void;
+  handleBottomLeftMouseDown: (e: React.MouseEvent) => void;
+  handleBottomRightMouseDown: (e: React.MouseEvent) => void;
   handleLeftKeyDown: (e: React.KeyboardEvent) => void;
   handleRightKeyDown: (e: React.KeyboardEvent) => void;
   handleBottomKeyDown: (e: React.KeyboardEvent) => void;
+  handleBottomLeftKeyDown: (e: React.KeyboardEvent) => void;
+  handleBottomRightKeyDown: (e: React.KeyboardEvent) => void;
+  setHeight: (height: number) => void;
 
   // Drag handlers
-  handleDragMouseDown: (e: React.MouseEvent) => void;
+  handleDragPointerDown: (e: React.PointerEvent<HTMLElement>) => void;
   handleDragKeyDown: (e: React.KeyboardEvent) => void;
 }
 
@@ -58,10 +65,23 @@ export interface CardLayout {
  */
 export function useCardLayout({ selectionRect }: CardLayoutConfig): CardLayout {
   const [maxCardWidth, setMaxCardWidth] = useState(() =>
-    calculateMaxCardWidth(window.innerWidth)
+    calculateMaxCardWidth(window.visualViewport?.width ?? window.innerWidth)
   );
   const [maxCardHeight, setMaxCardHeight] = useState(() =>
-    calculateMaxCardHeight(window.innerHeight)
+    calculateMaxCardHeight(window.visualViewport?.height ?? window.innerHeight)
+  );
+  const [savedSize, setSavedSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+  const [isHeightManuallySized, setIsHeightManuallySized] = useState(false);
+  const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
+  const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+  const [initialWidth] = useState(() =>
+    calculateCardWidth(
+      selectionRect.width,
+      calculateMaxCardWidth(window.visualViewport?.width ?? window.innerWidth)
+    )
   );
 
   // Update max dimensions on window resize with debounce
@@ -72,73 +92,107 @@ export function useCardLayout({ selectionRect }: CardLayoutConfig): CardLayout {
         clearTimeout(timeoutId);
       }
       timeoutId = setTimeout(() => {
-        setMaxCardWidth(calculateMaxCardWidth(window.innerWidth));
-        setMaxCardHeight(calculateMaxCardHeight(window.innerHeight));
+        setMaxCardWidth(
+          calculateMaxCardWidth(window.visualViewport?.width ?? window.innerWidth)
+        );
+        setMaxCardHeight(
+          calculateMaxCardHeight(window.visualViewport?.height ?? window.innerHeight)
+        );
       }, RESIZE_DEBOUNCE_MS);
     };
     window.addEventListener("resize", handleResize);
+    window.visualViewport?.addEventListener("resize", handleResize);
     return () => {
       if (timeoutId !== undefined) {
         clearTimeout(timeoutId);
       }
       window.removeEventListener("resize", handleResize);
+      window.visualViewport?.removeEventListener("resize", handleResize);
     };
   }, []);
 
-  // Calculate card width based on selection width (clamped to min/max)
-  const selectionBasedWidth = calculateCardWidth(
-    selectionRect.width,
+  useEffect(() => {
+    getSavedCardSize().then((size) => {
+      if (size) {
+        setSavedSize(size);
+        setIsHeightManuallySized(true);
+      }
+    });
+  }, []);
+
+  const preferredWidth = Math.min(
+    Math.max(savedSize?.width ?? initialWidth, MIN_CARD_WIDTH),
     maxCardWidth
+  );
+  const preferredHeight = Math.min(
+    Math.max(savedSize?.height ?? INITIAL_CARD_HEIGHT, MIN_CARD_HEIGHT),
+    maxCardHeight
   );
 
   const {
     width,
     height,
     offsetX: resizeOffsetX,
+    isResizing,
     handleLeftMouseDown,
     handleRightMouseDown,
     handleBottomMouseDown,
+    handleBottomLeftMouseDown,
+    handleBottomRightMouseDown,
     handleLeftKeyDown,
     handleRightKeyDown,
     handleBottomKeyDown,
+    handleBottomLeftKeyDown,
+    handleBottomRightKeyDown,
+    setHeight,
   } = useResizable({
-    initialWidth: selectionBasedWidth,
+    initialWidth: preferredWidth,
     minWidth: MIN_CARD_WIDTH,
     maxWidth: maxCardWidth,
-    initialHeight: INITIAL_CARD_HEIGHT,
+    initialHeight: preferredHeight,
     minHeight: MIN_CARD_HEIGHT,
     maxHeight: maxCardHeight,
+    onResizeStart: (axis) => {
+      if (axis === "height") {
+        setIsHeightManuallySized(true);
+      }
+    },
+    onResizeEnd: async (nextWidth, nextHeight) => {
+      setSavedSize({ width: nextWidth, height: nextHeight });
+      await saveCardSize({ width: nextWidth, height: nextHeight });
+    },
   });
 
   const {
     offset,
     isDragging,
-    handleMouseDown: handleDragMouseDown,
+    handlePointerDown: handleDragPointerDown,
     handleKeyDown: handleDragKeyDown,
   } = useDraggable();
 
   const position = calculateCardPosition(
     selectionRect,
     {
-      cardWidth: selectionBasedWidth,
+      cardWidth: width,
       cardHeight: height,
       margin: VIEWPORT_MARGIN,
     },
-    { width: window.innerWidth, height: window.innerHeight }
+    { width: viewportWidth, height: viewportHeight }
   );
 
-  const cardLeft = position.x + offset.x + resizeOffsetX;
-  const rawCardTop = position.y + offset.y;
-
-  // Adjust card position if it overflows bottom of viewport
-  const cardBottom = rawCardTop + height;
-  const top =
-    cardBottom > window.innerHeight - VIEWPORT_MARGIN
-      ? Math.max(
-          VIEWPORT_MARGIN,
-          rawCardTop - (cardBottom - (window.innerHeight - VIEWPORT_MARGIN))
-        )
-      : rawCardTop;
+  const cardLeft = Math.max(
+    VIEWPORT_MARGIN,
+    Math.min(
+      Math.max(VIEWPORT_MARGIN, viewportWidth - VIEWPORT_MARGIN - width),
+      position.x + offset.x + resizeOffsetX
+    )
+  );
+  const top = clampCardTop(
+    position.y + offset.y,
+    height,
+    viewportHeight,
+    VIEWPORT_MARGIN
+  );
 
   return {
     // Dimensions
@@ -155,17 +209,27 @@ export function useCardLayout({ selectionRect }: CardLayoutConfig): CardLayout {
 
     // Drag state
     isDragging,
+    isResizing,
 
     // Resize handlers
     handleLeftMouseDown,
     handleRightMouseDown,
     handleBottomMouseDown,
+    handleBottomLeftMouseDown,
+    handleBottomRightMouseDown,
     handleLeftKeyDown,
     handleRightKeyDown,
     handleBottomKeyDown,
+    handleBottomLeftKeyDown,
+    handleBottomRightKeyDown,
+    setHeight: (nextHeight) => {
+      if (!isHeightManuallySized) {
+        setHeight(nextHeight);
+      }
+    },
 
     // Drag handlers
-    handleDragMouseDown,
+    handleDragPointerDown,
     handleDragKeyDown,
   };
 }

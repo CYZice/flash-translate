@@ -37,18 +37,17 @@ export function CopyButton({ text }: CopyButtonProps) {
           : getMessage("content_copyTranslation")
       }
       className={cn(
+        "min-h-7 min-w-7 rounded-sm bg-transparent p-0 shadow-none hover:bg-transparent hover:shadow-none",
         state === "copied" && "text-green-600 hover:text-green-600",
         state === "error" && "text-red-500 hover:text-red-500"
       )}
       disabled={!text}
       onClick={handleCopy}
-      tooltip={
+      title={
         state === "error"
           ? getMessage("content_copyFailed")
           : getMessage("content_copyTranslation")
       }
-      tooltipAlign="end"
-      tooltipSide="top"
       variant="ghost"
     >
       {state === "idle" && <Copy size={14} />}

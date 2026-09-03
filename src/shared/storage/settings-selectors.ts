@@ -33,6 +33,9 @@ interface ContentAppSettings {
   skipSameLanguage: boolean;
   exclusionPatterns: ExclusionPattern[];
   autoDetectLanguage: boolean;
+  editorInputAssistEnabled: boolean;
+  aiBaseUrl: string;
+  aiModel: string;
 }
 
 export const selectContentAppSettings: SettingsSelector<ContentAppSettings> = (
@@ -43,6 +46,9 @@ export const selectContentAppSettings: SettingsSelector<ContentAppSettings> = (
   skipSameLanguage: s.skipSameLanguage,
   exclusionPatterns: s.exclusionPatterns,
   autoDetectLanguage: s.autoDetectLanguage,
+  editorInputAssistEnabled: s.editorInputAssistEnabled,
+  aiBaseUrl: s.aiBaseUrl,
+  aiModel: s.aiModel,
 });
 
 /**

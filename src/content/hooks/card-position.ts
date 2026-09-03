@@ -40,8 +40,20 @@ export interface CardPositionOptions {
 export interface CardPosition {
   x: number;
   y: number;
-  placement: "bottom" | "top";
   maxHeight: number;
+}
+
+/**
+ * Keep a fixed card inside the viewport while preserving its preferred top.
+ */
+export function clampCardTop(
+  preferredTop: number,
+  cardHeight: number,
+  viewportHeight: number,
+  margin: number
+): number {
+  const maxTop = Math.max(margin, viewportHeight - margin - cardHeight);
+  return Math.min(maxTop, Math.max(margin, preferredTop));
 }
 
 /**
@@ -74,35 +86,16 @@ export function calculateVerticalPosition(
   cardHeight: number,
   viewportHeight: number,
   margin: number
-): { y: number; placement: "bottom" | "top"; maxHeight: number } {
-  // Calculate available space below and above the selection
-  const spaceBelow = viewportHeight - selectionRect.bottom - margin * 2;
-  const spaceAbove = selectionRect.top - margin * 2;
+): { y: number; maxHeight: number } {
+  // Keep the selection as the stable anchor. If the card grows near the
+  // bottom edge, move its top upward continuously instead of flipping it
+  // above the selection (which caused visible jumping).
+  const anchorTop = selectionRect.bottom + margin;
+  const maxTop = Math.max(margin, viewportHeight - margin - cardHeight);
+  const y = Math.min(anchorTop, maxTop);
+  const availableHeight = Math.max(MIN_CARD_HEIGHT, viewportHeight - y - margin);
 
-  // Prefer showing below the selection
-  if (selectionRect.bottom + margin + cardHeight <= viewportHeight) {
-    return {
-      y: selectionRect.bottom + margin,
-      placement: "bottom",
-      maxHeight: Math.max(spaceBelow, MIN_CARD_HEIGHT),
-    };
-  }
-
-  // Show above if not enough space below
-  if (selectionRect.top - margin - cardHeight >= 0) {
-    return {
-      y: selectionRect.top - margin - cardHeight,
-      placement: "top",
-      maxHeight: Math.max(spaceAbove, MIN_CARD_HEIGHT),
-    };
-  }
-
-  // Fallback: show below anyway, limit height to available space
-  return {
-    y: selectionRect.bottom + margin,
-    placement: "bottom",
-    maxHeight: Math.max(spaceBelow, MIN_CARD_HEIGHT),
-  };
+  return { y, maxHeight: availableHeight };
 }
 
 /**
@@ -122,12 +115,12 @@ export function calculateCardPosition(
     margin
   );
 
-  const { y, placement, maxHeight } = calculateVerticalPosition(
+  const { y, maxHeight } = calculateVerticalPosition(
     selectionRect,
     cardHeight,
     viewport.height,
     margin
   );
 
-  return { x, y, placement, maxHeight };
+  return { x, y, maxHeight };
 }

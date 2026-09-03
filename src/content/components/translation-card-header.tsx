@@ -1,15 +1,15 @@
 import { Settings, X } from "lucide-react";
-import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/shared/components/button";
 import { saveSettings } from "@/shared/storage/settings";
 import { getMessage } from "@/shared/utils/i18n";
 import type { HoveredTermTranslationState } from "../term-translation/use-hovered-term-translation";
 import { LanguageSelector } from "./language-selector";
-import {
-  TemporaryDisableAction,
-  TemporaryDisableButton,
-} from "./temporary-disable-button";
 import { TermTranslationStatus } from "./term-translation-status";
+import {
+  TranslationResultSwitch,
+  type TranslationResultView,
+} from "./translation-result-switch";
 
 interface TranslationCardHeaderProps {
   sourceLanguage: string;
@@ -18,9 +18,14 @@ interface TranslationCardHeaderProps {
   isDetecting: boolean;
   autoDetectEnabled: boolean;
   isSettingsOpen: boolean;
+  activeResultView: TranslationResultView;
+  aiAvailable: boolean;
+  aiIsLoading: boolean;
   termTranslation: HoveredTermTranslationState;
+  isDragging: boolean;
   onClose: () => void;
-  onDisablePage: () => void;
+  onMovePointerDown: (event: React.PointerEvent<HTMLElement>) => void;
+  onResultViewChange: (view: TranslationResultView) => void;
   onSettingsToggle: () => void;
   onSourceLanguageOverride: (lang: string | null) => void;
 }
@@ -32,14 +37,17 @@ export function TranslationCardHeader({
   isDetecting,
   autoDetectEnabled,
   isSettingsOpen,
+  activeResultView,
+  aiAvailable,
+  aiIsLoading,
   termTranslation,
+  isDragging,
   onClose,
-  onDisablePage,
+  onMovePointerDown,
+  onResultViewChange,
   onSettingsToggle,
   onSourceLanguageOverride,
 }: TranslationCardHeaderProps) {
-  const [isConfirmingDisable, setIsConfirmingDisable] = useState(false);
-
   const onSourceChange = async (lang: string) => {
     // When auto-detect is enabled, override the detected language
     if (autoDetectEnabled) {
@@ -53,27 +61,28 @@ export function TranslationCardHeader({
     await saveSettings({ targetLanguage: lang });
   };
 
-  if (isConfirmingDisable) {
-    return (
-      <div className="sticky top-0 z-10 flex min-h-8 items-center rounded-t-xl px-3">
-        <TemporaryDisableAction
-          onCancel={() => setIsConfirmingDisable(false)}
-          onDisabled={onDisablePage}
-        />
-      </div>
-    );
-  }
-
   if (termTranslation.hoveredTerm) {
     return (
-      <div className="sticky top-0 z-10 min-h-8 rounded-t-xl px-3">
+      <div
+        className={cn(
+          "flex min-h-9 shrink-0 touch-none items-center border-gray-100 border-b bg-white px-3",
+          isDragging ? "cursor-grabbing" : "cursor-grab"
+        )}
+        onPointerDown={onMovePointerDown}
+      >
         <TermTranslationStatus state={termTranslation} />
       </div>
     );
   }
 
   return (
-    <div className="sticky top-0 z-10 flex min-h-8 items-center justify-between gap-2 rounded-t-xl border-b border-none px-3">
+    <div
+      className={cn(
+        "flex min-h-9 shrink-0 touch-none items-center justify-between gap-1 border-gray-100 border-b bg-white px-2",
+        isDragging ? "cursor-grabbing" : "cursor-grab"
+      )}
+      onPointerDown={onMovePointerDown}
+    >
       <div className="min-w-0 flex-1">
         <LanguageSelector
           isAutoDetected={autoDetectEnabled && detectedLanguage !== null}
@@ -85,12 +94,23 @@ export function TranslationCardHeader({
         />
       </div>
       <div className="flex shrink-0 items-stretch gap-1">
+        {!isSettingsOpen && (
+          <TranslationResultSwitch
+            activeView={activeResultView}
+            aiAvailable={aiAvailable}
+            aiIsLoading={aiIsLoading}
+            onViewChange={onResultViewChange}
+          />
+        )}
         <Button
           aria-controls="translation-card-body"
           aria-expanded={isSettingsOpen}
           aria-label={getMessage("content_toggleSettings")}
           aria-pressed={isSettingsOpen}
-          className={isSettingsOpen ? "bg-blue-50 text-blue-600" : undefined}
+          className={cn(
+            "min-h-7 min-w-7 rounded-sm p-0 shadow-none",
+            isSettingsOpen && "bg-blue-50 text-blue-600"
+          )}
           onClick={onSettingsToggle}
           tooltip={getMessage("content_toggleSettings")}
           tooltipAlign="end"
@@ -98,11 +118,9 @@ export function TranslationCardHeader({
         >
           <Settings size={14} />
         </Button>
-        <TemporaryDisableButton
-          onConfirm={() => setIsConfirmingDisable(true)}
-        />
         <Button
           aria-label={getMessage("content_close")}
+          className="min-h-7 min-w-7 rounded-sm p-0 shadow-none"
           onClick={onClose}
           tooltip={getMessage("content_close")}
           tooltipAlign="end"

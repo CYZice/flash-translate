@@ -1,5 +1,7 @@
 import { TranslationCard } from "./components/translation-card";
+import { EditorInputAssist } from "./components/editor-input-assist";
 import { useTranslationFlow } from "./hooks/use-translation-flow";
+import { useEditorInputAssist } from "./hooks/use-editor-input-assist";
 import { HoveredTermHighlight } from "./term-translation/hovered-term-highlight";
 import { useHoveredTermTranslation } from "./term-translation/use-hovered-term-translation";
 
@@ -11,14 +13,19 @@ export default function App() {
     autoDetectEnabled,
     detectedLanguage,
     isDetecting,
+    isAiConfigured,
     canDisplay,
     skipResult,
     dismissCard,
-    temporarilyDisablePage,
     permanentlyExcludeSite,
     setOverriddenLanguage,
+    editorInputAssistEnabled,
   } = useTranslationFlow();
-
+  const inputAssist = useEditorInputAssist(
+    editorInputAssistEnabled,
+    sourceLanguage,
+    targetLanguage
+  );
   const hoveredTermTranslation = useHoveredTermTranslation({
     selection,
     sourceLanguage,
@@ -41,8 +48,8 @@ export default function App() {
         autoDetectEnabled={autoDetectEnabled}
         detectedLanguage={detectedLanguage}
         isDetecting={isDetecting}
+        isAiConfigured={isAiConfigured}
         onClose={dismissCard}
-        onDisablePage={temporarilyDisablePage}
         onExcludeSite={permanentlyExcludeSite}
         onSourceLanguageOverride={setOverriddenLanguage}
         selection={selection}
@@ -58,6 +65,7 @@ export default function App() {
           hoveredTerm={hoveredTermTranslation.hoveredTerm}
         />
       </div>
+      <EditorInputAssist {...inputAssist} />
     </>
   );
 }

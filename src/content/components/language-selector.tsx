@@ -20,7 +20,7 @@ export function LanguageSelector({
   isAutoDetected = false,
 }: LanguageSelectorProps) {
   return (
-    <div className="flex items-stretch gap-1">
+    <div className="flex items-stretch gap-0.5">
       <div className="relative flex items-stretch">
         {isDetecting && (
           <Loader2
@@ -30,7 +30,7 @@ export function LanguageSelector({
         )}
         <select
           aria-label={getMessage("content_sourceLanguage")}
-          className="language-select flex min-h-8 min-w-10 cursor-pointer items-center justify-center rounded border-none bg-white/70 px-2 text-center font-medium text-blue-700 text-xs backdrop-blur-sm transition-colors hover:bg-blue-50 hover:text-blue-900 focus:outline-none disabled:cursor-wait disabled:opacity-50"
+          className="language-select flex min-h-7 min-w-9 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent px-1.5 text-center font-medium text-blue-700 text-xs transition-colors hover:bg-blue-50 hover:text-blue-900 focus:outline-none disabled:cursor-wait disabled:opacity-50"
           disabled={isDetecting}
           onChange={(e) => onSourceChange(e.target.value)}
           value={sourceLanguage}
@@ -50,7 +50,7 @@ export function LanguageSelector({
 
       <select
         aria-label={getMessage("content_targetLanguage")}
-        className="language-select flex min-h-8 min-w-10 cursor-pointer items-center justify-center rounded border-none bg-white/70 px-2 text-center font-medium text-blue-700 text-xs backdrop-blur-sm transition-colors hover:bg-blue-50 hover:text-blue-900 focus:outline-none"
+        className="language-select flex min-h-7 min-w-9 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent px-1.5 text-center font-medium text-blue-700 text-xs transition-colors hover:bg-blue-50 hover:text-blue-900 focus:outline-none"
         onChange={(e) => onTargetChange(e.target.value)}
         value={targetLanguage}
       >

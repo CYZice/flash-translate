@@ -19,6 +19,21 @@ function createContext(overrides: Partial<SkipContext> = {}): SkipContext {
 }
 
 describe("evaluateSkipRules", () => {
+  it("does not skip a target-language selection containing English text", () => {
+    expect(
+      evaluateSkipRules({
+        targetLanguage: "zh",
+        skipSameLanguage: true,
+        autoDetectEnabled: false,
+        detectedLanguage: null,
+        confidence: 0,
+        pageLanguage: "zh-CN",
+        isDetecting: false,
+        selectedText: "这是中文 API 文档",
+      })
+    ).toEqual({ shouldSkip: false, reason: null });
+  });
+
   describe("基本ケース（スキップなし）", () => {
     it("skipSameLanguage が false の場合はスキップしない", () => {
       const context = createContext({

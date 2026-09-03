@@ -10,7 +10,7 @@ interface UseDraggableOptions {
 interface UseDraggableReturn {
   offset: { x: number; y: number };
   isDragging: boolean;
-  handleMouseDown: (e: React.MouseEvent) => void;
+  handlePointerDown: (e: React.PointerEvent<HTMLElement>) => void;
   handleKeyDown: (e: React.KeyboardEvent) => void;
   resetOffset: () => void;
 }
@@ -26,9 +26,19 @@ export function useDraggable({
   // Track current offset for mouseup handler without causing effect re-runs
   const currentOffsetRef = useLatestRef(offset);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handlePointerDown = (e: React.PointerEvent<HTMLElement>) => {
+    const target = e.target as Element;
+    if (
+      target.closest(
+        "button, select, input, textarea, a, [role='button'], [role='separator']"
+      )
+    ) {
+      return;
+    }
+
     e.preventDefault();
     e.stopPropagation();
+    e.currentTarget.setPointerCapture(e.pointerId);
     setIsDragging(true);
     startMouseRef.current = { x: e.clientX, y: e.clientY };
     startOffsetRef.current = offset;
@@ -75,7 +85,7 @@ export function useDraggable({
       return;
     }
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handlePointerMove = (e: PointerEvent) => {
       const deltaX = e.clientX - startMouseRef.current.x;
       const deltaY = e.clientY - startMouseRef.current.y;
       setOffset({
@@ -84,25 +94,27 @@ export function useDraggable({
       });
     };
 
-    const handleMouseUp = () => {
+    const handlePointerUp = () => {
       setIsDragging(false);
       // Use ref to get latest offset without dependency
       onDragEnd?.(currentOffsetRef.current);
     };
 
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener("pointermove", handlePointerMove);
+    document.addEventListener("pointerup", handlePointerUp);
+    document.addEventListener("pointercancel", handlePointerUp);
 
     return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("pointermove", handlePointerMove);
+      document.removeEventListener("pointerup", handlePointerUp);
+      document.removeEventListener("pointercancel", handlePointerUp);
     };
   }, [isDragging, onDragEnd]);
 
   return {
     offset,
     isDragging,
-    handleMouseDown,
+    handlePointerDown,
     handleKeyDown,
     resetOffset,
   };

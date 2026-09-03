@@ -10,6 +10,7 @@ const CHROME_FLAGS_URL = "chrome://flags/#language-detection-api";
 export function TranslationBehaviorSettings() {
   const [skipSameLanguage, setSkipSameLanguage] = useState(true);
   const [autoDetectLanguage, setAutoDetectLanguage] = useState(true);
+  const [editorInputAssistEnabled, setEditorInputAssistEnabled] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const {
     availability: detectorAvailability,
@@ -21,6 +22,7 @@ export function TranslationBehaviorSettings() {
       const settings = await getSettings();
       setSkipSameLanguage(settings.skipSameLanguage);
       setAutoDetectLanguage(settings.autoDetectLanguage);
+      setEditorInputAssistEnabled(settings.editorInputAssistEnabled);
     };
     initialize();
   }, []);
@@ -35,6 +37,12 @@ export function TranslationBehaviorSettings() {
     const newValue = !autoDetectLanguage;
     setAutoDetectLanguage(newValue);
     await saveSettings({ autoDetectLanguage: newValue });
+  };
+
+  const handleEditorInputAssistToggle = async () => {
+    const newValue = !editorInputAssistEnabled;
+    setEditorInputAssistEnabled(newValue);
+    await saveSettings({ editorInputAssistEnabled: newValue });
   };
 
   const handleCopyFlagsUrl = async () => {
@@ -94,6 +102,20 @@ export function TranslationBehaviorSettings() {
           checked={effectiveSkipSameLanguage}
           disabled={autoDetectEnabled}
           onChange={handleSkipSameLanguageToggle}
+        />
+      </div>
+      <div className="mt-3 flex items-center justify-between">
+        <div className="flex-1 pr-3">
+          <span className="text-gray-700 text-sm">
+            {getMessage("popup_behavior_editorInputAssist")}
+          </span>
+          <p className="mt-0.5 text-gray-400 text-xs">
+            {getMessage("popup_behavior_editorInputAssistDesc")}
+          </p>
+        </div>
+        <ToggleSwitch
+          checked={editorInputAssistEnabled}
+          onChange={handleEditorInputAssistToggle}
         />
       </div>
     </div>

@@ -8,12 +8,23 @@ export interface ExclusionPattern {
   enabled: boolean;
 }
 
+export type AiReasoningEffort = "low" | "high" | "max";
+
+export const DEFAULT_AI_SYSTEM_PROMPT =
+  "Translate the selected text into natural, accurate target-language text. Use the preceding and following sentences only to resolve context and terminology. Output only the translation.";
+
 export interface TranslationSettings {
   sourceLanguage: string;
   targetLanguage: string;
   exclusionPatterns: ExclusionPattern[];
   skipSameLanguage: boolean;
   autoDetectLanguage: boolean;
+  editorInputAssistEnabled: boolean;
+  aiBaseUrl: string;
+  aiModel: string;
+  aiSystemPrompt: string;
+  aiThinkingEnabled: boolean;
+  aiReasoningEffort: AiReasoningEffort;
 }
 
 const STORAGE_KEY = "flash-translate-settings";
@@ -25,6 +36,12 @@ const DEFAULT_SETTINGS: TranslationSettings = {
   exclusionPatterns: [],
   skipSameLanguage: true,
   autoDetectLanguage: true,
+  editorInputAssistEnabled: false,
+  aiBaseUrl: "",
+  aiModel: "",
+  aiSystemPrompt: DEFAULT_AI_SYSTEM_PROMPT,
+  aiThinkingEnabled: false,
+  aiReasoningEffort: "high",
 };
 
 // Type guard for ExclusionPattern
@@ -58,6 +75,28 @@ function validateSettings(data: unknown): Partial<TranslationSettings> {
   }
   if (typeof obj.autoDetectLanguage === "boolean") {
     result.autoDetectLanguage = obj.autoDetectLanguage;
+  }
+  if (typeof obj.editorInputAssistEnabled === "boolean") {
+    result.editorInputAssistEnabled = obj.editorInputAssistEnabled;
+  }
+  if (typeof obj.aiBaseUrl === "string") {
+    result.aiBaseUrl = obj.aiBaseUrl;
+  }
+  if (typeof obj.aiModel === "string") {
+    result.aiModel = obj.aiModel;
+  }
+  if (typeof obj.aiSystemPrompt === "string") {
+    result.aiSystemPrompt = obj.aiSystemPrompt;
+  }
+  if (typeof obj.aiThinkingEnabled === "boolean") {
+    result.aiThinkingEnabled = obj.aiThinkingEnabled;
+  }
+  if (
+    obj.aiReasoningEffort === "low" ||
+    obj.aiReasoningEffort === "high" ||
+    obj.aiReasoningEffort === "max"
+  ) {
+    result.aiReasoningEffort = obj.aiReasoningEffort;
   }
   if (Array.isArray(obj.exclusionPatterns)) {
     result.exclusionPatterns = obj.exclusionPatterns.filter(isExclusionPattern);

@@ -4,9 +4,10 @@
  */
 
 export const MIN_CARD_WIDTH = 280;
-export const MIN_CARD_HEIGHT = 60;
-export const INITIAL_CARD_HEIGHT = 180;
+export const MIN_CARD_HEIGHT = 120;
+export const INITIAL_CARD_HEIGHT = 160;
 export const CARD_EDGE_MARGIN = 32; // 16px margin on each side
+export const AUTO_GROW_VIEWPORT_RATIO = 0.72;
 
 /**
  * Calculate card width based on selection width, clamped to min/max bounds
@@ -37,4 +38,24 @@ export function calculateMaxCardWidth(viewportWidth: number): number {
  */
 export function calculateMaxCardHeight(viewportHeight: number): number {
   return viewportHeight - CARD_EDGE_MARGIN;
+}
+
+export function calculateAutoGrowHeight(
+  currentCardHeight: number,
+  bodyClientHeight: number,
+  contentScrollHeight: number,
+  minHeight: number,
+  maxHeight: number
+): number {
+  const fixedCardHeight = Math.max(0, currentCardHeight - bodyClientHeight);
+  const contentHeight = fixedCardHeight + contentScrollHeight;
+  return Math.min(maxHeight, Math.max(minHeight, contentHeight));
+}
+
+export function calculateAutoGrowLimit(
+  viewportHeight: number,
+  maxHeight: number
+): number {
+  const viewportLimit = Math.floor(viewportHeight * AUTO_GROW_VIEWPORT_RATIO);
+  return Math.min(maxHeight, viewportLimit);
 }

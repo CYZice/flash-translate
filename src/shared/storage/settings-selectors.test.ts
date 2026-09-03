@@ -14,10 +14,16 @@ const mockSettings: TranslationSettings = {
   sourceLanguage: "en",
   skipSameLanguage: true,
   autoDetectLanguage: true,
+  editorInputAssistEnabled: false,
   exclusionPatterns: [
     { id: "1", pattern: "https://example.com", enabled: true },
     { id: "2", pattern: "https://test.com", enabled: false },
   ],
+  aiBaseUrl: "",
+  aiModel: "",
+  aiSystemPrompt: "",
+  aiThinkingEnabled: false,
+  aiReasoningEffort: "high",
 };
 
 describe("selectTargetLanguage", () => {
@@ -30,7 +36,6 @@ describe("selectTargetLanguage", () => {
     expect(selectTargetLanguage(settings)).toBe("zh");
   });
 });
-
 describe("selectSourceLanguage", () => {
   it("returns sourceLanguage from settings", () => {
     expect(selectSourceLanguage(mockSettings)).toBe("en");
@@ -74,7 +79,10 @@ describe("selectContentAppSettings", () => {
       targetLanguage: "ja",
       skipSameLanguage: true,
       autoDetectLanguage: true,
+      editorInputAssistEnabled: false,
       exclusionPatterns: mockSettings.exclusionPatterns,
+      aiBaseUrl: "",
+      aiModel: "",
     });
   });
 

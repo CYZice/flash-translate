@@ -20,7 +20,7 @@ export function TranslationContent({
 }: TranslationContentProps) {
   if (availability === "unsupported") {
     return (
-      <div className="rounded-lg bg-red-50 px-3 py-2 text-red-600 text-sm">
+      <div className="rounded-md bg-red-50 px-3 py-2 text-red-600 text-sm">
         {getMessage("content_translatorUnsupported")}
       </div>
     );
@@ -28,7 +28,7 @@ export function TranslationContent({
 
   if (availability === "unavailable") {
     return (
-      <div className="rounded-lg bg-red-50 px-3 py-2 text-red-600 text-sm">
+      <div className="rounded-md bg-red-50 px-3 py-2 text-red-600 text-sm">
         {getMessage("content_translationUnavailable", [
           sourceLanguage,
           targetLanguage,
@@ -39,7 +39,7 @@ export function TranslationContent({
 
   if (error) {
     return (
-      <div className="rounded-lg bg-red-50 px-3 py-2 text-red-600 text-sm">
+      <div className="rounded-md bg-red-50 px-3 py-2 text-red-600 text-sm">
         {error.message}
       </div>
     );
@@ -59,7 +59,7 @@ export function TranslationContent({
   }
 
   return (
-    <div className="wrap-break-word whitespace-pre-wrap pb-10 text-base text-gray-800 leading-relaxed">
+    <div className="wrap-break-word whitespace-pre-wrap text-[18px] text-gray-800 leading-8">
       {result || (
         <span className="text-gray-400 italic">
           {getMessage("content_translationPlaceholder")}

@@ -3,13 +3,13 @@ import { cn } from "@/lib/utils";
 import { getMessage } from "@/shared/utils/i18n";
 
 interface DragHandleProps {
-  onMouseDown: (e: React.MouseEvent) => void;
+  onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
   isDragging: boolean;
 }
 
 export function DragHandle({
-  onMouseDown,
+  onPointerDown,
   onKeyDown,
   isDragging,
 }: DragHandleProps) {
@@ -33,9 +33,9 @@ export function DragHandle({
     <button
       aria-label={getMessage("content_moveCard")}
       aria-pressed={isDragging}
-      className="fixed top-0 z-10 flex h-4 w-full cursor-move items-center justify-center border-none bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+      className="absolute top-0 z-10 flex h-5 w-full cursor-grab touch-none items-center justify-center border-none bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 active:cursor-grabbing"
       onKeyDown={handleKeyDown}
-      onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown}
       type="button"
     >
       <GripHorizontal

@@ -1,5 +1,6 @@
 import { isLanguageMatch } from "@/shared/storage/settings";
 import { DEFAULT_CONFIDENCE_THRESHOLD } from "@/shared/utils/language-detector-utils";
+import { hasMixedLanguageSelection } from "./selection-language";
 
 export type SkipReason =
   | "same-as-page-language"
@@ -19,6 +20,7 @@ export interface SkipContext {
   confidence: number;
   pageLanguage: string | null;
   isDetecting: boolean;
+  selectedText?: string;
 }
 
 /**
@@ -48,6 +50,10 @@ export function evaluateSkipRules(context: SkipContext): SkipResult {
   // Rule 1: If auto-detect is enabled and detection is in progress, wait
   if (autoDetectEnabled && isDetecting) {
     return { shouldSkip: true, reason: "detecting-in-progress" };
+  }
+
+  if (skipSameLanguage && hasMixedLanguageSelection(context.selectedText ?? "", targetLanguage)) {
+    return { shouldSkip: false, reason: null };
   }
 
   // Rule 2: Auto-detect ON - use detected language for skip check

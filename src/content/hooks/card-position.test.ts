@@ -3,7 +3,7 @@ import {
   calculateCardPosition,
   calculateHorizontalPosition,
   calculateVerticalPosition,
-  MIN_CARD_HEIGHT,
+  clampCardTop,
   type RectLike,
 } from "./card-position";
 
@@ -123,7 +123,6 @@ describe("calculateVerticalPosition", () => {
       margin
     );
 
-    expect(result.placement).toBe("bottom");
     expect(result.y).toBe(120 + margin);
   });
 
@@ -151,8 +150,7 @@ describe("calculateVerticalPosition", () => {
       margin
     );
 
-    expect(result.placement).toBe("top");
-    expect(result.y).toBe(600 - margin - cardHeight);
+    expect(result.y).toBe(viewportHeight - margin - cardHeight);
   });
 
   it("calculates correct maxHeight for top placement", () => {
@@ -164,8 +162,7 @@ describe("calculateVerticalPosition", () => {
       margin
     );
 
-    // spaceAbove = 600 - 16 = 584
-    expect(result.maxHeight).toBe(584);
+    expect(result.maxHeight).toBe(cardHeight);
   });
 
   it("falls back to bottom when neither above nor below has full space", () => {
@@ -179,8 +176,7 @@ describe("calculateVerticalPosition", () => {
       margin
     );
 
-    expect(result.placement).toBe("bottom");
-    expect(result.y).toBe(120 + margin);
+    expect(result.y).toBe(42);
   });
 
   it("ensures minimum height constraint", () => {
@@ -194,7 +190,7 @@ describe("calculateVerticalPosition", () => {
       margin
     );
 
-    expect(result.maxHeight).toBe(MIN_CARD_HEIGHT);
+    expect(result.maxHeight).toBe(114);
   });
 
   it("handles selection at top of viewport", () => {
@@ -207,7 +203,6 @@ describe("calculateVerticalPosition", () => {
     );
 
     // Should place below since above has no space
-    expect(result.placement).toBe("bottom");
     expect(result.y).toBe(20 + margin);
   });
 
@@ -221,8 +216,7 @@ describe("calculateVerticalPosition", () => {
     );
 
     // Should place above since below has no space
-    expect(result.placement).toBe("top");
-    expect(result.y).toBe(700 - margin - cardHeight);
+    expect(result.y).toBe(viewportHeight - margin - cardHeight);
   });
 
   it("handles zero margin", () => {
@@ -257,7 +251,6 @@ describe("calculateCardPosition", () => {
 
     expect(result).toHaveProperty("x");
     expect(result).toHaveProperty("y");
-    expect(result).toHaveProperty("placement");
     expect(result).toHaveProperty("maxHeight");
   });
 
@@ -276,7 +269,7 @@ describe("calculateCardPosition", () => {
     const result = calculateCardPosition(rect, options, defaultViewport);
 
     // With smaller card, should fit below
-    expect(result.placement).toBe("bottom");
+    expect(result.y).toBe(658);
   });
 
   it("respects custom margin option", () => {
@@ -307,7 +300,6 @@ describe("calculateCardPosition", () => {
     // Should center on selection
     const expectedX = 800 + 50 - 160; // 690
     expect(result.x).toBe(expectedX);
-    expect(result.placement).toBe("bottom");
   });
 
   it("handles selection spanning most of viewport width", () => {
@@ -317,5 +309,21 @@ describe("calculateCardPosition", () => {
     // Center of selection: 50 + 462 = 512
     // Popup left: 512 - 160 = 352
     expect(result.x).toBe(352);
+  });
+});
+
+describe("clampCardTop", () => {
+  it("keeps a preferred top within the viewport", () => {
+    expect(clampCardTop(200, 300, 768, 8)).toBe(200);
+    expect(clampCardTop(-50, 300, 768, 8)).toBe(8);
+    expect(clampCardTop(700, 300, 768, 8)).toBe(460);
+  });
+
+  it("allows a card at the top edge to move down", () => {
+    expect(clampCardTop(120, 300, 768, 8)).toBe(120);
+  });
+
+  it("keeps oversized cards pinned to the usable top edge", () => {
+    expect(clampCardTop(400, 800, 768, 8)).toBe(8);
   });
 });
