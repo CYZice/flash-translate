@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslator } from "./use-translator";
 
 const INPUT_DEBOUNCE_MS = 400;
-const CJK_REGEX = /[\u3400-\u9fff]/;
+const CJK_REGEX = /[\u3400-\u9fff]/g;
 const BOUNDARY_REGEX = /[。！？!?\n]/g;
+const TRAILING_PUNCTUATION_REGEX = /[。！？!?]/;
+const WHITESPACE_REGEX = /\s/;
 
 interface EditorAssistState {
   text: string;
@@ -16,10 +18,41 @@ export function getSentenceSlice(value: string, caret: number) {
   const after = value.slice(safeCaret);
   const startMatch = [...before.matchAll(BOUNDARY_REGEX)].at(-1);
   const endMatch = after.search(BOUNDARY_REGEX);
-  const start = startMatch ? (startMatch.index ?? 0) + 1 : 0;
-  const end = endMatch === -1 ? value.length : safeCaret + endMatch + 1;
+  let start = startMatch ? (startMatch.index ?? 0) + 1 : 0;
+  let end = endMatch === -1 ? value.length : safeCaret + endMatch + 1;
 
-  return { start, end, text: value.slice(start, end).trim() };
+  while (start < end && WHITESPACE_REGEX.test(value[start] ?? "")) {
+    start += 1;
+  }
+  while (end > start && WHITESPACE_REGEX.test(value[end - 1] ?? "")) {
+    end -= 1;
+  }
+
+  return { start, end, text: value.slice(start, end) };
+}
+
+export function getCjkTranslationSlice(value: string, caret: number) {
+  const sentence = getSentenceSlice(value, caret);
+  const cjkMatches = [...sentence.text.matchAll(CJK_REGEX)];
+  const firstMatch = cjkMatches[0];
+  const lastMatch = cjkMatches.at(-1);
+  if (!(firstMatch && lastMatch)) {
+    return null;
+  }
+
+  const startOffset = firstMatch.index ?? 0;
+  let endOffset = (lastMatch.index ?? 0) + lastMatch[0].length;
+  while (
+    endOffset < sentence.text.length &&
+    TRAILING_PUNCTUATION_REGEX.test(sentence.text[endOffset] ?? "")
+  ) {
+    endOffset += 1;
+  }
+
+  const start = sentence.start + startOffset;
+  const end = sentence.start + endOffset;
+
+  return { start, end, text: value.slice(start, end) };
 }
 
 function getEditable(node: Node | null): HTMLElement | null {
@@ -37,10 +70,6 @@ function getEditable(node: Node | null): HTMLElement | null {
   return null;
 }
 
-function hasCjkText(text: string): boolean {
-  return Boolean(text && CJK_REGEX.test(text));
-}
-
 function getTextControlSentence(
   active: HTMLTextAreaElement | HTMLInputElement
 ): EditorAssistState | null {
@@ -48,11 +77,11 @@ function getTextControlSentence(
     return null;
   }
   const caret = active.selectionStart ?? 0;
-  const { text } = getSentenceSlice(active.value, caret);
-  if (!hasCjkText(text)) {
+  const sentence = getCjkTranslationSlice(active.value, caret);
+  if (!sentence) {
     return null;
   }
-  return { text, rect: active.getBoundingClientRect() };
+  return { text: sentence.text, rect: active.getBoundingClientRect() };
 }
 
 function getContentEditableSentence(
@@ -68,10 +97,11 @@ function getContentEditableSentence(
   before.selectNodeContents(editable);
   before.setEnd(selection.anchorNode as Node, selection.anchorOffset);
   const caretOffset = Math.min(before.toString().length, text.length);
-  const { start, end, text: sentence } = getSentenceSlice(text, caretOffset);
-  if (!hasCjkText(sentence)) {
+  const sentence = getCjkTranslationSlice(text, caretOffset);
+  if (!sentence) {
     return null;
   }
+  const { start, end } = sentence;
 
   const range = document.createRange();
   const walker = document.createTreeWalker(editable, NodeFilter.SHOW_TEXT);
@@ -96,7 +126,7 @@ function getContentEditableSentence(
   }
   if (!(startNode && endNode)) {
     return {
-      text: sentence,
+      text: sentence.text,
       rect: selection.getRangeAt(0).getBoundingClientRect(),
     };
   }
@@ -104,7 +134,7 @@ function getContentEditableSentence(
   range.setEnd(endNode, endOffset);
   const rect = range.getBoundingClientRect();
   return {
-    text: sentence,
+    text: sentence.text,
     rect:
       rect.width > 0 && rect.height > 0
         ? rect
