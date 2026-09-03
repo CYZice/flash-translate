@@ -3,17 +3,33 @@ import { useTranslator } from "./use-translator";
 
 const INPUT_DEBOUNCE_MS = 400;
 const CJK_REGEX = /[\u3400-\u9fff]/;
-const BOUNDARY_REGEX = /[。！？!?\n]/;
+const BOUNDARY_REGEX = /[。！？!?\n]/g;
 
 interface EditorAssistState {
   text: string;
   rect: DOMRect | null;
 }
 
+export function getSentenceSlice(value: string, caret: number) {
+  const safeCaret = Math.max(0, Math.min(caret, value.length));
+  const before = value.slice(0, safeCaret);
+  const after = value.slice(safeCaret);
+  const startMatch = [...before.matchAll(BOUNDARY_REGEX)].at(-1);
+  const endMatch = after.search(BOUNDARY_REGEX);
+  const start = startMatch ? (startMatch.index ?? 0) + 1 : 0;
+  const end = endMatch === -1 ? value.length : safeCaret + endMatch + 1;
+
+  return { start, end, text: value.slice(start, end).trim() };
+}
+
 function getEditable(node: Node | null): HTMLElement | null {
   let current: Node | null = node;
   while (current) {
-    if (current instanceof HTMLElement && current.isContentEditable) {
+    if (
+      current instanceof HTMLElement &&
+      (current.isContentEditable ||
+        current.getAttribute("contenteditable") === "true")
+    ) {
       return current;
     }
     current = current.parentNode;
@@ -21,26 +37,27 @@ function getEditable(node: Node | null): HTMLElement | null {
   return null;
 }
 
-function getInputSentence(): EditorAssistState | null {
-  const active = document.activeElement;
-  if (active instanceof HTMLTextAreaElement || active instanceof HTMLInputElement) {
-    if (active.type === "password") return null;
-    const caret = active.selectionStart ?? 0;
-    const value = active.value;
-    const before = value.slice(0, caret);
-    const after = value.slice(caret);
-    const startMatch = [...before.matchAll(BOUNDARY_REGEX)].pop();
-    const endMatch = after.search(BOUNDARY_REGEX);
-    const start = startMatch ? (startMatch.index ?? 0) + 1 : 0;
-    const end = endMatch === -1 ? value.length : caret + endMatch + 1;
-    const text = value.slice(start, end).trim();
-    if (!text || !CJK_REGEX.test(text)) return null;
-    return { text, rect: active.getBoundingClientRect() };
-  }
-  const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0 || !selection.isCollapsed) {
+function hasCjkText(text: string): boolean {
+  return Boolean(text && CJK_REGEX.test(text));
+}
+
+function getTextControlSentence(
+  active: HTMLTextAreaElement | HTMLInputElement
+): EditorAssistState | null {
+  if (active.type === "password") {
     return null;
   }
+  const caret = active.selectionStart ?? 0;
+  const { text } = getSentenceSlice(active.value, caret);
+  if (!hasCjkText(text)) {
+    return null;
+  }
+  return { text, rect: active.getBoundingClientRect() };
+}
+
+function getContentEditableSentence(
+  selection: Selection
+): EditorAssistState | null {
   const editable = getEditable(selection.anchorNode);
   if (!editable) {
     return null;
@@ -50,15 +67,9 @@ function getInputSentence(): EditorAssistState | null {
   const before = document.createRange();
   before.selectNodeContents(editable);
   before.setEnd(selection.anchorNode as Node, selection.anchorOffset);
-  const caretOffset = before.toString().length;
-  const startPart = text.slice(0, caretOffset);
-  const endPart = text.slice(caretOffset);
-  const startMatch = [...startPart.matchAll(BOUNDARY_REGEX)].pop();
-  const endMatch = endPart.search(BOUNDARY_REGEX);
-  const start = startMatch ? (startMatch.index ?? 0) + 1 : 0;
-  const end = endMatch === -1 ? text.length : caretOffset + endMatch + 1;
-  const sentence = text.slice(start, end).trim();
-  if (!sentence || !CJK_REGEX.test(sentence)) {
+  const caretOffset = Math.min(before.toString().length, text.length);
+  const { start, end, text: sentence } = getSentenceSlice(text, caretOffset);
+  if (!hasCjkText(sentence)) {
     return null;
   }
 
@@ -84,12 +95,37 @@ function getInputSentence(): EditorAssistState | null {
     cursor += length;
   }
   if (!(startNode && endNode)) {
-    return null;
+    return {
+      text: sentence,
+      rect: selection.getRangeAt(0).getBoundingClientRect(),
+    };
   }
   range.setStart(startNode, startOffset);
   range.setEnd(endNode, endOffset);
   const rect = range.getBoundingClientRect();
-  return { text: sentence, rect: rect.width > 0 && rect.height > 0 ? rect : null };
+  return {
+    text: sentence,
+    rect:
+      rect.width > 0 && rect.height > 0
+        ? rect
+        : selection.getRangeAt(0).getBoundingClientRect(),
+  };
+}
+
+function getInputSentence(): EditorAssistState | null {
+  const active = document.activeElement;
+  if (
+    active instanceof HTMLTextAreaElement ||
+    active instanceof HTMLInputElement
+  ) {
+    return getTextControlSentence(active);
+  }
+
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0 || !selection.isCollapsed) {
+    return null;
+  }
+  return getContentEditableSentence(selection);
 }
 
 export function useEditorInputAssist(
@@ -101,11 +137,22 @@ export function useEditorInputAssist(
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const composingRef = useRef(false);
   const translation = useTranslator({
-    sourceLanguage,
-    targetLanguage,
+    // Input assistance always reverses the main translation direction.
+    // Example: main en -> zh becomes input zh -> en.
+    sourceLanguage: targetLanguage,
+    targetLanguage: sourceLanguage,
     provider: "chrome-built-in",
-    resetKey: `${sourceLanguage}\u0000${targetLanguage}`,
+    resetKey: `${targetLanguage}\u0000${sourceLanguage}`,
   });
+
+  useEffect(() => {
+    if (enabled) {
+      console.info("[flash-translate][input-assist] enabled", {
+        sourceLanguage: targetLanguage,
+        targetLanguage: sourceLanguage,
+      });
+    }
+  }, [enabled, sourceLanguage, targetLanguage]);
 
   useEffect(() => {
     if (!enabled) {
@@ -113,12 +160,27 @@ export function useEditorInputAssist(
       return;
     }
     const schedule = () => {
-      if (composingRef.current) return;
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (composingRef.current) {
+        return;
+      }
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
       timerRef.current = setTimeout(() => {
         const next = getInputSentence();
         setAssist(next);
-        if (next) translation.translate(next.text);
+        if (next) {
+          console.info("[flash-translate][input-assist] detected", {
+            text: next.text,
+            sourceLanguage: targetLanguage,
+            targetLanguage: sourceLanguage,
+          });
+          translation.translate(next.text).catch(() => undefined);
+        } else {
+          console.debug(
+            "[flash-translate][input-assist] input received, no Chinese sentence found"
+          );
+        }
       }, INPUT_DEBOUNCE_MS);
     };
     const onCompositionStart = () => {
@@ -134,11 +196,38 @@ export function useEditorInputAssist(
     document.addEventListener("compositionend", onCompositionEnd, true);
     return () => {
       document.removeEventListener("input", schedule, true);
-      document.removeEventListener("compositionstart", onCompositionStart, true);
+      document.removeEventListener(
+        "compositionstart",
+        onCompositionStart,
+        true
+      );
       document.removeEventListener("compositionend", onCompositionEnd, true);
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
     };
-  }, [enabled, sourceLanguage, targetLanguage]);
+  }, [enabled, sourceLanguage, targetLanguage, translation.translate]);
 
-  return { rect: assist?.rect ?? null, text: translation.result, isLoading: translation.isLoading };
+  useEffect(() => {
+    if (translation.error) {
+      console.error("[flash-translate][input-assist] translation failed", {
+        sourceLanguage: targetLanguage,
+        targetLanguage: sourceLanguage,
+        error: translation.error,
+        availability: translation.availability,
+      });
+    }
+  }, [
+    translation.error,
+    translation.availability,
+    sourceLanguage,
+    targetLanguage,
+  ]);
+
+  return {
+    rect: assist?.rect ?? null,
+    text: translation.result,
+    isLoading: translation.isLoading,
+    error: translation.error?.message ?? null,
+  };
 }

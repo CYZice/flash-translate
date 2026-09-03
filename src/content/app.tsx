@@ -1,7 +1,7 @@
-import { TranslationCard } from "./components/translation-card";
 import { EditorInputAssist } from "./components/editor-input-assist";
-import { useTranslationFlow } from "./hooks/use-translation-flow";
+import { TranslationCard } from "./components/translation-card";
 import { useEditorInputAssist } from "./hooks/use-editor-input-assist";
+import { useTranslationFlow } from "./hooks/use-translation-flow";
 import { HoveredTermHighlight } from "./term-translation/hovered-term-highlight";
 import { useHoveredTermTranslation } from "./term-translation/use-hovered-term-translation";
 
@@ -37,9 +37,9 @@ export default function App() {
       selection !== null,
   });
 
-  // Early return if cannot display
+  // Keep the input hint mounted even when there is no active text selection.
   if (!canDisplay || skipResult.shouldSkip || !selection) {
-    return null;
+    return <EditorInputAssist {...inputAssist} />;
   }
 
   return (

@@ -36,7 +36,7 @@ const DEFAULT_SETTINGS: TranslationSettings = {
   exclusionPatterns: [],
   skipSameLanguage: true,
   autoDetectLanguage: true,
-  editorInputAssistEnabled: false,
+  editorInputAssistEnabled: true,
   aiBaseUrl: "",
   aiModel: "",
   aiSystemPrompt: DEFAULT_AI_SYSTEM_PROMPT,
