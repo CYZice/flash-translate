@@ -7,9 +7,9 @@ import { TranslationBehaviorSettings } from "./components/translation-behavior-s
 
 export default function App() {
   return (
-    <div className="flex max-h-1/2 min-w-96 flex-col overflow-y-auto bg-white/90 backdrop-blur-sm">
+    <div className="flex h-auto max-h-[600px] w-96 flex-col overflow-hidden bg-white/90 backdrop-blur-sm">
       <PopupHeader />
-      <div className="flex-1 divide-y divide-gray-100">
+      <div className="min-h-0 flex-1 divide-y divide-gray-100 overflow-y-auto">
         <section className="bg-white">
           <LanguageSettings />
         </section>
