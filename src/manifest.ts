@@ -6,7 +6,7 @@ export default defineManifest({
   name: "__MSG_ext_name__",
   version: packageJson.version,
   description: "__MSG_ext_description__",
-  default_locale: "en",
+  default_locale: "zh_CN",
 
   icons: {
     16: "icons/icon-16.png",

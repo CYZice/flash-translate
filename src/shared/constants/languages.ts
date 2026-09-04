@@ -5,9 +5,9 @@ interface Language {
 }
 
 export const SUPPORTED_LANGUAGES: Language[] = [
+  { code: "zh", name: "Chinese", nativeName: "中文" },
   { code: "en", name: "English", nativeName: "English" },
   { code: "ja", name: "Japanese", nativeName: "日本語" },
-  { code: "zh", name: "Chinese", nativeName: "中文" },
   { code: "ko", name: "Korean", nativeName: "한국어" },
   { code: "es", name: "Spanish", nativeName: "Español" },
   { code: "fr", name: "French", nativeName: "Français" },
@@ -21,8 +21,16 @@ export const SUPPORTED_LANGUAGES: Language[] = [
   { code: "vi", name: "Vietnamese", nativeName: "Tiếng Việt" },
 ];
 
-export const DEFAULT_SOURCE_LANGUAGE = "en";
-export const DEFAULT_TARGET_LANGUAGE = "ja";
+export const DEFAULT_SOURCE_LANGUAGE = "zh";
+export const DEFAULT_TARGET_LANGUAGE = "en";
+
+/**
+ * Use the Chinese pair as the representative pair for model availability.
+ * English remains the fallback source when the target itself is Chinese.
+ */
+export function getRepresentativeSourceLanguage(targetLanguage: string): string {
+  return targetLanguage === "zh" ? "en" : "zh";
+}
 
 export function getLanguageByCode(code: string): Language | undefined {
   return SUPPORTED_LANGUAGES.find((lang) => lang.code === code);

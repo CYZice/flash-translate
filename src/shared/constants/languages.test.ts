@@ -6,8 +6,28 @@ import {
   getLanguageEnglishName,
   getLanguageNativeName,
   getLanguageUpperCode,
+  getRepresentativeSourceLanguage,
+  DEFAULT_SOURCE_LANGUAGE,
+  DEFAULT_TARGET_LANGUAGE,
   SUPPORTED_LANGUAGES,
 } from "./languages";
+
+describe("Chinese-English defaults", () => {
+  it("prefers Chinese as the source and English as the target", () => {
+    expect(DEFAULT_SOURCE_LANGUAGE).toBe("zh");
+    expect(DEFAULT_TARGET_LANGUAGE).toBe("en");
+    expect(SUPPORTED_LANGUAGES.slice(0, 2).map((lang) => lang.code)).toEqual([
+      "zh",
+      "en",
+    ]);
+  });
+
+  it("uses Chinese as the representative source for target availability", () => {
+    expect(getRepresentativeSourceLanguage("en")).toBe("zh");
+    expect(getRepresentativeSourceLanguage("zh")).toBe("en");
+    expect(getRepresentativeSourceLanguage("ja")).toBe("zh");
+  });
+});
 
 describe("getLanguageByCode", () => {
   it("returns language object for valid code", () => {

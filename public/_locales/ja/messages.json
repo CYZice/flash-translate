@@ -16,6 +16,11 @@
     "message": "Flash Translate"
   },
 
+  "popup_section_languages": { "message": "言語" },
+  "popup_section_behavior": { "message": "動作" },
+
+  "popup_ai_title": { "message": "AI 強化翻訳" },
+  "popup_ai_description": { "message": "文脈を考慮した結果に使用する任意のプロバイダー" },
   "popup_ai_baseUrl": { "message": "Base URL" },
   "popup_ai_apiKey": { "message": "API Key" },
   "popup_ai_apiKeyPlaceholder": { "message": "ローカルサーバーでは空欄可" },
@@ -28,6 +33,21 @@
   "popup_ai_testing": { "message": "接続テスト中..." },
   "popup_ai_connectionSuccess": { "message": "接続に成功しました" },
   "popup_ai_hostPermissionDenied": { "message": "ホストへのアクセスが許可されていません。この Base URL へ Custom AI リクエストを送信できません。" },
+  "popup_ai_thinkingEnabled": { "message": "思考モード" },
+  "popup_ai_reasoningEffort": { "message": "推論強度" },
+  "popup_ai_effortLow": { "message": "低" },
+  "popup_ai_effortHigh": { "message": "高" },
+  "popup_ai_effortMax": { "message": "最大" },
+  "popup_ai_contextRange": { "message": "文脈の範囲" },
+  "popup_ai_contextRangeDesc": { "message": "AI に送信する選択部分の前後の文" },
+  "popup_ai_contextSentenceOption": {
+    "message": "前後各 $COUNT$ 文",
+    "placeholders": { "count": { "content": "$1", "example": "1" } }
+  },
+  "popup_ai_contextPreview": { "message": "送信内容のプレビュー" },
+  "popup_ai_contextBefore": { "message": "前文" },
+  "popup_ai_contextSelected": { "message": "選択" },
+  "popup_ai_contextAfter": { "message": "後文" },
 
   "popup_behavior_autoDetectLanguage": {
     "message": "言語を自動検出"
