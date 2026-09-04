@@ -1,4 +1,12 @@
 import { createPrefixedLogger } from "@/shared/utils/logger";
+import {
+  DEFAULT_SOURCE_LANGUAGE,
+  DEFAULT_TARGET_LANGUAGE,
+} from "@/shared/constants/languages";
+import {
+  DEFAULT_AI_CONTEXT_SENTENCE_COUNT,
+  normalizeAiContextSentenceCount,
+} from "@/shared/utils/ai-context";
 
 const log = createPrefixedLogger("settings");
 
@@ -23,6 +31,7 @@ export interface TranslationSettings {
   aiBaseUrl: string;
   aiModel: string;
   aiSystemPrompt: string;
+  aiContextSentenceCount: number;
   aiThinkingEnabled: boolean;
   aiReasoningEffort: AiReasoningEffort;
 }
@@ -31,8 +40,8 @@ const STORAGE_KEY = "flash-translate-settings";
 const LANG_SEPARATOR_REGEX = /[-_]/;
 
 const DEFAULT_SETTINGS: TranslationSettings = {
-  sourceLanguage: "en",
-  targetLanguage: "ja",
+  sourceLanguage: DEFAULT_SOURCE_LANGUAGE,
+  targetLanguage: DEFAULT_TARGET_LANGUAGE,
   exclusionPatterns: [],
   skipSameLanguage: true,
   autoDetectLanguage: true,
@@ -40,6 +49,7 @@ const DEFAULT_SETTINGS: TranslationSettings = {
   aiBaseUrl: "",
   aiModel: "",
   aiSystemPrompt: DEFAULT_AI_SYSTEM_PROMPT,
+  aiContextSentenceCount: DEFAULT_AI_CONTEXT_SENTENCE_COUNT,
   aiThinkingEnabled: false,
   aiReasoningEffort: "high",
 };
@@ -87,6 +97,11 @@ function validateSettings(data: unknown): Partial<TranslationSettings> {
   }
   if (typeof obj.aiSystemPrompt === "string") {
     result.aiSystemPrompt = obj.aiSystemPrompt;
+  }
+  if (typeof obj.aiContextSentenceCount === "number") {
+    result.aiContextSentenceCount = normalizeAiContextSentenceCount(
+      obj.aiContextSentenceCount
+    );
   }
   if (typeof obj.aiThinkingEnabled === "boolean") {
     result.aiThinkingEnabled = obj.aiThinkingEnabled;

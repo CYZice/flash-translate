@@ -36,6 +36,7 @@ interface ContentAppSettings {
   editorInputAssistEnabled: boolean;
   aiBaseUrl: string;
   aiModel: string;
+  aiContextSentenceCount: number;
 }
 
 export const selectContentAppSettings: SettingsSelector<ContentAppSettings> = (
@@ -49,6 +50,7 @@ export const selectContentAppSettings: SettingsSelector<ContentAppSettings> = (
   editorInputAssistEnabled: s.editorInputAssistEnabled,
   aiBaseUrl: s.aiBaseUrl,
   aiModel: s.aiModel,
+  aiContextSentenceCount: s.aiContextSentenceCount,
 });
 
 /**

@@ -58,65 +58,72 @@ export function TranslationBehaviorSettings() {
   const effectiveSkipSameLanguage = autoDetectEnabled ? true : skipSameLanguage;
 
   return (
-    <div className="border-gray-100 border-t px-3 py-2.5">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex-1 pr-3">
-          <span
-            className={cn(
-              "text-sm",
-              isDetectorUnavailable ? "text-gray-400" : "text-gray-700"
-            )}
-          >
-            {getMessage("popup_behavior_autoDetectLanguage")}
-          </span>
-          <AutoDetectDescription
-            isCopied={isCopied}
-            isDetectorUnavailable={isDetectorUnavailable}
-            isLoading={isCheckingAvailability}
-            onCopyFlagsUrl={handleCopyFlagsUrl}
+    <div>
+      <div className="px-4 pt-3 pb-1">
+        <h2 className="m-0 font-semibold text-gray-900 text-xs">
+          {getMessage("popup_section_behavior")}
+        </h2>
+      </div>
+      <div className="divide-y divide-gray-100 px-4">
+        <div className="flex items-center justify-between py-3">
+          <div className="flex-1 pr-3">
+            <span
+              className={cn(
+                "text-sm",
+                isDetectorUnavailable ? "text-gray-400" : "text-gray-700"
+              )}
+            >
+              {getMessage("popup_behavior_autoDetectLanguage")}
+            </span>
+            <AutoDetectDescription
+              isCopied={isCopied}
+              isDetectorUnavailable={isDetectorUnavailable}
+              isLoading={isCheckingAvailability}
+              onCopyFlagsUrl={handleCopyFlagsUrl}
+            />
+          </div>
+          <ToggleSwitch
+            checked={autoDetectEnabled}
+            disabled={isDetectorUnavailable}
+            onChange={handleAutoDetectToggle}
           />
         </div>
-        <ToggleSwitch
-          checked={autoDetectEnabled}
-          disabled={isDetectorUnavailable}
-          onChange={handleAutoDetectToggle}
-        />
-      </div>
-      <div className="flex items-center justify-between">
-        <div className="flex-1 pr-3">
-          <span
-            className={cn(
-              "text-sm",
-              autoDetectEnabled ? "text-gray-400" : "text-gray-700"
-            )}
-          >
-            {getMessage("popup_behavior_skipSameLanguage")}
-          </span>
-          <p className="mt-0.5 text-gray-400 text-xs">
-            {autoDetectEnabled
-              ? getMessage("popup_behavior_skipSameLanguageAutoDetectNote")
-              : getMessage("popup_behavior_skipSameLanguageDesc")}
-          </p>
+        <div className="flex items-center justify-between py-3">
+          <div className="flex-1 pr-3">
+            <span
+              className={cn(
+                "text-sm",
+                autoDetectEnabled ? "text-gray-400" : "text-gray-700"
+              )}
+            >
+              {getMessage("popup_behavior_skipSameLanguage")}
+            </span>
+            <p className="mt-0.5 text-gray-400 text-xs">
+              {autoDetectEnabled
+                ? getMessage("popup_behavior_skipSameLanguageAutoDetectNote")
+                : getMessage("popup_behavior_skipSameLanguageDesc")}
+            </p>
+          </div>
+          <ToggleSwitch
+            checked={effectiveSkipSameLanguage}
+            disabled={autoDetectEnabled}
+            onChange={handleSkipSameLanguageToggle}
+          />
         </div>
-        <ToggleSwitch
-          checked={effectiveSkipSameLanguage}
-          disabled={autoDetectEnabled}
-          onChange={handleSkipSameLanguageToggle}
-        />
-      </div>
-      <div className="mt-3 flex items-center justify-between">
-        <div className="flex-1 pr-3">
-          <span className="text-gray-700 text-sm">
-            {getMessage("popup_behavior_editorInputAssist")}
-          </span>
-          <p className="mt-0.5 text-gray-400 text-xs">
-            {getMessage("popup_behavior_editorInputAssistDesc")}
-          </p>
+        <div className="flex items-center justify-between py-3">
+          <div className="flex-1 pr-3">
+            <span className="text-gray-700 text-sm">
+              {getMessage("popup_behavior_editorInputAssist")}
+            </span>
+            <p className="mt-0.5 text-gray-400 text-xs">
+              {getMessage("popup_behavior_editorInputAssistDesc")}
+            </p>
+          </div>
+          <ToggleSwitch
+            checked={editorInputAssistEnabled}
+            onChange={handleEditorInputAssistToggle}
+          />
         </div>
-        <ToggleSwitch
-          checked={editorInputAssistEnabled}
-          onChange={handleEditorInputAssistToggle}
-        />
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
@@ -61,18 +62,18 @@ export function ExclusionSettings() {
   };
 
   return (
-    <div className="px-3 py-2.5">
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-gray-700 text-sm">
+    <div className="px-4 py-3">
+      <div className="mb-2.5 flex items-center justify-between">
+        <h2 className="m-0 font-semibold text-gray-900 text-xs">
           {getMessage("popup_exclusion_title")}
-        </span>
+        </h2>
       </div>
 
       {/* Add current site button */}
       {currentTabUrl && (
         <button
           className={cn(
-            "mb-2 flex w-full items-center gap-2 rounded border border-dashed px-3 py-2 text-left text-sm",
+            "mb-2 flex min-h-9 w-full items-center gap-2 rounded border border-dashed px-2.5 py-2 text-left text-sm transition-colors",
             isCurrentSiteExcluded
               ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400"
               : "border-blue-300 text-blue-600 hover:border-blue-400 hover:bg-blue-50"
@@ -81,7 +82,7 @@ export function ExclusionSettings() {
           onClick={handleAddCurrentSite}
           type="button"
         >
-          <span className="text-lg leading-none">+</span>
+          <Plus aria-hidden="true" size={15} />
           <span className="flex-1 truncate">{formatUrl(currentTabUrl)}</span>
           {isCurrentSiteExcluded && (
             <span className="shrink-0 text-gray-400 text-xs">
@@ -97,7 +98,7 @@ export function ExclusionSettings() {
           {getMessage("popup_exclusion_noSites")}
         </p>
       ) : (
-        <div className="space-y-1.5">
+        <div className="divide-y divide-gray-100 border-gray-100 border-t">
           {patterns.map((pattern) => (
             <ExclusionPatternItem
               key={pattern.id}

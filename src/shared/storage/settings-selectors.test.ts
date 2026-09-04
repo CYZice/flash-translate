@@ -22,6 +22,7 @@ const mockSettings: TranslationSettings = {
   aiBaseUrl: "",
   aiModel: "",
   aiSystemPrompt: "",
+  aiContextSentenceCount: 1,
   aiThinkingEnabled: false,
   aiReasoningEffort: "high",
 };
@@ -83,6 +84,7 @@ describe("selectContentAppSettings", () => {
       exclusionPatterns: mockSettings.exclusionPatterns,
       aiBaseUrl: "",
       aiModel: "",
+      aiContextSentenceCount: 1,
     });
   });
 
@@ -93,6 +95,7 @@ describe("selectContentAppSettings", () => {
     expect(result).toHaveProperty("skipSameLanguage");
     expect(result).toHaveProperty("autoDetectLanguage");
     expect(result).toHaveProperty("exclusionPatterns");
+    expect(result).toHaveProperty("aiContextSentenceCount");
   });
 });
 

@@ -22,9 +22,9 @@ export function LanguageChip({
   return (
     <button
       className={cn(
-        "inline-flex items-center gap-1 rounded px-2 py-1 text-xs transition-all duration-150",
+        "inline-flex min-h-7 items-center gap-1 rounded px-2 py-1 font-medium text-xs transition-colors duration-150",
         isSelected
-          ? "bg-blue-500 text-white shadow-sm"
+          ? "bg-blue-600 text-white"
           : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
       )}
       onClick={onClick}

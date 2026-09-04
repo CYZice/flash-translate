@@ -3,9 +3,9 @@ import iconUrl from "/icons/icon-32.png";
 
 export function PopupHeader() {
   return (
-    <header className="flex items-center gap-2 border-gray-100 border-b bg-white px-3 py-2.5">
-      <img alt="" className="h-5 w-5" height={20} src={iconUrl} width={20} />
-      <span className="font-medium text-gray-800 text-sm">
+    <header className="flex shrink-0 items-center gap-2.5 border-gray-200 border-b bg-white px-4 py-3">
+      <img alt="" className="h-6 w-6" height={24} src={iconUrl} width={24} />
+      <span className="font-semibold text-gray-900 text-sm">
         {getMessage("popup_header_title")}
       </span>
     </header>

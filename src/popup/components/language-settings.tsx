@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
-import { SUPPORTED_LANGUAGES } from "@/shared/constants/languages";
+import {
+  DEFAULT_SOURCE_LANGUAGE,
+  DEFAULT_TARGET_LANGUAGE,
+  SUPPORTED_LANGUAGES,
+} from "@/shared/constants/languages";
 import { useSettings } from "@/shared/hooks/use-settings";
 import { saveSettings } from "@/shared/storage/settings";
 import { selectLanguageSettings } from "@/shared/storage/settings-selectors";
+import { getMessage } from "@/shared/utils/i18n";
 import {
   checkAllPairsToTarget,
   type LanguagePairStatus,
@@ -15,8 +20,12 @@ export function LanguageSettings() {
     subscribe: false,
   });
 
-  const [sourceLanguage, setSourceLanguage] = useState<string>("en");
-  const [targetLanguage, setTargetLanguage] = useState<string>("ja");
+  const [sourceLanguage, setSourceLanguage] = useState<string>(
+    DEFAULT_SOURCE_LANGUAGE
+  );
+  const [targetLanguage, setTargetLanguage] = useState<string>(
+    DEFAULT_TARGET_LANGUAGE
+  );
   const [pairs, setPairs] = useState<LanguagePairStatus[]>([]);
   const [isLoadingPairs, setIsLoadingPairs] = useState(false);
 
@@ -55,7 +64,12 @@ export function LanguageSettings() {
   }
 
   return (
-    <>
+    <div>
+      <div className="px-4 pt-3 pb-1">
+        <h2 className="m-0 font-semibold text-gray-900 text-xs">
+          {getMessage("popup_section_languages")}
+        </h2>
+      </div>
       <TargetLanguageChips
         onChangeTargetLanguage={handleTargetLanguageChange}
         targetLanguage={targetLanguage}
@@ -68,6 +82,6 @@ export function LanguageSettings() {
         sourceLanguage={sourceLanguage}
         targetLanguage={targetLanguage}
       />
-    </>
+    </div>
   );
 }

@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { SUPPORTED_LANGUAGES } from "@/shared/constants/languages";
+import {
+  getRepresentativeSourceLanguage,
+  SUPPORTED_LANGUAGES,
+} from "@/shared/constants/languages";
 import { getMessage } from "@/shared/utils/i18n";
 import { createPrefixedLogger } from "@/shared/utils/logger";
 import {
@@ -53,8 +56,8 @@ export function TargetLanguageChips({
       setIsLoading(true);
       const results = await Promise.all(
         SUPPORTED_LANGUAGES.map(async (lang) => {
-          // Check if English → target is available (as a representative pair)
-          const sourceToCheck = lang.code === "en" ? "ja" : "en";
+          // Check the Chinese pair first because it is the primary user flow.
+          const sourceToCheck = getRepresentativeSourceLanguage(lang.code);
           const status = await translatorManager.checkAvailability(
             sourceToCheck,
             lang.code
@@ -76,7 +79,7 @@ export function TargetLanguageChips({
   // Convert statuses to pairs format for useDownloadState compatibility
   const convertToPairs = (targetLangStatuses: TargetLanguageStatus[]) => {
     return targetLangStatuses.map((s) => {
-      const sourceToCheck = s.code === "en" ? "ja" : "en";
+      const sourceToCheck = getRepresentativeSourceLanguage(s.code);
       return {
         sourceLanguage: sourceToCheck,
         targetLanguage: s.code,
@@ -86,7 +89,7 @@ export function TargetLanguageChips({
   };
 
   const handleDownload = async (targetLang: string) => {
-    const sourceToCheck = targetLang === "en" ? "ja" : "en";
+    const sourceToCheck = getRepresentativeSourceLanguage(targetLang);
     const pairKey = `${sourceToCheck}-${targetLang}`;
 
     // Clear any existing timeout for this pair
@@ -103,7 +106,7 @@ export function TargetLanguageChips({
       // Re-check all targets after successful download
       const results = await Promise.all(
         SUPPORTED_LANGUAGES.map(async (lang) => {
-          const source = lang.code === "en" ? "ja" : "en";
+          const source = getRepresentativeSourceLanguage(lang.code);
           const status = await translatorManager.checkAvailability(
             source,
             lang.code
@@ -128,7 +131,7 @@ export function TargetLanguageChips({
 
   if (isLoading) {
     return (
-      <div className="px-3 py-2.5">
+      <div className="px-4 py-2.5">
         <div className="flex items-center gap-2">
           <span className="text-gray-500 text-xs">
             {getMessage("popup_target_label")}
@@ -147,14 +150,16 @@ export function TargetLanguageChips({
   const pairs = convertToPairs(statuses);
 
   return (
-    <div className="px-3 py-2.5">
-      <div className="flex items-center gap-2">
-        <span className="shrink-0 text-gray-500 text-xs">
+    <div className="px-4 py-2">
+      <div className="grid grid-cols-[3.5rem_1fr] items-start gap-2">
+        <span className="pt-1 text-gray-500 text-xs">
           {getMessage("popup_target_label")}
         </span>
         <div className="flex flex-1 flex-wrap gap-1.5">
           {availableStatuses.map((langStatus) => {
-            const sourceToCheck = langStatus.code === "en" ? "ja" : "en";
+            const sourceToCheck = getRepresentativeSourceLanguage(
+              langStatus.code
+            );
             return (
               <LanguageChip
                 isSelected={langStatus.code === targetLanguage}

@@ -46,7 +46,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="flex items-center justify-between gap-4 border-gray-100 border-t bg-gray-50/80 px-4 py-3">
+    <footer className="flex shrink-0 items-center justify-between gap-4 border-gray-200 border-t bg-white px-4 py-2.5">
       <div className="flex items-center justify-center gap-4">
         <a
           className="flex items-center gap-1.5 text-gray-500 text-xs transition-colors hover:text-gray-700"

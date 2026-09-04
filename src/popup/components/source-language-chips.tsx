@@ -85,7 +85,7 @@ export function SourceLanguageChips({
 
   if (isLoading) {
     return (
-      <div className="px-3 py-2.5">
+      <div className="px-4 py-2.5">
         <div className="flex items-center gap-2">
           <span className="text-gray-500 text-xs">
             {getMessage("popup_source_label")}
@@ -102,9 +102,9 @@ export function SourceLanguageChips({
   }
 
   return (
-    <div className="px-3 py-2.5">
-      <div className="flex items-center gap-2">
-        <span className="shrink-0 text-gray-500 text-xs">
+    <div className="px-4 pt-1 pb-3">
+      <div className="grid grid-cols-[3.5rem_1fr] items-start gap-2">
+        <span className="pt-1 text-gray-500 text-xs">
           {getMessage("popup_source_label")}
         </span>
         <div className="flex flex-1 flex-wrap gap-1.5">

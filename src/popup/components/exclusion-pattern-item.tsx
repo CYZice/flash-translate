@@ -84,8 +84,8 @@ export function ExclusionPatternItem({
   return (
     <div
       className={cn(
-        "flex items-center gap-2 rounded px-2 py-1.5",
-        pattern.enabled ? "bg-gray-100" : "bg-gray-50"
+        "flex min-h-9 items-center gap-2 px-1 py-2",
+        !pattern.enabled && "opacity-60"
       )}
     >
       <input

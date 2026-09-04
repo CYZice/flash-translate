@@ -1,4 +1,7 @@
+import { ChevronDown, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
+import { ToggleSwitch } from "@/shared/components/toggle-switch";
 import {
   AI_TEST_CONNECTION_MESSAGE,
   type AiTestConnectionResponse,
@@ -10,6 +13,12 @@ import {
   saveSettings,
 } from "@/shared/storage/settings";
 import { getAiHostPermissionPattern } from "@/shared/utils/ai-endpoint";
+import {
+  DEFAULT_AI_CONTEXT_SENTENCE_COUNT,
+  getContextAroundSelection,
+  MAX_AI_CONTEXT_SENTENCE_COUNT,
+  MIN_AI_CONTEXT_SENTENCE_COUNT,
+} from "@/shared/utils/ai-context";
 import { getMessage } from "@/shared/utils/i18n";
 
 type Status =
@@ -30,13 +39,57 @@ function getStatusClassName(status: Status): string {
 }
 
 const inputClassName =
-  "mt-1 w-full rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-gray-700 text-xs outline-none focus:border-blue-400";
+  "mt-1.5 w-full rounded border border-gray-200 bg-white px-2.5 py-2 text-gray-800 text-xs outline-none transition-colors placeholder:text-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20";
+
+const CONTEXT_PREVIEW_BEFORE =
+  "第一句介绍项目背景。第二句补充当前进度。第三句说明关键术语。";
+const CONTEXT_PREVIEW_SELECTION = "这个功能会结合上下文优化翻译。";
+const CONTEXT_PREVIEW_AFTER =
+  "第一句说明输出要求。第二句提示请求长度。第三句给出使用建议。";
+
+export function ContextPreview({ sentenceCount }: { sentenceCount: number }) {
+  const { contextBefore, contextAfter } = getContextAroundSelection(
+    CONTEXT_PREVIEW_BEFORE,
+    CONTEXT_PREVIEW_AFTER,
+    sentenceCount
+  );
+
+  return (
+    <div className="space-y-1.5 rounded border border-gray-100 bg-gray-50 p-2.5 text-xs leading-5">
+      {contextBefore && (
+        <p className="m-0 text-gray-400">
+          <span className="mr-2 text-gray-500">
+            {getMessage("popup_ai_contextBefore")}
+          </span>
+          {contextBefore}
+        </p>
+      )}
+      <p className="m-0 rounded-sm bg-blue-50 px-2 py-1 text-blue-800">
+        <span className="mr-2 font-medium text-blue-600">
+          {getMessage("popup_ai_contextSelected")}
+        </span>
+        {CONTEXT_PREVIEW_SELECTION}
+      </p>
+      {contextAfter && (
+        <p className="m-0 text-gray-400">
+          <span className="mr-2 text-gray-500">
+            {getMessage("popup_ai_contextAfter")}
+          </span>
+          {contextAfter}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export function ProviderSettings() {
   const [baseUrl, setBaseUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [model, setModel] = useState("");
   const [systemPrompt, setSystemPrompt] = useState("");
+  const [contextSentenceCount, setContextSentenceCount] = useState(
+    DEFAULT_AI_CONTEXT_SENTENCE_COUNT
+  );
   const [thinkingEnabled, setThinkingEnabled] = useState(false);
   const [reasoningEffort, setReasoningEffort] =
     useState<AiReasoningEffort>("high");
@@ -52,6 +105,7 @@ export function ProviderSettings() {
       setApiKey(storedApiKey);
       setModel(settings.aiModel);
       setSystemPrompt(settings.aiSystemPrompt);
+      setContextSentenceCount(settings.aiContextSentenceCount);
       setThinkingEnabled(settings.aiThinkingEnabled);
       setReasoningEffort(settings.aiReasoningEffort);
     };
@@ -64,6 +118,7 @@ export function ProviderSettings() {
         aiBaseUrl: baseUrl.trim(),
         aiModel: model.trim(),
         aiSystemPrompt: systemPrompt,
+        aiContextSentenceCount: contextSentenceCount,
         aiThinkingEnabled: thinkingEnabled,
         aiReasoningEffort: reasoningEffort,
       }),
@@ -130,13 +185,25 @@ export function ProviderSettings() {
   };
 
   return (
-    <div className="px-3 py-3">
-      <div className="mb-2">
-        <p className="font-medium text-gray-700 text-sm">AI enhanced translation</p>
-        <p className="mt-0.5 text-gray-400 text-xs">Chrome handles the default translation. AI is used only when you request an enhanced result.</p>
-      </div>
+    <details className="group">
+      <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 outline-none transition-colors hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset">
+        <Sparkles aria-hidden="true" className="shrink-0 text-violet-600" size={18} />
+        <span className="min-w-0 flex-1">
+          <span className="block font-semibold text-gray-900 text-xs">
+            {getMessage("popup_ai_title")}
+          </span>
+          <span className="mt-0.5 block text-gray-400 text-xs leading-4">
+            {getMessage("popup_ai_description")}
+          </span>
+        </span>
+        <ChevronDown
+          aria-hidden="true"
+          className="shrink-0 text-gray-400 transition-transform duration-200 group-open:rotate-180"
+          size={16}
+        />
+      </summary>
 
-        <div className="space-y-2.5 border-gray-100 border-t pt-2.5">
+      <div className="space-y-3 border-gray-100 border-t px-4 pt-3 pb-4">
           <label className="block text-gray-600 text-xs" htmlFor="ai-base-url">
             {getMessage("popup_ai_baseUrl")}
             <input
@@ -188,33 +255,75 @@ export function ProviderSettings() {
           >
             {getMessage("popup_ai_systemPrompt")}
             <textarea
-              className={`${inputClassName} min-h-28 resize-y`}
+              className={`${inputClassName} min-h-20 resize-y`}
               id="ai-system-prompt"
               onChange={(event) => setSystemPrompt(event.target.value)}
               value={systemPrompt}
             />
           </label>
 
-          <div className="grid grid-cols-2 gap-2">
-            <label
-              className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-2.5 py-2 text-gray-600 text-xs"
-              htmlFor="ai-thinking-enabled"
-            >
-              <input
+          <div className="space-y-2 border-gray-100 border-t pt-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <label
+                  className="font-medium text-gray-700 text-xs"
+                  htmlFor="ai-context-sentence-count"
+                >
+                  {getMessage("popup_ai_contextRange")}
+                </label>
+                <p className="m-0 mt-0.5 text-gray-400 text-xs">
+                  {getMessage("popup_ai_contextRangeDesc")}
+                </p>
+              </div>
+              <select
+                className="h-8 w-24 rounded border border-gray-200 bg-white px-2 text-gray-700 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                id="ai-context-sentence-count"
+                onChange={(event) =>
+                  setContextSentenceCount(Number(event.target.value))
+                }
+                value={contextSentenceCount}
+              >
+                {Array.from(
+                  {
+                    length:
+                      MAX_AI_CONTEXT_SENTENCE_COUNT -
+                      MIN_AI_CONTEXT_SENTENCE_COUNT +
+                      1,
+                  },
+                  (_, index) => index + MIN_AI_CONTEXT_SENTENCE_COUNT
+                ).map((count) => (
+                  <option key={count} value={count}>
+                    {getMessage("popup_ai_contextSentenceOption", String(count))}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <p className="m-0 mb-1.5 font-medium text-gray-500 text-xs">
+                {getMessage("popup_ai_contextPreview")}
+              </p>
+              <ContextPreview sentenceCount={contextSentenceCount} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-[1fr_8rem] items-end gap-3 border-gray-100 border-t pt-3">
+            <div className="flex min-h-9 items-center justify-between gap-3">
+              <label className="text-gray-700 text-xs" htmlFor="ai-thinking-enabled">
+                {getMessage("popup_ai_thinkingEnabled")}
+              </label>
+              <ToggleSwitch
                 checked={thinkingEnabled}
                 id="ai-thinking-enabled"
-                onChange={(event) => setThinkingEnabled(event.target.checked)}
-                type="checkbox"
+                onChange={() => setThinkingEnabled((enabled) => !enabled)}
               />
-              <span>开启思考模式</span>
-            </label>
+            </div>
             <label
               className="block text-gray-600 text-xs"
               htmlFor="ai-reasoning-effort"
             >
-              思考强度
+              {getMessage("popup_ai_reasoningEffort")}
               <select
-                className={inputClassName}
+                className={cn(inputClassName, "disabled:bg-gray-50 disabled:text-gray-400")}
                 disabled={!thinkingEnabled}
                 id="ai-reasoning-effort"
                 onChange={(event) =>
@@ -222,16 +331,16 @@ export function ProviderSettings() {
                 }
                 value={reasoningEffort}
               >
-                <option value="low">Low</option>
-                <option value="high">High</option>
-                <option value="max">Max</option>
+                <option value="low">{getMessage("popup_ai_effortLow")}</option>
+                <option value="high">{getMessage("popup_ai_effortHigh")}</option>
+                <option value="max">{getMessage("popup_ai_effortMax")}</option>
               </select>
             </label>
           </div>
 
           <div className="flex gap-2 pt-1">
             <button
-              className="flex-1 rounded-md bg-gray-900 px-3 py-1.5 font-medium text-white text-xs hover:bg-gray-800 disabled:opacity-50"
+              className="min-h-8 flex-1 rounded bg-blue-600 px-3 py-1.5 font-medium text-white text-xs transition-colors hover:bg-blue-700 disabled:opacity-50"
               disabled={status.type === "working"}
               onClick={handleSave}
               type="button"
@@ -239,7 +348,7 @@ export function ProviderSettings() {
               {getMessage("popup_ai_save")}
             </button>
             <button
-              className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-1.5 font-medium text-gray-700 text-xs hover:bg-gray-50 disabled:opacity-50"
+              className="min-h-8 flex-1 rounded border border-gray-200 bg-white px-3 py-1.5 font-medium text-gray-700 text-xs transition-colors hover:bg-gray-50 disabled:opacity-50"
               disabled={status.type === "working"}
               onClick={handleTestConnection}
               type="button"
@@ -248,14 +357,12 @@ export function ProviderSettings() {
             </button>
           </div>
 
-          {status.type !== "idle" && (
-            <p
-              className={getStatusClassName(status)}
-            >
-              {status.message}
-            </p>
-          )}
-        </div>
-    </div>
+        {status.type !== "idle" && (
+          <p aria-live="polite" className={getStatusClassName(status)}>
+            {status.message}
+          </p>
+        )}
+      </div>
+    </details>
   );
 }
