@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_SOURCE_LANGUAGE,
+  DEFAULT_TARGET_LANGUAGE,
   getAllLanguageCodes,
   getLanguageByCode,
   getLanguageDisplayName,
@@ -7,8 +9,6 @@ import {
   getLanguageNativeName,
   getLanguageUpperCode,
   getRepresentativeSourceLanguage,
-  DEFAULT_SOURCE_LANGUAGE,
-  DEFAULT_TARGET_LANGUAGE,
   SUPPORTED_LANGUAGES,
 } from "./languages";
 

@@ -191,13 +191,19 @@ describe("shouldShowCardForSelection", () => {
 describe("shouldClearSelectionAfterOutsideInteraction", () => {
   it("clears the card when an outside click leaves the original selection active", () => {
     expect(
-      shouldClearSelectionAfterOutsideInteraction("selected text", "selected text")
+      shouldClearSelectionAfterOutsideInteraction(
+        "selected text",
+        "selected text"
+      )
     ).toBe(true);
   });
 
   it("keeps the card available for a new selection", () => {
     expect(
-      shouldClearSelectionAfterOutsideInteraction("new selection", "selected text")
+      shouldClearSelectionAfterOutsideInteraction(
+        "new selection",
+        "selected text"
+      )
     ).toBe(false);
   });
 

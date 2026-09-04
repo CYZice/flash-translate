@@ -10,7 +10,8 @@ const CHROME_FLAGS_URL = "chrome://flags/#language-detection-api";
 export function TranslationBehaviorSettings() {
   const [skipSameLanguage, setSkipSameLanguage] = useState(true);
   const [autoDetectLanguage, setAutoDetectLanguage] = useState(true);
-  const [editorInputAssistEnabled, setEditorInputAssistEnabled] = useState(false);
+  const [editorInputAssistEnabled, setEditorInputAssistEnabled] =
+    useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const {
     availability: detectorAvailability,

@@ -52,7 +52,10 @@ export function evaluateSkipRules(context: SkipContext): SkipResult {
     return { shouldSkip: true, reason: "detecting-in-progress" };
   }
 
-  if (skipSameLanguage && hasMixedLanguageSelection(context.selectedText ?? "", targetLanguage)) {
+  if (
+    skipSameLanguage &&
+    hasMixedLanguageSelection(context.selectedText ?? "", targetLanguage)
+  ) {
     return { shouldSkip: false, reason: null };
   }
 

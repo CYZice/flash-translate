@@ -20,7 +20,9 @@
   "popup_section_behavior": { "message": "Behavior" },
 
   "popup_ai_title": { "message": "AI enhanced translation" },
-  "popup_ai_description": { "message": "Optional provider for context-aware results" },
+  "popup_ai_description": {
+    "message": "Optional provider for context-aware results"
+  },
   "popup_ai_baseUrl": { "message": "Base URL" },
   "popup_ai_apiKey": { "message": "API Key" },
   "popup_ai_apiKeyPlaceholder": { "message": "Optional for local servers" },
@@ -32,14 +34,18 @@
   "popup_ai_saved": { "message": "Saved" },
   "popup_ai_testing": { "message": "Testing connection..." },
   "popup_ai_connectionSuccess": { "message": "Connection successful" },
-  "popup_ai_hostPermissionDenied": { "message": "Host access was not granted. Custom AI requests cannot reach this Base URL." },
+  "popup_ai_hostPermissionDenied": {
+    "message": "Host access was not granted. Custom AI requests cannot reach this Base URL."
+  },
   "popup_ai_thinkingEnabled": { "message": "Thinking mode" },
   "popup_ai_reasoningEffort": { "message": "Reasoning" },
   "popup_ai_effortLow": { "message": "Low" },
   "popup_ai_effortHigh": { "message": "High" },
   "popup_ai_effortMax": { "message": "Max" },
   "popup_ai_contextRange": { "message": "Context range" },
-  "popup_ai_contextRangeDesc": { "message": "Sentences before and after the selected text sent to AI" },
+  "popup_ai_contextRangeDesc": {
+    "message": "Sentences before and after the selected text sent to AI"
+  },
   "popup_ai_contextSentenceOption": {
     "message": "$COUNT$ sentence(s) each side",
     "placeholders": { "count": { "content": "$1", "example": "1" } }
@@ -242,13 +248,17 @@
   "content_resultAi": { "message": "AI" },
   "content_translationResults": { "message": "Translation result source" },
   "content_aiEnhance": { "message": "Enhance with AI" },
-  "content_aiEnhanceDescription": { "message": "Use nearby sentences to refine wording and terminology." },
+  "content_aiEnhanceDescription": {
+    "message": "Use nearby sentences to refine wording and terminology."
+  },
   "content_aiRetry": { "message": "Retry" },
   "content_termTranslation": {
     "message": "Term translation"
   },
   "popup_behavior_editorInputAssist": { "message": "Editor English hints" },
-  "popup_behavior_editorInputAssistDesc": { "message": "Show English above Chinese after you stop typing" },
+  "popup_behavior_editorInputAssistDesc": {
+    "message": "Show English above Chinese after you stop typing"
+  },
 
   "action_edit": {
     "message": "Edit"

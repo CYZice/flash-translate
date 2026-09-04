@@ -40,6 +40,7 @@ export function useTranslator({
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: resetKey intentionally triggers cleanup
   useEffect(() => {
     abortControllerRef.current?.abort();
     abortControllerRef.current = null;

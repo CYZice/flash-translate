@@ -193,12 +193,7 @@ export function TranslationCard({
       cancelAnimationFrame(frameId);
       observer.disconnect();
     };
-  }, [
-    layout.height,
-    layout.isResizing,
-    layout.maxHeight,
-    layout.setHeight,
-  ]);
+  }, [layout.height, layout.isResizing, layout.maxHeight, layout.setHeight]);
 
   return (
     <div

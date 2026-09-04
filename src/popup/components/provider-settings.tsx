@@ -12,13 +12,13 @@ import {
   getSettings,
   saveSettings,
 } from "@/shared/storage/settings";
-import { getAiHostPermissionPattern } from "@/shared/utils/ai-endpoint";
 import {
   DEFAULT_AI_CONTEXT_SENTENCE_COUNT,
   getContextAroundSelection,
   MAX_AI_CONTEXT_SENTENCE_COUNT,
   MIN_AI_CONTEXT_SENTENCE_COUNT,
 } from "@/shared/utils/ai-context";
+import { getAiHostPermissionPattern } from "@/shared/utils/ai-endpoint";
 import { getMessage } from "@/shared/utils/i18n";
 
 type Status =
@@ -187,7 +187,11 @@ export function ProviderSettings() {
   return (
     <details className="group">
       <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 outline-none transition-colors hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset">
-        <Sparkles aria-hidden="true" className="shrink-0 text-violet-600" size={18} />
+        <Sparkles
+          aria-hidden="true"
+          className="shrink-0 text-violet-600"
+          size={18}
+        />
         <span className="min-w-0 flex-1">
           <span className="block font-semibold text-gray-900 text-xs">
             {getMessage("popup_ai_title")}
@@ -204,158 +208,164 @@ export function ProviderSettings() {
       </summary>
 
       <div className="space-y-3 border-gray-100 border-t px-4 pt-3 pb-4">
-          <label className="block text-gray-600 text-xs" htmlFor="ai-base-url">
-            {getMessage("popup_ai_baseUrl")}
-            <input
-              autoCapitalize="off"
-              autoComplete="off"
-              className={inputClassName}
-              id="ai-base-url"
-              onChange={(event) => setBaseUrl(event.target.value)}
-              placeholder="https://example.com/v1"
-              spellCheck={false}
-              type="url"
-              value={baseUrl}
-            />
-          </label>
+        <label className="block text-gray-600 text-xs" htmlFor="ai-base-url">
+          {getMessage("popup_ai_baseUrl")}
+          <input
+            autoCapitalize="off"
+            autoComplete="off"
+            className={inputClassName}
+            id="ai-base-url"
+            onChange={(event) => setBaseUrl(event.target.value)}
+            placeholder="https://example.com/v1"
+            spellCheck={false}
+            type="url"
+            value={baseUrl}
+          />
+        </label>
 
-          <label className="block text-gray-600 text-xs" htmlFor="ai-api-key">
-            {getMessage("popup_ai_apiKey")}
-            <input
-              autoCapitalize="off"
-              autoComplete="off"
-              className={inputClassName}
-              id="ai-api-key"
-              onChange={(event) => setApiKey(event.target.value)}
-              placeholder={getMessage("popup_ai_apiKeyPlaceholder")}
-              spellCheck={false}
-              type="password"
-              value={apiKey}
-            />
-          </label>
+        <label className="block text-gray-600 text-xs" htmlFor="ai-api-key">
+          {getMessage("popup_ai_apiKey")}
+          <input
+            autoCapitalize="off"
+            autoComplete="off"
+            className={inputClassName}
+            id="ai-api-key"
+            onChange={(event) => setApiKey(event.target.value)}
+            placeholder={getMessage("popup_ai_apiKeyPlaceholder")}
+            spellCheck={false}
+            type="password"
+            value={apiKey}
+          />
+        </label>
 
-          <label className="block text-gray-600 text-xs" htmlFor="ai-model">
-            {getMessage("popup_ai_model")}
-            <input
-              autoCapitalize="off"
-              autoComplete="off"
-              className={inputClassName}
-              id="ai-model"
-              onChange={(event) => setModel(event.target.value)}
-              placeholder="gpt-5.6"
-              spellCheck={false}
-              type="text"
-              value={model}
-            />
-          </label>
+        <label className="block text-gray-600 text-xs" htmlFor="ai-model">
+          {getMessage("popup_ai_model")}
+          <input
+            autoCapitalize="off"
+            autoComplete="off"
+            className={inputClassName}
+            id="ai-model"
+            onChange={(event) => setModel(event.target.value)}
+            placeholder="gpt-5.6"
+            spellCheck={false}
+            type="text"
+            value={model}
+          />
+        </label>
 
+        <label
+          className="block text-gray-600 text-xs"
+          htmlFor="ai-system-prompt"
+        >
+          {getMessage("popup_ai_systemPrompt")}
+          <textarea
+            className={`${inputClassName} min-h-20 resize-y`}
+            id="ai-system-prompt"
+            onChange={(event) => setSystemPrompt(event.target.value)}
+            value={systemPrompt}
+          />
+        </label>
+
+        <div className="space-y-2 border-gray-100 border-t pt-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <label
+                className="font-medium text-gray-700 text-xs"
+                htmlFor="ai-context-sentence-count"
+              >
+                {getMessage("popup_ai_contextRange")}
+              </label>
+              <p className="m-0 mt-0.5 text-gray-400 text-xs">
+                {getMessage("popup_ai_contextRangeDesc")}
+              </p>
+            </div>
+            <select
+              className="h-8 w-24 rounded border border-gray-200 bg-white px-2 text-gray-700 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+              id="ai-context-sentence-count"
+              onChange={(event) =>
+                setContextSentenceCount(Number(event.target.value))
+              }
+              value={contextSentenceCount}
+            >
+              {Array.from(
+                {
+                  length:
+                    MAX_AI_CONTEXT_SENTENCE_COUNT -
+                    MIN_AI_CONTEXT_SENTENCE_COUNT +
+                    1,
+                },
+                (_, index) => index + MIN_AI_CONTEXT_SENTENCE_COUNT
+              ).map((count) => (
+                <option key={count} value={count}>
+                  {getMessage("popup_ai_contextSentenceOption", String(count))}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <p className="m-0 mb-1.5 font-medium text-gray-500 text-xs">
+              {getMessage("popup_ai_contextPreview")}
+            </p>
+            <ContextPreview sentenceCount={contextSentenceCount} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-[1fr_8rem] items-end gap-3 border-gray-100 border-t pt-3">
+          <div className="flex min-h-9 items-center justify-between gap-3">
+            <label
+              className="text-gray-700 text-xs"
+              htmlFor="ai-thinking-enabled"
+            >
+              {getMessage("popup_ai_thinkingEnabled")}
+            </label>
+            <ToggleSwitch
+              checked={thinkingEnabled}
+              id="ai-thinking-enabled"
+              onChange={() => setThinkingEnabled((enabled) => !enabled)}
+            />
+          </div>
           <label
             className="block text-gray-600 text-xs"
-            htmlFor="ai-system-prompt"
+            htmlFor="ai-reasoning-effort"
           >
-            {getMessage("popup_ai_systemPrompt")}
-            <textarea
-              className={`${inputClassName} min-h-20 resize-y`}
-              id="ai-system-prompt"
-              onChange={(event) => setSystemPrompt(event.target.value)}
-              value={systemPrompt}
-            />
+            {getMessage("popup_ai_reasoningEffort")}
+            <select
+              className={cn(
+                inputClassName,
+                "disabled:bg-gray-50 disabled:text-gray-400"
+              )}
+              disabled={!thinkingEnabled}
+              id="ai-reasoning-effort"
+              onChange={(event) =>
+                setReasoningEffort(event.target.value as AiReasoningEffort)
+              }
+              value={reasoningEffort}
+            >
+              <option value="low">{getMessage("popup_ai_effortLow")}</option>
+              <option value="high">{getMessage("popup_ai_effortHigh")}</option>
+              <option value="max">{getMessage("popup_ai_effortMax")}</option>
+            </select>
           </label>
+        </div>
 
-          <div className="space-y-2 border-gray-100 border-t pt-3">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <label
-                  className="font-medium text-gray-700 text-xs"
-                  htmlFor="ai-context-sentence-count"
-                >
-                  {getMessage("popup_ai_contextRange")}
-                </label>
-                <p className="m-0 mt-0.5 text-gray-400 text-xs">
-                  {getMessage("popup_ai_contextRangeDesc")}
-                </p>
-              </div>
-              <select
-                className="h-8 w-24 rounded border border-gray-200 bg-white px-2 text-gray-700 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
-                id="ai-context-sentence-count"
-                onChange={(event) =>
-                  setContextSentenceCount(Number(event.target.value))
-                }
-                value={contextSentenceCount}
-              >
-                {Array.from(
-                  {
-                    length:
-                      MAX_AI_CONTEXT_SENTENCE_COUNT -
-                      MIN_AI_CONTEXT_SENTENCE_COUNT +
-                      1,
-                  },
-                  (_, index) => index + MIN_AI_CONTEXT_SENTENCE_COUNT
-                ).map((count) => (
-                  <option key={count} value={count}>
-                    {getMessage("popup_ai_contextSentenceOption", String(count))}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <p className="m-0 mb-1.5 font-medium text-gray-500 text-xs">
-                {getMessage("popup_ai_contextPreview")}
-              </p>
-              <ContextPreview sentenceCount={contextSentenceCount} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-[1fr_8rem] items-end gap-3 border-gray-100 border-t pt-3">
-            <div className="flex min-h-9 items-center justify-between gap-3">
-              <label className="text-gray-700 text-xs" htmlFor="ai-thinking-enabled">
-                {getMessage("popup_ai_thinkingEnabled")}
-              </label>
-              <ToggleSwitch
-                checked={thinkingEnabled}
-                id="ai-thinking-enabled"
-                onChange={() => setThinkingEnabled((enabled) => !enabled)}
-              />
-            </div>
-            <label
-              className="block text-gray-600 text-xs"
-              htmlFor="ai-reasoning-effort"
-            >
-              {getMessage("popup_ai_reasoningEffort")}
-              <select
-                className={cn(inputClassName, "disabled:bg-gray-50 disabled:text-gray-400")}
-                disabled={!thinkingEnabled}
-                id="ai-reasoning-effort"
-                onChange={(event) =>
-                  setReasoningEffort(event.target.value as AiReasoningEffort)
-                }
-                value={reasoningEffort}
-              >
-                <option value="low">{getMessage("popup_ai_effortLow")}</option>
-                <option value="high">{getMessage("popup_ai_effortHigh")}</option>
-                <option value="max">{getMessage("popup_ai_effortMax")}</option>
-              </select>
-            </label>
-          </div>
-
-          <div className="flex gap-2 pt-1">
-            <button
-              className="min-h-8 flex-1 rounded bg-blue-600 px-3 py-1.5 font-medium text-white text-xs transition-colors hover:bg-blue-700 disabled:opacity-50"
-              disabled={status.type === "working"}
-              onClick={handleSave}
-              type="button"
-            >
-              {getMessage("popup_ai_save")}
-            </button>
-            <button
-              className="min-h-8 flex-1 rounded border border-gray-200 bg-white px-3 py-1.5 font-medium text-gray-700 text-xs transition-colors hover:bg-gray-50 disabled:opacity-50"
-              disabled={status.type === "working"}
-              onClick={handleTestConnection}
-              type="button"
-            >
-              {getMessage("popup_ai_testConnection")}
-            </button>
-          </div>
+        <div className="flex gap-2 pt-1">
+          <button
+            className="min-h-8 flex-1 rounded bg-blue-600 px-3 py-1.5 font-medium text-white text-xs transition-colors hover:bg-blue-700 disabled:opacity-50"
+            disabled={status.type === "working"}
+            onClick={handleSave}
+            type="button"
+          >
+            {getMessage("popup_ai_save")}
+          </button>
+          <button
+            className="min-h-8 flex-1 rounded border border-gray-200 bg-white px-3 py-1.5 font-medium text-gray-700 text-xs transition-colors hover:bg-gray-50 disabled:opacity-50"
+            disabled={status.type === "working"}
+            onClick={handleTestConnection}
+            type="button"
+          >
+            {getMessage("popup_ai_testConnection")}
+          </button>
+        </div>
 
         {status.type !== "idle" && (
           <p aria-live="polite" className={getStatusClassName(status)}>

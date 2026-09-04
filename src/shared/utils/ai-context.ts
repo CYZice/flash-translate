@@ -56,11 +56,7 @@ export function getContextAroundSelection(
   sentenceCount: number
 ): { contextBefore: string; contextAfter: string } {
   return {
-    contextBefore: getAdjacentContext(
-      contextBefore,
-      "before",
-      sentenceCount
-    ),
+    contextBefore: getAdjacentContext(contextBefore, "before", sentenceCount),
     contextAfter: getAdjacentContext(contextAfter, "after", sentenceCount),
   };
 }

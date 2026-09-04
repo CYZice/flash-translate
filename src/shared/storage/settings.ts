@@ -1,4 +1,3 @@
-import { createPrefixedLogger } from "@/shared/utils/logger";
 import {
   DEFAULT_SOURCE_LANGUAGE,
   DEFAULT_TARGET_LANGUAGE,
@@ -7,6 +6,7 @@ import {
   DEFAULT_AI_CONTEXT_SENTENCE_COUNT,
   normalizeAiContextSentenceCount,
 } from "@/shared/utils/ai-context";
+import { createPrefixedLogger } from "@/shared/utils/logger";
 
 const log = createPrefixedLogger("settings");
 

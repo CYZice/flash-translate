@@ -1,5 +1,5 @@
-import { createPrefixedLogger } from "@/shared/utils/logger";
 import { isAiTestConnectionMessage } from "@/shared/constants/ai-translation";
+import { createPrefixedLogger } from "@/shared/utils/logger";
 import {
   handleAiTestConnection,
   registerAiTranslationPortHandler,

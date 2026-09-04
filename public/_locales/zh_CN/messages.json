@@ -1,6 +1,8 @@
 {
   "ext_name": { "message": "闪译" },
-  "ext_description": { "message": "无需离开当前页面，即时翻译选中文本。翻译优先在设备本地完成。" },
+  "ext_description": {
+    "message": "无需离开当前页面，即时翻译选中文本。翻译优先在设备本地完成。"
+  },
   "ext_actionTitle": { "message": "闪译" },
 
   "popup_header_title": { "message": "闪译" },
@@ -20,7 +22,9 @@
   "popup_ai_saved": { "message": "已保存" },
   "popup_ai_testing": { "message": "正在测试连接..." },
   "popup_ai_connectionSuccess": { "message": "连接成功" },
-  "popup_ai_hostPermissionDenied": { "message": "未授予网站访问权限，无法访问此接口地址。" },
+  "popup_ai_hostPermissionDenied": {
+    "message": "未授予网站访问权限，无法访问此接口地址。"
+  },
   "popup_ai_thinkingEnabled": { "message": "深度思考" },
   "popup_ai_reasoningEffort": { "message": "推理强度" },
   "popup_ai_effortLow": { "message": "低" },
@@ -38,13 +42,23 @@
   "popup_ai_contextAfter": { "message": "后文" },
 
   "popup_behavior_autoDetectLanguage": { "message": "自动识别源语言" },
-  "popup_behavior_autoDetectLanguageDesc": { "message": "自动识别选中文本的语言" },
-  "popup_behavior_autoDetectUnavailable": { "message": "当前浏览器不支持语言识别 API，请在 Chrome 实验性功能中启用。" },
-  "popup_behavior_autoDetectEnableFlag": { "message": "打开 Chrome 实验性功能" },
+  "popup_behavior_autoDetectLanguageDesc": {
+    "message": "自动识别选中文本的语言"
+  },
+  "popup_behavior_autoDetectUnavailable": {
+    "message": "当前浏览器不支持语言识别 API，请在 Chrome 实验性功能中启用。"
+  },
+  "popup_behavior_autoDetectEnableFlag": {
+    "message": "打开 Chrome 实验性功能"
+  },
   "popup_behavior_autoDetectCopied": { "message": "链接已复制" },
   "popup_behavior_skipSameLanguage": { "message": "跳过相同语言" },
-  "popup_behavior_skipSameLanguageDesc": { "message": "网页语言与目标语言相同时不显示翻译卡片" },
-  "popup_behavior_skipSameLanguageAutoDetectNote": { "message": "开启自动识别后，相同语言的文本会始终跳过" },
+  "popup_behavior_skipSameLanguageDesc": {
+    "message": "网页语言与目标语言相同时不显示翻译卡片"
+  },
+  "popup_behavior_skipSameLanguageAutoDetectNote": {
+    "message": "开启自动识别后，相同语言的文本会始终跳过"
+  },
 
   "popup_exclusion_title": { "message": "排除的网站" },
   "popup_exclusion_noSites": { "message": "暂无排除的网站" },
@@ -72,7 +86,9 @@
   "popup_footer_githubRepository": { "message": "GitHub 仓库" },
   "popup_footer_shared": { "message": "已分享" },
   "popup_footer_shareExtension": { "message": "分享此扩展" },
-  "popup_footer_shareText": { "message": "使用 Chrome 内置 Translator API 的即时翻译扩展" },
+  "popup_footer_shareText": {
+    "message": "使用 Chrome 内置 Translator API 的即时翻译扩展"
+  },
   "popup_error_generic": { "message": "发生错误" },
 
   "status_downloaded": { "message": "已下载" },
@@ -86,7 +102,9 @@
   "content_settings": { "message": "设置" },
   "content_openDetailedSettings": { "message": "打开详细设置" },
   "content_excludeCurrentSite": { "message": "不翻译此网站" },
-  "content_excludeCurrentSiteDescription": { "message": "可以在详细设置中撤销" },
+  "content_excludeCurrentSiteDescription": {
+    "message": "可以在详细设置中撤销"
+  },
   "content_close": { "message": "关闭" },
   "content_copyFailed": { "message": "复制失败" },
   "content_copyTranslation": { "message": "复制译文" },
@@ -96,7 +114,9 @@
   "content_resizeHandleBottom": { "message": "底部调整手柄" },
   "content_sourceLanguage": { "message": "源语言" },
   "content_targetLanguage": { "message": "目标语言" },
-  "content_translatorUnsupported": { "message": "当前浏览器不支持 Translator API，请使用 Chrome 150 或更高版本并启用该 API。" },
+  "content_translatorUnsupported": {
+    "message": "当前浏览器不支持 Translator API，请使用 Chrome 150 或更高版本并启用该 API。"
+  },
   "content_translationUnavailable": {
     "message": "暂不支持从 $SOURCE$ 翻译为 $TARGET$。",
     "placeholders": {
@@ -115,7 +135,9 @@
   "content_aiRetry": { "message": "重试" },
   "content_termTranslation": { "message": "术语翻译" },
   "popup_behavior_editorInputAssist": { "message": "中文输入英文提示" },
-  "popup_behavior_editorInputAssistDesc": { "message": "停止输入后，在中文上方显示英文提示" },
+  "popup_behavior_editorInputAssistDesc": {
+    "message": "停止输入后，在中文上方显示英文提示"
+  },
 
   "action_edit": { "message": "编辑" },
   "action_delete": { "message": "删除" }

@@ -61,7 +61,9 @@ describe("TranslationResultSwitch", () => {
     });
 
     act(() => {
-      container.querySelector<HTMLButtonElement>('[title="content_resultAi"]')?.click();
+      container
+        .querySelector<HTMLButtonElement>('[title="content_resultAi"]')
+        ?.click();
     });
     expect(onViewChange).toHaveBeenCalledWith("ai");
   });

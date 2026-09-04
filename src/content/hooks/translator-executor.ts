@@ -59,8 +59,19 @@ export async function executeStreamingTranslation(
   try {
     let result = "";
     const stream = context
-      ? translator.translateStreaming(text, sourceLanguage, targetLanguage, signal, context)
-      : translator.translateStreaming(text, sourceLanguage, targetLanguage, signal);
+      ? translator.translateStreaming(
+          text,
+          sourceLanguage,
+          targetLanguage,
+          signal,
+          context
+        )
+      : translator.translateStreaming(
+          text,
+          sourceLanguage,
+          targetLanguage,
+          signal
+        );
     for await (const chunk of stream) {
       if (signal.aborted) {
         return { type: "aborted" };

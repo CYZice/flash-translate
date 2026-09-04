@@ -15,7 +15,7 @@ function createAbortError(): DOMException {
 }
 
 class PortMessageQueue {
-  private items: QueueItem[] = [];
+  private readonly items: QueueItem[] = [];
   private pendingResolve: ((item: QueueItem) => void) | null = null;
 
   push(item: QueueItem): void {

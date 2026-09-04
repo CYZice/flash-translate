@@ -63,7 +63,10 @@ export interface CardLayout {
  * - useDraggable for position offset
  * - Position calculation with viewport overflow handling
  */
-export function useCardLayout({ selectionRect, layoutKey }: CardLayoutConfig): CardLayout {
+export function useCardLayout({
+  selectionRect,
+  layoutKey,
+}: CardLayoutConfig): CardLayout {
   const [maxCardWidth, setMaxCardWidth] = useState(() =>
     calculateMaxCardWidth(window.visualViewport?.width ?? window.innerWidth)
   );
@@ -84,10 +87,14 @@ export function useCardLayout({ selectionRect, layoutKey }: CardLayoutConfig): C
       }
       timeoutId = setTimeout(() => {
         setMaxCardWidth(
-          calculateMaxCardWidth(window.visualViewport?.width ?? window.innerWidth)
+          calculateMaxCardWidth(
+            window.visualViewport?.width ?? window.innerWidth
+          )
         );
         setMaxCardHeight(
-          calculateMaxCardHeight(window.visualViewport?.height ?? window.innerHeight)
+          calculateMaxCardHeight(
+            window.visualViewport?.height ?? window.innerHeight
+          )
         );
       }, RESIZE_DEBOUNCE_MS);
     };

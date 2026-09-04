@@ -262,6 +262,8 @@ export function useEditorInputAssist(
     };
   }, [enabled, translation.reset, translation.translate]);
 
+  // The language pair intentionally triggers cleanup even though it is not read in the body.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: language changes must reset the active assist session
   useEffect(() => {
     setAssist(null);
     setAnchorRect(null);

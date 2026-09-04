@@ -10,8 +10,8 @@ import {
   getSelectionText,
   getValidSelectionText,
   isClickInsideShadowHost,
-  shouldClearSelectionAfterOutsideInteraction,
   type SelectionInfo,
+  shouldClearSelectionAfterOutsideInteraction,
   shouldShowCardForSelection,
 } from "./text-selection";
 
@@ -30,7 +30,12 @@ interface SelectionDetails {
 
 function getControlSelection(sentenceCount: number): SelectionDetails | null {
   const element = document.activeElement;
-  if (!(element instanceof HTMLTextAreaElement || element instanceof HTMLInputElement)) {
+  if (
+    !(
+      element instanceof HTMLTextAreaElement ||
+      element instanceof HTMLInputElement
+    )
+  ) {
     return null;
   }
   if (element.type === "password") {

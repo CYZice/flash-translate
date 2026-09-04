@@ -1,13 +1,10 @@
 import { useEffect } from "react";
-import { useLanguageDetectorAvailability } from "@/shared/hooks/use-language-detector-availability";
-import { useSettings } from "@/shared/hooks/use-settings";
 import {
   DEFAULT_SOURCE_LANGUAGE,
   DEFAULT_TARGET_LANGUAGE,
 } from "@/shared/constants/languages";
-import {
-  DEFAULT_AI_CONTEXT_SENTENCE_COUNT,
-} from "@/shared/utils/ai-context";
+import { useLanguageDetectorAvailability } from "@/shared/hooks/use-language-detector-availability";
+import { useSettings } from "@/shared/hooks/use-settings";
 import {
   enableExclusionPattern,
   generatePatternId,
@@ -16,6 +13,7 @@ import {
   saveSettings,
 } from "@/shared/storage/settings";
 import { selectContentAppSettings } from "@/shared/storage/settings-selectors";
+import { DEFAULT_AI_CONTEXT_SENTENCE_COUNT } from "@/shared/utils/ai-context";
 import { evaluateSkipRules, type SkipResult } from "./skip-rules";
 import { useLanguageDetection } from "./use-language-detection";
 import { type SelectionInfo, useTextSelection } from "./use-text-selection";
@@ -133,8 +131,7 @@ export function useTranslationFlow(): TranslationFlowState {
 
   useEffect(() => {
     console.info("[flash-translate][content] settings state", {
-      editorInputAssistEnabled:
-        settings?.editorInputAssistEnabled ?? false,
+      editorInputAssistEnabled: settings?.editorInputAssistEnabled ?? false,
       hasSettings: settings !== null,
       isLoading,
       sourceLanguage,

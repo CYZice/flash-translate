@@ -28,7 +28,9 @@ export const DEFAULT_TARGET_LANGUAGE = "en";
  * Use the Chinese pair as the representative pair for model availability.
  * English remains the fallback source when the target itself is Chinese.
  */
-export function getRepresentativeSourceLanguage(targetLanguage: string): string {
+export function getRepresentativeSourceLanguage(
+  targetLanguage: string
+): string {
   return targetLanguage === "zh" ? "en" : "zh";
 }
 

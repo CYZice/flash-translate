@@ -53,7 +53,9 @@ describe("getTranslationRequestOptions", () => {
   });
 
   it("sends DeepSeek thinking and effort when enabled", () => {
-    expect(getTranslationRequestOptions("deepseek-v4-flash", true, "low")).toEqual({
+    expect(
+      getTranslationRequestOptions("deepseek-v4-flash", true, "low")
+    ).toEqual({
       thinking: { type: "enabled" },
       reasoning_effort: "low",
     });

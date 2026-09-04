@@ -20,7 +20,9 @@
   "popup_section_behavior": { "message": "動作" },
 
   "popup_ai_title": { "message": "AI 強化翻訳" },
-  "popup_ai_description": { "message": "文脈を考慮した結果に使用する任意のプロバイダー" },
+  "popup_ai_description": {
+    "message": "文脈を考慮した結果に使用する任意のプロバイダー"
+  },
   "popup_ai_baseUrl": { "message": "Base URL" },
   "popup_ai_apiKey": { "message": "API Key" },
   "popup_ai_apiKeyPlaceholder": { "message": "ローカルサーバーでは空欄可" },
@@ -32,7 +34,9 @@
   "popup_ai_saved": { "message": "保存しました" },
   "popup_ai_testing": { "message": "接続テスト中..." },
   "popup_ai_connectionSuccess": { "message": "接続に成功しました" },
-  "popup_ai_hostPermissionDenied": { "message": "ホストへのアクセスが許可されていません。この Base URL へ Custom AI リクエストを送信できません。" },
+  "popup_ai_hostPermissionDenied": {
+    "message": "ホストへのアクセスが許可されていません。この Base URL へ Custom AI リクエストを送信できません。"
+  },
   "popup_ai_thinkingEnabled": { "message": "思考モード" },
   "popup_ai_reasoningEffort": { "message": "推論強度" },
   "popup_ai_effortLow": { "message": "低" },
@@ -242,13 +246,17 @@
   "content_resultAi": { "message": "AI" },
   "content_translationResults": { "message": "翻訳結果の種類" },
   "content_aiEnhance": { "message": "AI で翻訳を補強" },
-  "content_aiEnhanceDescription": { "message": "前後の文を使って表現と専門用語を補います。" },
+  "content_aiEnhanceDescription": {
+    "message": "前後の文を使って表現と専門用語を補います。"
+  },
   "content_aiRetry": { "message": "再試行" },
   "content_termTranslation": {
     "message": "語句の翻訳"
   },
   "popup_behavior_editorInputAssist": { "message": "エディターの英語ヒント" },
-  "popup_behavior_editorInputAssistDesc": { "message": "入力を止めると中国語の上に英語を表示" },
+  "popup_behavior_editorInputAssistDesc": {
+    "message": "入力を止めると中国語の上に英語を表示"
+  },
 
   "action_edit": {
     "message": "編集"

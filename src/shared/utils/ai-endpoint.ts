@@ -1,4 +1,5 @@
 const CHAT_COMPLETIONS_SUFFIX = "/chat/completions";
+const TRAILING_SLASHES_PATTERN = /\/+$/;
 
 function parseHttpUrl(baseUrl: string): URL {
   const url = new URL(baseUrl.trim());
@@ -9,7 +10,7 @@ function parseHttpUrl(baseUrl: string): URL {
 }
 
 function stripTrailingSlashes(value: string): string {
-  return value.replace(/\/+$/, "");
+  return value.replace(TRAILING_SLASHES_PATTERN, "");
 }
 
 export function buildChatCompletionsUrl(baseUrl: string): string {
