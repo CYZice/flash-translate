@@ -42,6 +42,6 @@
     "ultracite": "7.9.4",
     "vite": "^8.1.5",
     "vite-plugin-babel": "^1.7.3",
-    "vitest": "^4.1.10"
+    "vitest": "^5.0.0"
   }
 }
