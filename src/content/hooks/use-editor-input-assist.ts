@@ -1,161 +1,60 @@
 import { useEffect, useRef, useState } from "react";
+import { AnchorTracker } from "../editor-assist/anchor-tracker";
+import { isSensitiveEditor } from "../editor-assist/editable-detector";
+import {
+  editorFromEvent,
+  measureEditorTextOffset,
+  readEditorSnapshot,
+  refreshEditorAnchor,
+} from "../editor-assist/editor-adapters";
+import { resolveCjkSlice } from "../editor-assist/text-slice-resolver";
+import type {
+  EditorSession,
+  EditorSnapshot,
+  RectLike,
+} from "../editor-assist/types";
 import { useTranslator } from "./use-translator";
 
 const INPUT_DEBOUNCE_MS = 400;
-const CJK_REGEX = /[\u3400-\u9fff]/g;
-const BOUNDARY_REGEX = /[。！？!?\n]/g;
-const TRAILING_PUNCTUATION_REGEX = /[。！？!?]/;
-const WHITESPACE_REGEX = /\s/;
 
-interface EditorAssistState {
-  text: string;
-  rect: DOMRect | null;
+interface AssistState {
+  anchorRect: RectLike;
+  sessionId: string;
+  revision: number;
 }
 
-export function getSentenceSlice(value: string, caret: number) {
-  const safeCaret = Math.max(0, Math.min(caret, value.length));
-  const before = value.slice(0, safeCaret);
-  const after = value.slice(safeCaret);
-  const startMatch = [...before.matchAll(BOUNDARY_REGEX)].at(-1);
-  const endMatch = after.search(BOUNDARY_REGEX);
-  let start = startMatch ? (startMatch.index ?? 0) + 1 : 0;
-  let end = endMatch === -1 ? value.length : safeCaret + endMatch + 1;
+type DiagnosticCode =
+  | "caret-unmappable"
+  | "editor-detached"
+  | "empty-editor"
+  | "mirror-measure-failed"
+  | "no-cjk-content"
+  | "sensitive-editor"
+  | "slice-anchor-unmappable"
+  | "stale-revision"
+  | "translation-failed"
+  | "unsupported-editor";
 
-  while (start < end && WHITESPACE_REGEX.test(value[start] ?? "")) {
-    start += 1;
-  }
-  while (end > start && WHITESPACE_REGEX.test(value[end - 1] ?? "")) {
-    end -= 1;
-  }
-
-  return { start, end, text: value.slice(start, end) };
+function logDiagnostic(code: DiagnosticCode, snapshot?: EditorSnapshot): void {
+  console.debug(`[flash-translate][input-assist][${code}]`, {
+    code,
+    revision: snapshot?.revision,
+    sessionId: snapshot?.sessionId,
+  });
 }
 
-export function getCjkTranslationSlice(value: string, caret: number) {
-  const sentence = getSentenceSlice(value, caret);
-  const cjkMatches = [...sentence.text.matchAll(CJK_REGEX)];
-  const firstMatch = cjkMatches[0];
-  const lastMatch = cjkMatches.at(-1);
-  if (!(firstMatch && lastMatch)) {
-    return null;
-  }
-
-  const startOffset = firstMatch.index ?? 0;
-  let endOffset = (lastMatch.index ?? 0) + lastMatch[0].length;
-  while (
-    endOffset < sentence.text.length &&
-    TRAILING_PUNCTUATION_REGEX.test(sentence.text[endOffset] ?? "")
-  ) {
-    endOffset += 1;
-  }
-
-  const start = sentence.start + startOffset;
-  const end = sentence.start + endOffset;
-
-  return { start, end, text: value.slice(start, end) };
+function logInputSnapshot(snapshot: EditorSnapshot): void {
+  console.info("[flash-translate][input-assist] input", {
+    caretOffset: snapshot.caretOffset,
+    editorKind: snapshot.kind,
+    revision: snapshot.revision,
+    sessionId: snapshot.sessionId,
+    textLength: snapshot.text.length,
+  });
 }
 
-function getEditable(node: Node | null): HTMLElement | null {
-  let current: Node | null = node;
-  while (current) {
-    if (
-      current instanceof HTMLElement &&
-      (current.isContentEditable ||
-        current.getAttribute("contenteditable") === "true")
-    ) {
-      return current;
-    }
-    current = current.parentNode;
-  }
-  return null;
-}
-
-function getTextControlSentence(
-  active: HTMLTextAreaElement | HTMLInputElement
-): EditorAssistState | null {
-  if (active.type === "password") {
-    return null;
-  }
-  const caret = active.selectionStart ?? 0;
-  const sentence = getCjkTranslationSlice(active.value, caret);
-  if (!sentence) {
-    return null;
-  }
-  return { text: sentence.text, rect: active.getBoundingClientRect() };
-}
-
-function getContentEditableSentence(
-  selection: Selection
-): EditorAssistState | null {
-  const editable = getEditable(selection.anchorNode);
-  if (!editable) {
-    return null;
-  }
-
-  const text = editable.innerText || editable.textContent || "";
-  const before = document.createRange();
-  before.selectNodeContents(editable);
-  before.setEnd(selection.anchorNode as Node, selection.anchorOffset);
-  const caretOffset = Math.min(before.toString().length, text.length);
-  const sentence = getCjkTranslationSlice(text, caretOffset);
-  if (!sentence) {
-    return null;
-  }
-  const { start, end } = sentence;
-
-  const range = document.createRange();
-  const walker = document.createTreeWalker(editable, NodeFilter.SHOW_TEXT);
-  let cursor = 0;
-  let startNode: Node | null = null;
-  let endNode: Node | null = null;
-  let startOffset = 0;
-  let endOffset = 0;
-  while (walker.nextNode()) {
-    const node = walker.currentNode;
-    const length = node.textContent?.length ?? 0;
-    if (!startNode && start >= cursor && start <= cursor + length) {
-      startNode = node;
-      startOffset = start - cursor;
-    }
-    if (end >= cursor && end <= cursor + length) {
-      endNode = node;
-      endOffset = end - cursor;
-      break;
-    }
-    cursor += length;
-  }
-  if (!(startNode && endNode)) {
-    return {
-      text: sentence.text,
-      rect: selection.getRangeAt(0).getBoundingClientRect(),
-    };
-  }
-  range.setStart(startNode, startOffset);
-  range.setEnd(endNode, endOffset);
-  const rect = range.getBoundingClientRect();
-  return {
-    text: sentence.text,
-    rect:
-      rect.width > 0 && rect.height > 0
-        ? rect
-        : selection.getRangeAt(0).getBoundingClientRect(),
-  };
-}
-
-function getInputSentence(): EditorAssistState | null {
-  const active = document.activeElement;
-  if (
-    active instanceof HTMLTextAreaElement ||
-    active instanceof HTMLInputElement
-  ) {
-    return getTextControlSentence(active);
-  }
-
-  const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0 || !selection.isCollapsed) {
-    return null;
-  }
-  return getContentEditableSentence(selection);
+function makeSessionId(): string {
+  return `editor-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
 export function useEditorInputAssist(
@@ -163,12 +62,14 @@ export function useEditorInputAssist(
   sourceLanguage: string,
   targetLanguage: string
 ) {
-  const [assist, setAssist] = useState<EditorAssistState | null>(null);
+  const [assist, setAssist] = useState<AssistState | null>(null);
+  const [anchorRect, setAnchorRect] = useState<RectLike | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const composingRef = useRef(false);
+  const sessionRef = useRef<EditorSession | null>(null);
+  const snapshotRef = useRef<EditorSnapshot | null>(null);
+  const anchorTrackerRef = useRef(new AnchorTracker());
   const translation = useTranslator({
-    // Input assistance always reverses the main translation direction.
-    // Example: main en -> zh becomes input zh -> en.
     sourceLanguage: targetLanguage,
     targetLanguage: sourceLanguage,
     provider: "chrome-built-in",
@@ -176,17 +77,22 @@ export function useEditorInputAssist(
   });
 
   useEffect(() => {
-    if (enabled) {
-      console.info("[flash-translate][input-assist] enabled", {
-        sourceLanguage: targetLanguage,
-        targetLanguage: sourceLanguage,
-      });
+    if (!enabled) {
+      return;
     }
+    console.info("[flash-translate][input-assist] enabled", {
+      sourceLanguage: targetLanguage,
+      targetLanguage: sourceLanguage,
+    });
   }, [enabled, sourceLanguage, targetLanguage]);
 
   useEffect(() => {
     if (!enabled) {
       setAssist(null);
+      setAnchorRect(null);
+      snapshotRef.current = null;
+      sessionRef.current = null;
+      anchorTrackerRef.current.stop();
       translation.reset();
       return;
     }
@@ -194,91 +100,192 @@ export function useEditorInputAssist(
     const clearAssist = () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
-        timerRef.current = null;
       }
+      timerRef.current = null;
       setAssist(null);
+      setAnchorRect(null);
+      snapshotRef.current = null;
+      anchorTrackerRef.current.stop();
       translation.reset();
     };
 
-    const schedule = () => {
+    const getOrCreateSession = (editor: HTMLElement): EditorSession => {
+      const current = sessionRef.current;
+      if (current?.editor === editor && editor.isConnected) {
+        return current;
+      }
+      const kind =
+        editor instanceof HTMLInputElement ||
+        editor instanceof HTMLTextAreaElement
+          ? "text-control"
+          : "contenteditable";
+      const next = {
+        editor,
+        id: makeSessionId(),
+        kind,
+        revision: 0,
+      } satisfies EditorSession;
+      sessionRef.current = next;
+      return next;
+    };
+
+    const readCurrentSnapshot = (event: Event): EditorSnapshot | null => {
+      const editor = editorFromEvent(event);
+      if (!editor) {
+        logDiagnostic("unsupported-editor");
+        return null;
+      }
+      if (isSensitiveEditor(editor)) {
+        logDiagnostic("sensitive-editor");
+        return null;
+      }
+      const session = getOrCreateSession(editor);
+      session.revision += 1;
+      const snapshot = readEditorSnapshot(editor, session);
+      if (!snapshot) {
+        logDiagnostic(
+          editor.isConnected ? "caret-unmappable" : "editor-detached"
+        );
+        return null;
+      }
+      snapshotRef.current = snapshot;
+      logInputSnapshot(snapshot);
+      return snapshot;
+    };
+
+    const schedule = (event: Event) => {
       if (composingRef.current) {
         return;
       }
+      const snapshot = readCurrentSnapshot(event);
+      if (!snapshot) {
+        clearAssist();
+        return;
+      }
+
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
-      // Hide the previous hint immediately while the editor changes. This
-      // includes send actions that clear ChatGPT's contenteditable composer.
       setAssist(null);
+      setAnchorRect(null);
+      anchorTrackerRef.current.stop();
       translation.reset();
       timerRef.current = setTimeout(() => {
         timerRef.current = null;
-        const next = getInputSentence();
-        setAssist(next);
-        if (next) {
-          console.info("[flash-translate][input-assist] detected", {
-            text: next.text,
-            sourceLanguage: targetLanguage,
-            targetLanguage: sourceLanguage,
-          });
-          translation.translate(next.text).catch(() => undefined);
-        } else {
-          console.debug(
-            "[flash-translate][input-assist] input received, no Chinese sentence found"
-          );
+        const current = snapshotRef.current;
+        if (
+          !current ||
+          current.sessionId !== snapshot.sessionId ||
+          current.revision !== snapshot.revision ||
+          current.editor !== snapshot.editor ||
+          !current.editor.isConnected
+        ) {
+          logDiagnostic("stale-revision", snapshot);
+          return;
         }
+
+        const slice = resolveCjkSlice(current.text, current.caretOffset);
+        if (!slice) {
+          logDiagnostic("no-cjk-content", current);
+          return;
+        }
+
+        const sliceAnchorRect = measureEditorTextOffset(
+          current.editor,
+          slice.start
+        );
+        if (!sliceAnchorRect) {
+          logDiagnostic("slice-anchor-unmappable", current);
+          return;
+        }
+
+        console.info("[flash-translate][input-assist] slice", {
+          end: slice.end,
+          revision: current.revision,
+          sessionId: current.sessionId,
+          start: slice.start,
+          textLength: slice.text.length,
+        });
+
+        setAssist({
+          anchorRect: sliceAnchorRect,
+          sessionId: current.sessionId,
+          revision: current.revision,
+        });
+        setAnchorRect(sliceAnchorRect);
+        anchorTrackerRef.current.start(
+          () => {
+            const latest = snapshotRef.current;
+            if (
+              !latest ||
+              latest.sessionId !== current.sessionId ||
+              latest.revision !== current.revision
+            ) {
+              return null;
+            }
+            return refreshEditorAnchor(latest, slice.start);
+          },
+          (rect) => setAnchorRect(rect),
+          current.editor
+        );
+        translation
+          .translate(slice.text)
+          .catch(() => logDiagnostic("translation-failed", current));
       }, INPUT_DEBOUNCE_MS);
     };
+
     const onCompositionStart = () => {
       composingRef.current = true;
       clearAssist();
     };
-    const onCompositionEnd = () => {
+    const onCompositionEnd = (event: CompositionEvent) => {
       composingRef.current = false;
-      schedule();
+      schedule(event);
     };
-    document.addEventListener("input", schedule, true);
+    const onInput = (event: Event) => schedule(event);
+    const onFocusOut = () => clearAssist();
+
+    document.addEventListener("input", onInput, true);
     document.addEventListener("compositionstart", onCompositionStart, true);
     document.addEventListener("compositionend", onCompositionEnd, true);
-    document.addEventListener("focusout", clearAssist, true);
+    document.addEventListener("focusout", onFocusOut, true);
     return () => {
-      document.removeEventListener("input", schedule, true);
+      document.removeEventListener("input", onInput, true);
       document.removeEventListener(
         "compositionstart",
         onCompositionStart,
         true
       );
       document.removeEventListener("compositionend", onCompositionEnd, true);
-      document.removeEventListener("focusout", clearAssist, true);
+      document.removeEventListener("focusout", onFocusOut, true);
       clearAssist();
     };
-  }, [
-    enabled,
-    sourceLanguage,
-    targetLanguage,
-    translation.translate,
-  ]);
+  }, [enabled, translation.reset, translation.translate]);
+
+  useEffect(() => {
+    setAssist(null);
+    setAnchorRect(null);
+    snapshotRef.current = null;
+    anchorTrackerRef.current.stop();
+    translation.reset();
+  }, [sourceLanguage, targetLanguage, translation.reset]);
 
   useEffect(() => {
     if (translation.error) {
-      console.error("[flash-translate][input-assist] translation failed", {
-        sourceLanguage: targetLanguage,
-        targetLanguage: sourceLanguage,
-        error: translation.error,
-        availability: translation.availability,
-      });
+      logDiagnostic("translation-failed");
     }
-  }, [
-    translation.error,
-    translation.availability,
-    sourceLanguage,
-    targetLanguage,
-  ]);
+  }, [translation.error]);
+
+  const visible =
+    assist &&
+    anchorRect &&
+    assist.sessionId === snapshotRef.current?.sessionId &&
+    assist.revision === snapshotRef.current?.revision;
 
   return {
-    rect: assist?.rect ?? null,
-    text: translation.result,
-    isLoading: translation.isLoading,
-    error: translation.error?.message ?? null,
+    rect: visible ? anchorRect : null,
+    text: visible ? translation.result : "",
+    isLoading: Boolean(visible && translation.isLoading),
+    error: visible ? (translation.error?.message ?? null) : null,
   };
 }

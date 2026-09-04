@@ -6,9 +6,10 @@ import {
   shift,
 } from "@floating-ui/dom";
 import { useEffect, useRef, useState } from "react";
+import type { RectLike } from "../editor-assist/types";
 
 interface EditorInputAssistProps {
-  rect: DOMRect | null;
+  rect: DOMRect | RectLike | null;
   text: string;
   isLoading: boolean;
   error: string | null;

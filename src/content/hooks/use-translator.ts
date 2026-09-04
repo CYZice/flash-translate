@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   type TranslationAvailabilityStatus,
   translatorManager,
@@ -53,9 +53,13 @@ export function useTranslator({
 
   // Check availability when language changes
   useEffect(() => {
+    let cancelled = false;
+
     if (provider === "custom-ai") {
       setState((prev) => ({ ...prev, availability: "available" }));
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
 
     const checkAvailability = async () => {
@@ -63,88 +67,96 @@ export function useTranslator({
         sourceLanguage,
         targetLanguage
       );
-      setState((prev) => ({ ...prev, availability }));
+      if (!cancelled) {
+        setState((prev) => ({ ...prev, availability }));
+      }
     };
 
     checkAvailability();
+    return () => {
+      cancelled = true;
+    };
   }, [sourceLanguage, targetLanguage, provider]);
 
-  const translate = async (text: string, context?: TranslationContext) => {
-    if (!isValidTranslationText(text)) {
-      return;
-    }
-
-    // Cancel previous translation if still running
-    abortControllerRef.current?.abort();
-    const abortController = new AbortController();
-    abortControllerRef.current = abortController;
-
-    setState((prev) => ({
-      ...prev,
-      result: "",
-      isLoading: true,
-      error: null,
-    }));
-
-    const options = {
-      text,
-      sourceLanguage,
-      targetLanguage,
-      signal: abortController.signal,
-      context,
-    };
-
-    const translator: TranslationFunctions =
-      provider === "custom-ai" ? openAiCompatibleTranslator : translatorManager;
-
-    const executionResult = await executeStreamingTranslation(
-      options,
-      translator,
-      {
-        onChunk: (result) => setState((prev) => ({ ...prev, result })),
+  const translate = useCallback(
+    async (text: string, context?: TranslationContext) => {
+      if (!isValidTranslationText(text)) {
+        return;
       }
-    );
 
-    // Avoid an older aborted request clearing a newer request's controller.
-    if (abortControllerRef.current === abortController) {
-      abortControllerRef.current = null;
-    }
+      // Cancel previous translation if still running
+      abortControllerRef.current?.abort();
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
 
-    // Handle aborted translation (new translation started)
-    if (executionResult.type === "aborted") {
-      return;
-    }
-
-    // Update state based on result
-    if (executionResult.type === "error") {
       setState((prev) => ({
         ...prev,
         result: "",
-        isLoading: false,
-        error: executionResult.error,
-      }));
-    } else {
-      setState((prev) => ({
-        ...prev,
-        result: executionResult.result,
-        isLoading: false,
+        isLoading: true,
         error: null,
       }));
-    }
-  };
 
-  const reset = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
+      const options = {
+        text,
+        sourceLanguage,
+        targetLanguage,
+        signal: abortController.signal,
+        context,
+      };
+
+      const translator: TranslationFunctions =
+        provider === "custom-ai"
+          ? openAiCompatibleTranslator
+          : translatorManager;
+
+      const executionResult = await executeStreamingTranslation(
+        options,
+        translator,
+        {
+          onChunk: (result) => setState((prev) => ({ ...prev, result })),
+        }
+      );
+
+      // Avoid an older aborted request clearing a newer request's controller.
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null;
+      }
+
+      // Handle aborted translation (new translation started)
+      if (executionResult.type === "aborted") {
+        return;
+      }
+
+      // Update state based on result
+      if (executionResult.type === "error") {
+        setState((prev) => ({
+          ...prev,
+          result: "",
+          isLoading: false,
+          error: executionResult.error,
+        }));
+      } else {
+        setState((prev) => ({
+          ...prev,
+          result: executionResult.result,
+          isLoading: false,
+          error: null,
+        }));
+      }
+    },
+    [provider, sourceLanguage, targetLanguage]
+  );
+
+  const reset = useCallback(() => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
     setState((prev) => ({
       ...prev,
       result: "",
       isLoading: false,
       error: null,
     }));
-  };
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {

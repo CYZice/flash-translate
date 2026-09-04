@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
-  getCjkTranslationSlice,
-  getSentenceSlice,
-} from "./use-editor-input-assist";
+  resolveCjkSlice as getCjkTranslationSlice,
+  resolveSentence as getSentenceSlice,
+} from "../editor-assist/text-slice-resolver";
 
 describe("getSentenceSlice", () => {
   it("extracts the Chinese sentence surrounding the caret", () => {

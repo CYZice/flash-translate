@@ -18,8 +18,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 function initializeContentScript() {
   // Check if already initialized
   if (document.getElementById(HOST_ID)) {
+    console.info("[flash-translate][content] already initialized");
     return;
   }
+
+  console.info("[flash-translate][content] initializing", {
+    readyState: document.readyState,
+    url: window.location.href,
+  });
 
   // Create Shadow DOM host
   const host = document.createElement("div");
@@ -46,6 +52,7 @@ function initializeContentScript() {
       </ErrorBoundary>
     </React.StrictMode>
   );
+  console.info("[flash-translate][content] react root mounted");
 }
 
 initializeContentScript();

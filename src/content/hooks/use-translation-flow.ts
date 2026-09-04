@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useLanguageDetectorAvailability } from "@/shared/hooks/use-language-detector-availability";
 import { useSettings } from "@/shared/hooks/use-settings";
 import {
@@ -129,6 +130,23 @@ export function useTranslationFlow(): TranslationFlowState {
   const sourceLanguage = autoDetectEnabled
     ? effectiveSourceLanguage
     : (settings?.sourceLanguage ?? DEFAULT_SOURCE_LANGUAGE);
+
+  useEffect(() => {
+    console.info("[flash-translate][content] settings state", {
+      editorInputAssistEnabled:
+        settings?.editorInputAssistEnabled ?? false,
+      hasSettings: settings !== null,
+      isLoading,
+      sourceLanguage,
+      targetLanguage,
+    });
+  }, [
+    isLoading,
+    settings?.editorInputAssistEnabled,
+    settings,
+    sourceLanguage,
+    targetLanguage,
+  ]);
 
   const permanentlyExcludeSite = async () => {
     if (!settings) {
