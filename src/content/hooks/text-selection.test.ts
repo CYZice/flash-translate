@@ -10,6 +10,7 @@ import {
   getValidSelectionText,
   isNodeInContentEditable,
   isValidRect,
+  shouldClearSelectionAfterOutsideInteraction,
   shouldShowCardForSelection,
 } from "./text-selection";
 
@@ -184,6 +185,26 @@ describe("shouldShowCardForSelection", () => {
 
   it("is case-sensitive", () => {
     expect(shouldShowCardForSelection("Hello", "hello")).toBe(true);
+  });
+});
+
+describe("shouldClearSelectionAfterOutsideInteraction", () => {
+  it("clears the card when an outside click leaves the original selection active", () => {
+    expect(
+      shouldClearSelectionAfterOutsideInteraction("selected text", "selected text")
+    ).toBe(true);
+  });
+
+  it("keeps the card available for a new selection", () => {
+    expect(
+      shouldClearSelectionAfterOutsideInteraction("new selection", "selected text")
+    ).toBe(false);
+  });
+
+  it("does not clear when there was no selection at pointer down", () => {
+    expect(
+      shouldClearSelectionAfterOutsideInteraction("selected text", null)
+    ).toBe(false);
   });
 });
 

@@ -1,5 +1,25 @@
 import type { RectLike } from "./types";
 
+export function areAnchorRectsEqual(
+  current: RectLike | null,
+  next: RectLike | null
+): boolean {
+  if (!(current && next)) {
+    return current === next;
+  }
+
+  return (
+    current.bottom === next.bottom &&
+    current.height === next.height &&
+    current.left === next.left &&
+    current.right === next.right &&
+    current.top === next.top &&
+    current.width === next.width &&
+    current.x === next.x &&
+    current.y === next.y
+  );
+}
+
 export class AnchorTracker {
   private cleanup: (() => void) | null = null;
 
@@ -9,7 +29,15 @@ export class AnchorTracker {
     editor?: EventTarget
   ): void {
     this.stop();
-    const update = () => onUpdate(refresh());
+    let currentRect: RectLike | null = null;
+    const update = () => {
+      const nextRect = refresh();
+      if (areAnchorRectsEqual(currentRect, nextRect)) {
+        return;
+      }
+      currentRect = nextRect;
+      onUpdate(nextRect);
+    };
     const listeners: [EventTarget, string, EventListener, boolean?][] = [
       [window, "scroll", update, true],
       [window, "resize", update],

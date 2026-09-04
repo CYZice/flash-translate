@@ -239,6 +239,17 @@ export function shouldShowCardForSelection(
 }
 
 /**
+ * A click outside the card should close it when the page keeps the original
+ * selection active, such as when navigating inside a single-page application.
+ */
+export function shouldClearSelectionAfterOutsideInteraction(
+  currentText: string | null,
+  textAtPointerDown: string | null
+): boolean {
+  return currentText !== null && currentText === textAtPointerDown;
+}
+
+/**
  * Checks if a click event originated from inside the shadow DOM host
  */
 export function isClickInsideShadowHost(

@@ -1,10 +1,4 @@
-import {
-  autoUpdate,
-  computePosition,
-  flip,
-  offset,
-  shift,
-} from "@floating-ui/dom";
+import { computePosition, flip, offset, shift } from "@floating-ui/dom";
 import { useEffect, useRef, useState } from "react";
 import type { RectLike } from "../editor-assist/types";
 
@@ -34,9 +28,19 @@ export function EditorInputAssist({
       computePosition(reference, floating, {
         placement: "top-start",
         middleware: [offset(6), flip(), shift({ padding: 8 })],
-      }).then(({ x, y }) => setPosition({ left: x, top: y }));
+      }).then(({ x, y }) => {
+        setPosition((current) =>
+          current.left === x && current.top === y
+            ? current
+            : { left: x, top: y }
+        );
+      });
     update().catch(() => undefined);
-    return autoUpdate(reference, floating, update, { animationFrame: true });
+    const resizeObserver = new ResizeObserver(() => {
+      update().catch(() => undefined);
+    });
+    resizeObserver.observe(floating);
+    return () => resizeObserver.disconnect();
   }, [rect]);
 
   if (!(rect && (text || isLoading || error))) {

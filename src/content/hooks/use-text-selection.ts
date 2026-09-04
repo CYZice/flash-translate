@@ -10,6 +10,7 @@ import {
   getSelectionText,
   getValidSelectionText,
   isClickInsideShadowHost,
+  shouldClearSelectionAfterOutsideInteraction,
   type SelectionInfo,
   shouldShowCardForSelection,
 } from "./text-selection";
@@ -113,6 +114,7 @@ export function useTextSelection(
   const [isVisible, setIsVisible] = useState(true);
   const lastSelectionTextRef = useRef<string | null>(null);
   const pendingClearRef = useRef(false);
+  const selectionTextAtPointerDownRef = useRef<string | null>(null);
 
   const handleMouseUp = () => {
     // Delay to ensure selection is complete
@@ -133,12 +135,26 @@ export function useTextSelection(
         document.body.getBoundingClientRect(),
         sentenceCount
       );
+      if (
+        pendingClearRef.current &&
+        shouldClearSelectionAfterOutsideInteraction(
+          selectionInfo?.text ?? null,
+          selectionTextAtPointerDownRef.current
+        )
+      ) {
+        clearSelectionState(setSelection, lastSelectionTextRef);
+        pendingClearRef.current = false;
+        selectionTextAtPointerDownRef.current = null;
+        return;
+      }
       if (!selectionInfo) {
         handlePendingClear(pendingClearRef, setSelection, lastSelectionTextRef);
+        selectionTextAtPointerDownRef.current = null;
         return;
       }
 
       pendingClearRef.current = false;
+      selectionTextAtPointerDownRef.current = null;
       if (
         shouldShowCardForSelection(
           selectionInfo.text,
@@ -162,9 +178,13 @@ export function useTextSelection(
     // Close card when clicking outside our UI
     if (isInsideShadowHost) {
       pendingClearRef.current = false;
+      selectionTextAtPointerDownRef.current = null;
       return;
     }
     pendingClearRef.current = true;
+    selectionTextAtPointerDownRef.current =
+      getControlSelection(sentenceCount)?.text ??
+      getSelectionText(window.getSelection());
   };
 
   const handleKeyDown = (event: KeyboardEvent) => {
@@ -179,18 +199,41 @@ export function useTextSelection(
     setIsVisible(false);
   };
 
+  const dismissForPageLifecycle = () => {
+    pendingClearRef.current = false;
+    selectionTextAtPointerDownRef.current = null;
+    clearSelectionState(setSelection, lastSelectionTextRef);
+    setIsVisible(false);
+  };
+
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === "hidden") {
+      dismissForPageLifecycle();
+    }
+  };
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: React Compiler handles function memoization
   useEffect(() => {
     document.addEventListener("mouseup", handleMouseUp, true);
     document.addEventListener("mousedown", handleMouseDown, true);
     document.addEventListener("keydown", handleKeyDown, true);
     document.addEventListener("selectionchange", handleMouseUp, true);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", dismissForPageLifecycle);
+    window.addEventListener("pagehide", dismissForPageLifecycle);
+    window.addEventListener("popstate", dismissForPageLifecycle);
+    window.addEventListener("hashchange", dismissForPageLifecycle);
 
     return () => {
       document.removeEventListener("mouseup", handleMouseUp, true);
       document.removeEventListener("mousedown", handleMouseDown, true);
       document.removeEventListener("keydown", handleKeyDown, true);
       document.removeEventListener("selectionchange", handleMouseUp, true);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", dismissForPageLifecycle);
+      window.removeEventListener("pagehide", dismissForPageLifecycle);
+      window.removeEventListener("popstate", dismissForPageLifecycle);
+      window.removeEventListener("hashchange", dismissForPageLifecycle);
     };
   }, [sentenceCount]);
 
