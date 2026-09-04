@@ -19,7 +19,9 @@ export function calculateCardWidth(
   selectionWidth: number,
   maxWidth: number
 ): number {
-  return Math.min(Math.max(selectionWidth, MIN_CARD_WIDTH), maxWidth);
+  const safeMaxWidth = Math.max(1, maxWidth);
+  const safeMinWidth = Math.min(MIN_CARD_WIDTH, safeMaxWidth);
+  return Math.min(Math.max(selectionWidth, safeMinWidth), safeMaxWidth);
 }
 
 /**
@@ -28,7 +30,7 @@ export function calculateCardWidth(
  * @returns Maximum allowed card width
  */
 export function calculateMaxCardWidth(viewportWidth: number): number {
-  return viewportWidth - CARD_EDGE_MARGIN;
+  return Math.max(1, viewportWidth - CARD_EDGE_MARGIN);
 }
 
 /**
@@ -37,7 +39,7 @@ export function calculateMaxCardWidth(viewportWidth: number): number {
  * @returns Maximum allowed card height
  */
 export function calculateMaxCardHeight(viewportHeight: number): number {
-  return viewportHeight - CARD_EDGE_MARGIN;
+  return Math.max(1, viewportHeight - CARD_EDGE_MARGIN);
 }
 
 export function calculateAutoGrowHeight(

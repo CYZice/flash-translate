@@ -126,19 +126,6 @@ describe("calculateVerticalPosition", () => {
     expect(result.y).toBe(120 + margin);
   });
 
-  it("calculates correct maxHeight for bottom placement", () => {
-    const rect = createRect({ top: 100, bottom: 120 });
-    const result = calculateVerticalPosition(
-      rect,
-      cardHeight,
-      viewportHeight,
-      margin
-    );
-
-    // spaceBelow = 768 - 120 - 16 = 632
-    expect(result.maxHeight).toBe(632);
-  });
-
   it("places card above selection when no space below", () => {
     const rect = createRect({ top: 600, bottom: 700 });
     // Space below: 768 - 700 - 8 - 150 = -90 (not enough)
@@ -153,18 +140,6 @@ describe("calculateVerticalPosition", () => {
     expect(result.y).toBe(viewportHeight - margin - cardHeight);
   });
 
-  it("calculates correct maxHeight for top placement", () => {
-    const rect = createRect({ top: 600, bottom: 700 });
-    const result = calculateVerticalPosition(
-      rect,
-      cardHeight,
-      viewportHeight,
-      margin
-    );
-
-    expect(result.maxHeight).toBe(cardHeight);
-  });
-
   it("falls back to bottom when neither above nor below has full space", () => {
     const tinyViewport = 200;
     const rect = createRect({ top: 80, bottom: 120 });
@@ -177,20 +152,6 @@ describe("calculateVerticalPosition", () => {
     );
 
     expect(result.y).toBe(42);
-  });
-
-  it("ensures minimum height constraint", () => {
-    const tinyViewport = 130;
-    const rect = createRect({ top: 50, bottom: 70 });
-    // spaceBelow = 130 - 70 - 16 = 44 (less than MIN_CARD_HEIGHT)
-    const result = calculateVerticalPosition(
-      rect,
-      cardHeight,
-      tinyViewport,
-      margin
-    );
-
-    expect(result.maxHeight).toBe(114);
   });
 
   it("handles selection at top of viewport", () => {
@@ -230,7 +191,6 @@ describe("calculateVerticalPosition", () => {
 
     expect(result.y).toBe(120);
     // spaceBelow = 768 - 120 - 0 = 648
-    expect(result.maxHeight).toBe(648);
   });
 });
 
@@ -251,7 +211,6 @@ describe("calculateCardPosition", () => {
 
     expect(result).toHaveProperty("x");
     expect(result).toHaveProperty("y");
-    expect(result).toHaveProperty("maxHeight");
   });
 
   it("respects custom cardWidth option", () => {

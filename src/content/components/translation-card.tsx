@@ -155,7 +155,8 @@ export function TranslationCard({
     );
   };
 
-  const layout = useCardLayout({ selectionRect: selection.rect });
+  const layoutKey = `${selection.text}\u0000${selection.rect.left}:${selection.rect.top}:${selection.rect.width}:${selection.rect.height}`;
+  const layout = useCardLayout({ layoutKey, selectionRect: selection.rect });
 
   // Measure natural content height so switching views can both grow and shrink the card.
   useEffect(() => {
@@ -210,7 +211,7 @@ export function TranslationCard({
       }}
     >
       <div
-        className={`relative flex animate-card-expand flex-col overflow-hidden rounded-lg border border-gray-200 border-solid bg-white shadow-[0_12px_32px_rgba(15,23,42,0.16)] ${layout.isResizing ? "" : "transition-[width,height] duration-150 ease-out"}`}
+        className={`relative flex animate-card-expand flex-col overflow-hidden rounded-lg border border-gray-200 border-solid bg-white shadow-[0_12px_32px_rgba(15,23,42,0.16)] ${layout.isResizing ? "" : "transition-[width] duration-150 ease-out"}`}
         style={{
           width: `${layout.width}px`,
           height: `${layout.height}px`,

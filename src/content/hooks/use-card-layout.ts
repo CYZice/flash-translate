@@ -8,7 +8,6 @@ import {
   MIN_CARD_WIDTH,
 } from "../components/translation-card-utils";
 import { calculateCardPosition, clampCardTop } from "./card-position";
-import { getSavedCardSize, saveCardSize } from "./card-size-storage";
 import { useDraggable } from "./use-draggable";
 import { useResizable } from "./use-resizable";
 
@@ -17,6 +16,7 @@ const VIEWPORT_MARGIN = 8;
 
 export interface CardLayoutConfig {
   selectionRect: DOMRect;
+  layoutKey: string;
 }
 
 export interface CardLayout {
@@ -63,26 +63,17 @@ export interface CardLayout {
  * - useDraggable for position offset
  * - Position calculation with viewport overflow handling
  */
-export function useCardLayout({ selectionRect }: CardLayoutConfig): CardLayout {
+export function useCardLayout({ selectionRect, layoutKey }: CardLayoutConfig): CardLayout {
   const [maxCardWidth, setMaxCardWidth] = useState(() =>
     calculateMaxCardWidth(window.visualViewport?.width ?? window.innerWidth)
   );
   const [maxCardHeight, setMaxCardHeight] = useState(() =>
     calculateMaxCardHeight(window.visualViewport?.height ?? window.innerHeight)
   );
-  const [savedSize, setSavedSize] = useState<{
-    width: number;
-    height: number;
-  } | null>(null);
   const [isHeightManuallySized, setIsHeightManuallySized] = useState(false);
   const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
   const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-  const [initialWidth] = useState(() =>
-    calculateCardWidth(
-      selectionRect.width,
-      calculateMaxCardWidth(window.visualViewport?.width ?? window.innerWidth)
-    )
-  );
+  const initialWidth = calculateCardWidth(selectionRect.width, maxCardWidth);
 
   // Update max dimensions on window resize with debounce
   useEffect(() => {
@@ -111,23 +102,9 @@ export function useCardLayout({ selectionRect }: CardLayoutConfig): CardLayout {
     };
   }, []);
 
-  useEffect(() => {
-    getSavedCardSize().then((size) => {
-      if (size) {
-        setSavedSize(size);
-        setIsHeightManuallySized(true);
-      }
-    });
-  }, []);
-
-  const preferredWidth = Math.min(
-    Math.max(savedSize?.width ?? initialWidth, MIN_CARD_WIDTH),
-    maxCardWidth
-  );
-  const preferredHeight = Math.min(
-    Math.max(savedSize?.height ?? INITIAL_CARD_HEIGHT, MIN_CARD_HEIGHT),
-    maxCardHeight
-  );
+  const minWidth = Math.min(MIN_CARD_WIDTH, maxCardWidth);
+  const minHeight = Math.min(MIN_CARD_HEIGHT, maxCardHeight);
+  const preferredHeight = Math.min(INITIAL_CARD_HEIGHT, maxCardHeight);
 
   const {
     width,
@@ -146,20 +123,19 @@ export function useCardLayout({ selectionRect }: CardLayoutConfig): CardLayout {
     handleBottomRightKeyDown,
     setHeight,
   } = useResizable({
-    initialWidth: preferredWidth,
-    minWidth: MIN_CARD_WIDTH,
+    initialWidth,
+    resetKey: layoutKey,
+    viewportWidth,
+    viewportHeight,
+    minWidth,
     maxWidth: maxCardWidth,
     initialHeight: preferredHeight,
-    minHeight: MIN_CARD_HEIGHT,
+    minHeight,
     maxHeight: maxCardHeight,
     onResizeStart: (axis) => {
       if (axis === "height") {
         setIsHeightManuallySized(true);
       }
-    },
-    onResizeEnd: async (nextWidth, nextHeight) => {
-      setSavedSize({ width: nextWidth, height: nextHeight });
-      await saveCardSize({ width: nextWidth, height: nextHeight });
     },
   });
 
@@ -168,7 +144,12 @@ export function useCardLayout({ selectionRect }: CardLayoutConfig): CardLayout {
     isDragging,
     handlePointerDown: handleDragPointerDown,
     handleKeyDown: handleDragKeyDown,
-  } = useDraggable();
+  } = useDraggable({ resetKey: layoutKey });
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: layoutKey is the explicit reset boundary for this card
+  useEffect(() => {
+    setIsHeightManuallySized(false);
+  }, [layoutKey]);
 
   const position = calculateCardPosition(
     selectionRect,
@@ -198,9 +179,9 @@ export function useCardLayout({ selectionRect }: CardLayoutConfig): CardLayout {
     // Dimensions
     width,
     height,
-    minWidth: MIN_CARD_WIDTH,
+    minWidth,
     maxWidth: maxCardWidth,
-    minHeight: MIN_CARD_HEIGHT,
+    minHeight,
     maxHeight: maxCardHeight,
 
     // Position

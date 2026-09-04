@@ -3,6 +3,7 @@ import { useLatestRef } from "@/shared/hooks/use-latest-ref";
 
 interface UseDraggableOptions {
   onDragEnd?: (offset: { x: number; y: number }) => void;
+  resetKey?: unknown;
   /** Pixels to move per arrow key press (default: 10) */
   keyboardStep?: number;
 }
@@ -17,6 +18,7 @@ interface UseDraggableReturn {
 
 export function useDraggable({
   onDragEnd,
+  resetKey,
   keyboardStep = 10,
 }: UseDraggableOptions = {}): UseDraggableReturn {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -25,6 +27,12 @@ export function useDraggable({
   const startOffsetRef = useRef({ x: 0, y: 0 });
   // Track current offset for mouseup handler without causing effect re-runs
   const currentOffsetRef = useLatestRef(offset);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: resetKey is the explicit reset boundary for this hook
+  useEffect(() => {
+    setOffset({ x: 0, y: 0 });
+    setIsDragging(false);
+  }, [resetKey]);
 
   const handlePointerDown = (e: React.PointerEvent<HTMLElement>) => {
     const target = e.target as Element;

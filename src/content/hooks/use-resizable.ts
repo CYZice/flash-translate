@@ -8,6 +8,9 @@ import {
 
 interface UseResizableOptions {
   initialWidth: number;
+  resetKey?: unknown;
+  viewportWidth?: number;
+  viewportHeight?: number;
   minWidth?: number;
   maxWidth?: number;
   initialHeight?: number;
@@ -40,6 +43,9 @@ interface UseResizableReturn {
 
 export function useResizable({
   initialWidth,
+  resetKey,
+  viewportWidth = window.innerWidth,
+  viewportHeight = window.innerHeight,
   minWidth = 280,
   maxWidth = 600,
   initialHeight = 180,
@@ -76,15 +82,15 @@ export function useResizable({
   const currentWidthRef = useLatestRef(width);
   const currentHeightRef = useLatestRef(height);
 
-  // Update width when initialWidth changes (e.g., from settings)
+  // Reset dimensions only when a new card/selection is shown.
+  // Viewport changes must clamp rather than reset a card being edited.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: resetKey defines the lifecycle boundary for this reset
   useEffect(() => {
     setWidth(initialWidth);
-  }, [initialWidth]);
-
-  // Update height when initialHeight changes
-  useEffect(() => {
     setHeight(initialHeight);
-  }, [initialHeight]);
+    setOffsetX(0);
+    setIsResizing(false);
+  }, [resetKey]);
 
   // Clamp width when maxWidth changes (e.g., window resize)
   useEffect(() => {
@@ -276,7 +282,7 @@ export function useResizable({
           deltaX,
           startWidth,
           cardRight,
-          viewportWidth: window.innerWidth,
+          viewportWidth,
           constraints,
         });
         setWidth(newWidth);
@@ -293,7 +299,7 @@ export function useResizable({
           deltaY,
           startHeight,
           cardBottom,
-          viewportHeight: window.innerHeight,
+          viewportHeight,
           constraints,
         });
         setHeight(newHeight);
@@ -321,6 +327,8 @@ export function useResizable({
     maxHeight,
     edgeMargin,
     onResizeEnd,
+    viewportHeight,
+    viewportWidth,
   ]);
 
   return {

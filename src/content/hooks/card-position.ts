@@ -1,11 +1,6 @@
 // Pure functions for card position calculation
 
 /**
- * Minimum card height constraint
- */
-export const MIN_CARD_HEIGHT = 100;
-
-/**
  * Interface for rectangle-like objects (avoids DOMRect dependency for testability)
  */
 export interface RectLike {
@@ -40,7 +35,6 @@ export interface CardPositionOptions {
 export interface CardPosition {
   x: number;
   y: number;
-  maxHeight: number;
 }
 
 /**
@@ -86,16 +80,14 @@ export function calculateVerticalPosition(
   cardHeight: number,
   viewportHeight: number,
   margin: number
-): { y: number; maxHeight: number } {
+): { y: number } {
   // Keep the selection as the stable anchor. If the card grows near the
   // bottom edge, move its top upward continuously instead of flipping it
   // above the selection (which caused visible jumping).
   const anchorTop = selectionRect.bottom + margin;
   const maxTop = Math.max(margin, viewportHeight - margin - cardHeight);
   const y = Math.min(anchorTop, maxTop);
-  const availableHeight = Math.max(MIN_CARD_HEIGHT, viewportHeight - y - margin);
-
-  return { y, maxHeight: availableHeight };
+  return { y };
 }
 
 /**
@@ -115,12 +107,12 @@ export function calculateCardPosition(
     margin
   );
 
-  const { y, maxHeight } = calculateVerticalPosition(
+  const { y } = calculateVerticalPosition(
     selectionRect,
     cardHeight,
     viewport.height,
     margin
   );
 
-  return { x, y, maxHeight };
+  return { x, y };
 }
