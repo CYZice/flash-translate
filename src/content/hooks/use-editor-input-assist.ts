@@ -187,8 +187,19 @@ export function useEditorInputAssist(
   useEffect(() => {
     if (!enabled) {
       setAssist(null);
+      translation.reset();
       return;
     }
+
+    const clearAssist = () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      setAssist(null);
+      translation.reset();
+    };
+
     const schedule = () => {
       if (composingRef.current) {
         return;
@@ -196,7 +207,12 @@ export function useEditorInputAssist(
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
+      // Hide the previous hint immediately while the editor changes. This
+      // includes send actions that clear ChatGPT's contenteditable composer.
+      setAssist(null);
+      translation.reset();
       timerRef.current = setTimeout(() => {
+        timerRef.current = null;
         const next = getInputSentence();
         setAssist(next);
         if (next) {
@@ -215,7 +231,7 @@ export function useEditorInputAssist(
     };
     const onCompositionStart = () => {
       composingRef.current = true;
-      setAssist(null);
+      clearAssist();
     };
     const onCompositionEnd = () => {
       composingRef.current = false;
@@ -224,6 +240,7 @@ export function useEditorInputAssist(
     document.addEventListener("input", schedule, true);
     document.addEventListener("compositionstart", onCompositionStart, true);
     document.addEventListener("compositionend", onCompositionEnd, true);
+    document.addEventListener("focusout", clearAssist, true);
     return () => {
       document.removeEventListener("input", schedule, true);
       document.removeEventListener(
@@ -232,11 +249,15 @@ export function useEditorInputAssist(
         true
       );
       document.removeEventListener("compositionend", onCompositionEnd, true);
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
+      document.removeEventListener("focusout", clearAssist, true);
+      clearAssist();
     };
-  }, [enabled, sourceLanguage, targetLanguage, translation.translate]);
+  }, [
+    enabled,
+    sourceLanguage,
+    targetLanguage,
+    translation.translate,
+  ]);
 
   useEffect(() => {
     if (translation.error) {
