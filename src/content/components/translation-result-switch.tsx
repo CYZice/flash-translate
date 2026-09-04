@@ -25,7 +25,7 @@ export function TranslationResultSwitch({
       <button
         aria-pressed={activeView === "local"}
         className={cn(
-          "flex h-7 items-center gap-1 rounded-sm px-1.5 font-medium text-xs shadow-none transition-colors",
+          "flex h-7 w-7 items-center justify-center rounded-sm px-0 font-medium text-xs shadow-none transition-colors",
           activeView === "local"
             ? "bg-blue-50 text-blue-700"
             : "text-gray-500 hover:text-gray-800"
@@ -41,7 +41,7 @@ export function TranslationResultSwitch({
         <button
           aria-pressed={activeView === "ai"}
           className={cn(
-            "flex h-7 items-center gap-1 rounded-sm px-1.5 font-medium text-xs shadow-none transition-colors",
+            "flex h-7 w-7 items-center justify-center rounded-sm px-0 font-medium text-xs shadow-none transition-colors",
             activeView === "ai"
               ? "bg-violet-50 text-violet-700"
               : "text-gray-500 hover:text-gray-800"
@@ -51,10 +51,11 @@ export function TranslationResultSwitch({
           type="button"
         >
           <Sparkles
+            aria-hidden="true"
             className={aiIsLoading ? "animate-pulse" : undefined}
             size={13}
           />
-          <span>{getMessage("content_resultAi")}</span>
+          <span className="sr-only">{getMessage("content_resultAi")}</span>
         </button>
       )}
     </fieldset>

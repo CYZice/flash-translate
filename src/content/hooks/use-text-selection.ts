@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  DEFAULT_AI_CONTEXT_SENTENCE_COUNT,
+  getContextAroundSelection,
+} from "@/shared/utils/ai-context";
+import {
   cloneSelectionRanges,
   getSelectionContext,
   getSelectionRect,
@@ -23,30 +27,41 @@ interface SelectionDetails {
   contextAfter: string;
 }
 
-function getControlSelection(): SelectionDetails | null {
+function getControlSelection(sentenceCount: number): SelectionDetails | null {
   const element = document.activeElement;
   if (!(element instanceof HTMLTextAreaElement || element instanceof HTMLInputElement)) {
     return null;
   }
-  if (element.type === "password") return null;
+  if (element.type === "password") {
+    return null;
+  }
   const start = element.selectionStart ?? 0;
   const end = element.selectionEnd ?? 0;
-  if (start === end) return null;
+  if (start === end) {
+    return null;
+  }
   const text = element.value.slice(start, end).trim();
-  if (!text) return null;
+  if (!text) {
+    return null;
+  }
+  const context = getContextAroundSelection(
+    element.value.slice(0, start),
+    element.value.slice(end),
+    sentenceCount
+  );
   return {
     text,
     rect: element.getBoundingClientRect(),
     ranges: [],
-    contextBefore: element.value.slice(Math.max(0, start - 240), start),
-    contextAfter: element.value.slice(end, end + 240),
+    ...context,
   };
 }
 
 function buildSelectionInfo(
   selection: Selection | null,
   rawText: string | undefined | null,
-  fallbackRect: DOMRect
+  fallbackRect: DOMRect,
+  sentenceCount: number
 ): SelectionDetails | null {
   const validText = getValidSelectionText(rawText);
   if (!validText) {
@@ -58,7 +73,10 @@ function buildSelectionInfo(
     return null;
   }
 
-  const { contextBefore, contextAfter } = getSelectionContext(selection);
+  const { contextBefore, contextAfter } = getSelectionContext(
+    selection,
+    sentenceCount
+  );
 
   return {
     text: validText,
@@ -88,7 +106,9 @@ function handlePendingClear(
   pendingClearRef.current = false;
 }
 
-export function useTextSelection() {
+export function useTextSelection(
+  sentenceCount = DEFAULT_AI_CONTEXT_SENTENCE_COUNT
+) {
   const [selection, setSelection] = useState<SelectionInfo | null>(null);
   const [isVisible, setIsVisible] = useState(true);
   const lastSelectionTextRef = useRef<string | null>(null);
@@ -98,7 +118,7 @@ export function useTextSelection() {
     // Delay to ensure selection is complete
     setTimeout(() => {
       const windowSelection = window.getSelection();
-      const controlSelection = getControlSelection();
+      const controlSelection = getControlSelection(sentenceCount);
       if (controlSelection) {
         pendingClearRef.current = false;
         setIsVisible(true);
@@ -110,7 +130,8 @@ export function useTextSelection() {
       const selectionInfo = buildSelectionInfo(
         windowSelection,
         rawText,
-        document.body.getBoundingClientRect()
+        document.body.getBoundingClientRect(),
+        sentenceCount
       );
       if (!selectionInfo) {
         handlePendingClear(pendingClearRef, setSelection, lastSelectionTextRef);
@@ -171,7 +192,7 @@ export function useTextSelection() {
       document.removeEventListener("keydown", handleKeyDown, true);
       document.removeEventListener("selectionchange", handleMouseUp, true);
     };
-  }, []);
+  }, [sentenceCount]);
 
   return { selection, isVisible, dismissCard };
 }

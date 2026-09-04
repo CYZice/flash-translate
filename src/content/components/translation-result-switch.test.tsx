@@ -65,4 +65,25 @@ describe("TranslationResultSwitch", () => {
     });
     expect(onViewChange).toHaveBeenCalledWith("ai");
   });
+
+  it("renders the AI control as an icon-only button", () => {
+    act(() => {
+      root.render(
+        <TranslationResultSwitch
+          activeView="local"
+          aiAvailable
+          aiIsLoading={false}
+          onViewChange={vi.fn()}
+        />
+      );
+    });
+
+    const aiButton = container.querySelector<HTMLButtonElement>(
+      '[title="content_resultAi"]'
+    );
+    expect(aiButton?.querySelector("svg")).not.toBeNull();
+    expect(aiButton?.querySelector(".sr-only")?.textContent).toBe(
+      "content_resultAi"
+    );
+  });
 });

@@ -1,6 +1,13 @@
 import { useLanguageDetectorAvailability } from "@/shared/hooks/use-language-detector-availability";
 import { useSettings } from "@/shared/hooks/use-settings";
 import {
+  DEFAULT_SOURCE_LANGUAGE,
+  DEFAULT_TARGET_LANGUAGE,
+} from "@/shared/constants/languages";
+import {
+  DEFAULT_AI_CONTEXT_SENTENCE_COUNT,
+} from "@/shared/utils/ai-context";
+import {
   enableExclusionPattern,
   generatePatternId,
   getPageLanguage,
@@ -53,9 +60,10 @@ export interface TranslationFlowState {
  * Returns all state needed to render the translation card.
  */
 export function useTranslationFlow(): TranslationFlowState {
-  const { selection, isVisible, dismissCard } = useTextSelection();
-
   const [settings, isLoading] = useSettings(selectContentAppSettings);
+  const { selection, isVisible, dismissCard } = useTextSelection(
+    settings?.aiContextSentenceCount ?? DEFAULT_AI_CONTEXT_SENTENCE_COUNT
+  );
 
   const autoDetectSetting = settings?.autoDetectLanguage ?? false;
   const { availability } = useLanguageDetectorAvailability({
@@ -82,11 +90,11 @@ export function useTranslationFlow(): TranslationFlowState {
   } = useLanguageDetection({
     text: detectionText,
     enabled: detectionEnabled,
-    fallbackLanguage: settings?.sourceLanguage ?? "en",
+    fallbackLanguage: settings?.sourceLanguage ?? DEFAULT_SOURCE_LANGUAGE,
   });
 
   // Compute derived state
-  const targetLanguage = settings?.targetLanguage ?? "ja";
+  const targetLanguage = settings?.targetLanguage ?? DEFAULT_TARGET_LANGUAGE;
   const skipSameLanguage = settings?.skipSameLanguage ?? true;
   const exclusionPatterns = settings?.exclusionPatterns ?? [];
   const isAiConfigured = Boolean(
@@ -120,7 +128,7 @@ export function useTranslationFlow(): TranslationFlowState {
   // Determine source language based on auto-detect mode
   const sourceLanguage = autoDetectEnabled
     ? effectiveSourceLanguage
-    : (settings?.sourceLanguage ?? "en");
+    : (settings?.sourceLanguage ?? DEFAULT_SOURCE_LANGUAGE);
 
   const permanentlyExcludeSite = async () => {
     if (!settings) {

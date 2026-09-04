@@ -1,6 +1,11 @@
 // Pure functions for text selection logic
 // These are extracted from useTextSelection hook for testability
 
+import {
+  DEFAULT_AI_CONTEXT_SENTENCE_COUNT,
+  getAdjacentContext,
+} from "@/shared/utils/ai-context";
+
 interface RectLike {
   width: number;
   height: number;
@@ -23,10 +28,6 @@ function getContextContainer(node: Node): Element | null {
       ? (node as Element)
       : node.parentElement;
   return element?.closest(CONTEXT_CONTAINER_SELECTOR) ?? element;
-}
-
-function normalizeContextText(text: string): string {
-  return text.replace(/\s+/g, " ").trim();
 }
 
 const NON_VISIBLE_SELECTION_SELECTOR = [
@@ -85,33 +86,7 @@ export function getSelectionText(selection: Selection | null): string | null {
   return getValidSelectionText(normalized || selection.toString());
 }
 
-const SENTENCE_END_REGEX =
-  /[.!?\u3002\uff01\uff1f]+(?:["'\u201d\u2019\uff09\]]*)/g;
-
-function getAdjacentSentence(
-  text: string,
-  direction: "before" | "after"
-): string {
-  const normalized = normalizeContextText(text);
-  if (!normalized) {
-    return "";
-  }
-
-  if (direction === "after") {
-    const match = SENTENCE_END_REGEX.exec(normalized);
-    return (
-      match ? normalized.slice(0, match.index + match[0].length) : normalized
-    ).trim();
-  }
-
-  let sentenceStart = 0;
-  for (const match of normalized.matchAll(SENTENCE_END_REGEX)) {
-    sentenceStart = match.index + match[0].length;
-  }
-  return normalized.slice(sentenceStart).trim();
-}
-
-function getTextBeforeRange(range: Range): string {
+function getTextBeforeRange(range: Range, sentenceCount: number): string {
   const container = getContextContainer(range.startContainer);
   if (!container) {
     return "";
@@ -121,13 +96,17 @@ function getTextBeforeRange(range: Range): string {
     const contextRange = document.createRange();
     contextRange.selectNodeContents(container);
     contextRange.setEnd(range.startContainer, range.startOffset);
-    return getAdjacentSentence(getRangeText(contextRange), "before");
+    return getAdjacentContext(
+      getRangeText(contextRange),
+      "before",
+      sentenceCount
+    );
   } catch {
     return "";
   }
 }
 
-function getTextAfterRange(range: Range): string {
+function getTextAfterRange(range: Range, sentenceCount: number): string {
   const container = getContextContainer(range.endContainer);
   if (!container) {
     return "";
@@ -137,13 +116,20 @@ function getTextAfterRange(range: Range): string {
     const contextRange = document.createRange();
     contextRange.selectNodeContents(container);
     contextRange.setStart(range.endContainer, range.endOffset);
-    return getAdjacentSentence(getRangeText(contextRange), "after");
+    return getAdjacentContext(
+      getRangeText(contextRange),
+      "after",
+      sentenceCount
+    );
   } catch {
     return "";
   }
 }
 
-export function getSelectionContext(selection: Selection | null): {
+export function getSelectionContext(
+  selection: Selection | null,
+  sentenceCount = DEFAULT_AI_CONTEXT_SENTENCE_COUNT
+): {
   contextBefore: string;
   contextAfter: string;
 } {
@@ -155,8 +141,8 @@ export function getSelectionContext(selection: Selection | null): {
     const firstRange = selection.getRangeAt(0);
     const lastRange = selection.getRangeAt(selection.rangeCount - 1);
     return {
-      contextBefore: getTextBeforeRange(firstRange),
-      contextAfter: getTextAfterRange(lastRange),
+      contextBefore: getTextBeforeRange(firstRange, sentenceCount),
+      contextAfter: getTextAfterRange(lastRange, sentenceCount),
     };
   } catch {
     return { contextBefore: "", contextAfter: "" };

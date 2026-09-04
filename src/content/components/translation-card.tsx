@@ -130,11 +130,10 @@ export function TranslationCard({
             <span>{getMessage("content_aiEnhanceDescription")}</span>
           </div>
           <Button
-            className="gap-1.5 border border-violet-200 bg-violet-50 px-2.5 text-violet-700 hover:bg-violet-100 hover:text-violet-800"
+            className="border border-violet-200 bg-violet-50 px-2.5 text-violet-700 hover:bg-violet-100 hover:text-violet-800"
             onClick={startAiTranslation}
             variant="ghost"
           >
-            <Sparkles size={14} />
             {getMessage("content_aiEnhance")}
           </Button>
         </div>
