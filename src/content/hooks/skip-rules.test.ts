@@ -19,19 +19,67 @@ function createContext(overrides: Partial<SkipContext> = {}): SkipContext {
 }
 
 describe("evaluateSkipRules", () => {
-  it("does not skip a target-language selection containing English text", () => {
+  it("skips an explicitly configured same-language pair", () => {
+    const context = createContext({
+      sourceLanguage: "zh",
+      targetLanguage: "zh",
+      pageLanguage: "en",
+      selectedText: "中文 API 文档",
+    });
+
+    expect(evaluateSkipRules(context)).toEqual({
+      shouldSkip: true,
+      reason: "same-as-source-language",
+    });
+  });
+
+  it("does not use the fallback source language to skip auto-detect", () => {
+    const context = createContext({
+      sourceLanguage: "zh",
+      targetLanguage: "zh",
+      autoDetectEnabled: true,
+      detectedLanguage: null,
+      confidence: 0,
+      selectedText: "English API documentation",
+    });
+
+    expect(evaluateSkipRules(context)).toEqual({
+      shouldSkip: false,
+      reason: null,
+    });
+  });
+
+  it("skips a mixed-script selection when it is detected as the target language", () => {
     expect(
       evaluateSkipRules({
         targetLanguage: "zh",
         skipSameLanguage: true,
-        autoDetectEnabled: false,
-        detectedLanguage: null,
-        confidence: 0,
-        pageLanguage: "zh-CN",
+        autoDetectEnabled: true,
+        detectedLanguage: "zh",
+        confidence: 0.9,
+        pageLanguage: null,
         isDetecting: false,
         selectedText: "这是中文 API 文档",
       })
-    ).toEqual({ shouldSkip: false, reason: null });
+    ).toEqual({
+      shouldSkip: true,
+      reason: "same-as-detected-language",
+    });
+  });
+
+  it("always skips an auto-detected same-language pair", () => {
+    const context = createContext({
+      autoDetectEnabled: true,
+      skipSameLanguage: false,
+      detectedLanguage: "zh",
+      confidence: 0.9,
+      targetLanguage: "zh",
+    });
+
+    expect(evaluateSkipRules(context)).toEqual({
+      shouldSkip: true,
+      reason: "same-as-detected-language",
+    });
   });
 
   describe("基本ケース（スキップなし）", () => {

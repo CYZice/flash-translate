@@ -103,6 +103,13 @@ export function useTranslationFlow(): TranslationFlowState {
   const isExcluded = isUrlExcluded(getCurrentUrl(), exclusionPatterns);
   const isDetectorPending = autoDetectSetting && availability === null;
 
+  // Determine source language before evaluating display skip rules so an
+  // explicitly configured same-language pair can be hidden before the card
+  // attempts an unsupported translation.
+  const sourceLanguage = autoDetectEnabled
+    ? effectiveSourceLanguage
+    : (settings?.sourceLanguage ?? DEFAULT_SOURCE_LANGUAGE);
+
   // Base display conditions
   const canDisplay =
     !isLoading &&
@@ -114,6 +121,7 @@ export function useTranslationFlow(): TranslationFlowState {
 
   // Evaluate skip rules
   const skipResult = evaluateSkipRules({
+    sourceLanguage,
     targetLanguage,
     skipSameLanguage,
     autoDetectEnabled,
@@ -123,11 +131,6 @@ export function useTranslationFlow(): TranslationFlowState {
     isDetecting,
     selectedText: selection?.text ?? "",
   });
-
-  // Determine source language based on auto-detect mode
-  const sourceLanguage = autoDetectEnabled
-    ? effectiveSourceLanguage
-    : (settings?.sourceLanguage ?? DEFAULT_SOURCE_LANGUAGE);
 
   useEffect(() => {
     console.info("[flash-translate][content] settings state", {

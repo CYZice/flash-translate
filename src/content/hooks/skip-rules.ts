@@ -1,8 +1,8 @@
 import { isLanguageMatch } from "@/shared/storage/settings";
 import { DEFAULT_CONFIDENCE_THRESHOLD } from "@/shared/utils/language-detector-utils";
-import { hasMixedLanguageSelection } from "./selection-language";
 
 export type SkipReason =
+  | "same-as-source-language"
   | "same-as-page-language"
   | "same-as-detected-language"
   | "detecting-in-progress";
@@ -13,6 +13,7 @@ export interface SkipResult {
 }
 
 export interface SkipContext {
+  sourceLanguage?: string;
   targetLanguage: string;
   skipSameLanguage: boolean;
   autoDetectEnabled: boolean;
@@ -31,13 +32,15 @@ export interface SkipContext {
  *
  * Skip rules:
  * 1. If auto-detect is enabled and detection is in progress, wait (skip)
- * 2. If auto-detect is enabled and skip same language is on:
- *    - Skip if detected language matches target language (with sufficient confidence)
+ * 2. If auto-detect is enabled and the detected language matches the target
+ *    language with sufficient confidence, always skip because Chrome
+ *    Translator cannot translate a language into itself.
  * 3. If auto-detect is disabled and skip same language is on:
  *    - Skip if page language matches target language
  */
 export function evaluateSkipRules(context: SkipContext): SkipResult {
   const {
+    sourceLanguage,
     targetLanguage,
     skipSameLanguage,
     autoDetectEnabled,
@@ -47,22 +50,24 @@ export function evaluateSkipRules(context: SkipContext): SkipResult {
     isDetecting,
   } = context;
 
+  // Chrome Translator does not support translating a language into itself.
+  // Skip before rendering the card so the user does not see a late API error.
+  if (
+    !autoDetectEnabled &&
+    sourceLanguage !== undefined &&
+    isLanguageMatch(sourceLanguage, targetLanguage)
+  ) {
+    return { shouldSkip: true, reason: "same-as-source-language" };
+  }
+
   // Rule 1: If auto-detect is enabled and detection is in progress, wait
   if (autoDetectEnabled && isDetecting) {
     return { shouldSkip: true, reason: "detecting-in-progress" };
   }
 
-  if (
-    skipSameLanguage &&
-    hasMixedLanguageSelection(context.selectedText ?? "", targetLanguage)
-  ) {
-    return { shouldSkip: false, reason: null };
-  }
-
   // Rule 2: Auto-detect ON - use detected language for skip check
   if (
     autoDetectEnabled &&
-    skipSameLanguage &&
     detectedLanguage !== null &&
     confidence >= DEFAULT_CONFIDENCE_THRESHOLD &&
     isLanguageMatch(detectedLanguage, targetLanguage)
