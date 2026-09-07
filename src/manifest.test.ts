@@ -26,4 +26,13 @@ describe("manifest", () => {
       "http://localhost/*",
     ]);
   });
+
+  it("declares the quick translation context menu and side panel", () => {
+    const manifestV3 = manifest as chrome.runtime.ManifestV3;
+    expect(manifestV3.permissions).toContain("contextMenus");
+    expect(manifestV3.permissions).toContain("sidePanel");
+    expect(manifestV3.side_panel).toEqual({
+      default_path: "src/sidepanel/index.html",
+    });
+  });
 });

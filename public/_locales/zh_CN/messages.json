@@ -133,6 +133,10 @@
   "content_aiEnhance": { "message": "使用 AI 润色" },
   "content_aiEnhanceDescription": { "message": "结合前后文优化措辞和术语。" },
   "content_aiRetry": { "message": "重试" },
+  "quickTranslation_menu": { "message": "闪译选中文本" },
+  "quickTranslation_empty": {
+    "message": "暂无待翻译文本，请在页面中选中文字后右键翻译。"
+  },
   "content_termTranslation": { "message": "术语翻译" },
   "popup_behavior_editorInputAssist": { "message": "中文输入英文提示" },
   "popup_behavior_editorInputAssistDesc": {

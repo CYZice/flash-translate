@@ -15,7 +15,7 @@ export default defineManifest({
     128: "icons/icon-128.png",
   },
 
-  permissions: ["storage", "activeTab"],
+  permissions: ["storage", "activeTab", "contextMenus", "sidePanel"],
   optional_host_permissions: ["http://*/*", "https://*/*"],
 
   action: {
@@ -30,6 +30,10 @@ export default defineManifest({
   options_ui: {
     page: "src/popup/index.html",
     open_in_tab: true,
+  },
+
+  side_panel: {
+    default_path: "src/sidepanel/index.html",
   },
 
   background: {

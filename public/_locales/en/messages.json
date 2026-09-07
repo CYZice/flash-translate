@@ -252,6 +252,10 @@
     "message": "Use nearby sentences to refine wording and terminology."
   },
   "content_aiRetry": { "message": "Retry" },
+  "quickTranslation_menu": { "message": "Flash Translate selected text" },
+  "quickTranslation_empty": {
+    "message": "No text to translate. Select text and choose Flash Translate from the context menu."
+  },
   "content_termTranslation": {
     "message": "Term translation"
   },

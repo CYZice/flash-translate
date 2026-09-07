@@ -4,6 +4,7 @@ import {
   handleAiTestConnection,
   registerAiTranslationPortHandler,
 } from "./ai-translation-handler";
+import { registerQuickTranslationHandler } from "./quick-translation";
 import { handleRuntimeMessage } from "./runtime-message-handler";
 
 const log = createPrefixedLogger("Background");
@@ -31,3 +32,4 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 });
 
 registerAiTranslationPortHandler();
+registerQuickTranslationHandler();
