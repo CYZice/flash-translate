@@ -5,13 +5,7 @@ import {
 } from "@/shared/constants/languages";
 import { useLanguageDetectorAvailability } from "@/shared/hooks/use-language-detector-availability";
 import { useSettings } from "@/shared/hooks/use-settings";
-import {
-  enableExclusionPattern,
-  generatePatternId,
-  getPageLanguage,
-  isUrlExcluded,
-  saveSettings,
-} from "@/shared/storage/settings";
+import { getPageLanguage, isUrlExcluded } from "@/shared/storage/settings";
 import { selectContentAppSettings } from "@/shared/storage/settings-selectors";
 import { DEFAULT_AI_CONTEXT_SENTENCE_COUNT } from "@/shared/utils/ai-context";
 import { evaluateSkipRules, type SkipResult } from "./skip-rules";
@@ -26,6 +20,8 @@ export interface TranslationFlowState {
   // Selection
   selection: SelectionInfo | null;
   isVisible: boolean;
+  isPinned: boolean;
+  selectionTrigger: "immediate" | "badge";
 
   // Languages
   sourceLanguage: string;
@@ -34,6 +30,7 @@ export interface TranslationFlowState {
   detectedLanguage: string | null;
   isDetecting: boolean;
   isAiConfigured: boolean;
+  defaultTranslationProvider: "chrome-built-in" | "custom-ai";
   editorInputAssistEnabled: boolean;
 
   // Display state
@@ -43,7 +40,8 @@ export interface TranslationFlowState {
 
   // Actions
   dismissCard: () => void;
-  permanentlyExcludeSite: () => Promise<void>;
+  activateCard: () => void;
+  togglePin: () => void;
   setOverriddenLanguage: (lang: string | null) => void;
 }
 
@@ -60,8 +58,16 @@ export interface TranslationFlowState {
  */
 export function useTranslationFlow(): TranslationFlowState {
   const [settings, isLoading] = useSettings(selectContentAppSettings);
-  const { selection, isVisible, dismissCard } = useTextSelection(
-    settings?.aiContextSentenceCount ?? DEFAULT_AI_CONTEXT_SENTENCE_COUNT
+  const {
+    selection,
+    isVisible,
+    isPinned,
+    togglePin,
+    dismissCard,
+    activateCard,
+  } = useTextSelection(
+    settings?.aiContextSentenceCount ?? DEFAULT_AI_CONTEXT_SENTENCE_COUNT,
+    settings?.selectionTrigger ?? "badge"
   );
 
   const autoDetectSetting = settings?.autoDetectLanguage ?? false;
@@ -101,8 +107,6 @@ export function useTranslationFlow(): TranslationFlowState {
   );
 
   const isExcluded = isUrlExcluded(getCurrentUrl(), exclusionPatterns);
-  const isDetectorPending = autoDetectSetting && availability === null;
-
   // Determine source language before evaluating display skip rules so an
   // explicitly configured same-language pair can be hidden before the card
   // attempts an unsupported translation.
@@ -112,12 +116,7 @@ export function useTranslationFlow(): TranslationFlowState {
 
   // Base display conditions
   const canDisplay =
-    !isLoading &&
-    settings !== null &&
-    selection !== null &&
-    isVisible &&
-    !isExcluded &&
-    !isDetectorPending;
+    !isLoading && settings !== null && selection !== null && !isExcluded;
 
   // Evaluate skip rules
   const skipResult = evaluateSkipRules({
@@ -148,24 +147,12 @@ export function useTranslationFlow(): TranslationFlowState {
     targetLanguage,
   ]);
 
-  const permanentlyExcludeSite = async () => {
-    if (!settings) {
-      return;
-    }
-
-    await saveSettings({
-      exclusionPatterns: enableExclusionPattern(
-        settings.exclusionPatterns,
-        window.location.origin,
-        generatePatternId()
-      ),
-    });
-  };
-
   return {
     // Selection
     selection,
     isVisible,
+    isPinned,
+    selectionTrigger: settings?.selectionTrigger ?? "badge",
 
     // Languages
     sourceLanguage,
@@ -174,6 +161,8 @@ export function useTranslationFlow(): TranslationFlowState {
     detectedLanguage,
     isDetecting,
     isAiConfigured,
+    defaultTranslationProvider:
+      settings?.defaultTranslationProvider ?? "chrome-built-in",
     editorInputAssistEnabled: settings?.editorInputAssistEnabled ?? false,
 
     // Display state
@@ -183,7 +172,8 @@ export function useTranslationFlow(): TranslationFlowState {
 
     // Actions
     dismissCard,
-    permanentlyExcludeSite,
+    activateCard,
+    togglePin,
     setOverriddenLanguage,
   };
 }

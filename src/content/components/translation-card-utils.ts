@@ -4,8 +4,8 @@
  */
 
 export const MIN_CARD_WIDTH = 280;
-export const MIN_CARD_HEIGHT = 120;
-export const INITIAL_CARD_HEIGHT = 160;
+export const MIN_CARD_HEIGHT = 96;
+export const INITIAL_CARD_HEIGHT = 128;
 export const CARD_EDGE_MARGIN = 32; // 16px margin on each side
 export const AUTO_GROW_VIEWPORT_RATIO = 0.72;
 

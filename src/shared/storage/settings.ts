@@ -17,6 +17,8 @@ export interface ExclusionPattern {
 }
 
 export type AiReasoningEffort = "low" | "high" | "max";
+export type SelectionTrigger = "immediate" | "badge";
+export type DefaultTranslationProvider = "chrome-built-in" | "custom-ai";
 
 export const DEFAULT_AI_SYSTEM_PROMPT =
   "Translate the selected text into natural, accurate target-language text. Use the preceding and following sentences only to resolve context and terminology. Output only the translation.";
@@ -28,6 +30,8 @@ export interface TranslationSettings {
   skipSameLanguage: boolean;
   autoDetectLanguage: boolean;
   editorInputAssistEnabled: boolean;
+  selectionTrigger?: SelectionTrigger;
+  defaultTranslationProvider?: DefaultTranslationProvider;
   aiBaseUrl: string;
   aiModel: string;
   aiSystemPrompt: string;
@@ -46,6 +50,8 @@ const DEFAULT_SETTINGS: TranslationSettings = {
   skipSameLanguage: true,
   autoDetectLanguage: true,
   editorInputAssistEnabled: true,
+  selectionTrigger: "badge",
+  defaultTranslationProvider: "chrome-built-in",
   aiBaseUrl: "",
   aiModel: "",
   aiSystemPrompt: DEFAULT_AI_SYSTEM_PROMPT,
@@ -88,6 +94,18 @@ function validateSettings(data: unknown): Partial<TranslationSettings> {
   }
   if (typeof obj.editorInputAssistEnabled === "boolean") {
     result.editorInputAssistEnabled = obj.editorInputAssistEnabled;
+  }
+  if (
+    obj.selectionTrigger === "immediate" ||
+    obj.selectionTrigger === "badge"
+  ) {
+    result.selectionTrigger = obj.selectionTrigger;
+  }
+  if (
+    obj.defaultTranslationProvider === "chrome-built-in" ||
+    obj.defaultTranslationProvider === "custom-ai"
+  ) {
+    result.defaultTranslationProvider = obj.defaultTranslationProvider;
   }
   if (typeof obj.aiBaseUrl === "string") {
     result.aiBaseUrl = obj.aiBaseUrl;

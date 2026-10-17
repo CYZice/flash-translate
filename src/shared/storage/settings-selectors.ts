@@ -34,6 +34,8 @@ interface ContentAppSettings {
   exclusionPatterns: ExclusionPattern[];
   autoDetectLanguage: boolean;
   editorInputAssistEnabled: boolean;
+  selectionTrigger: "immediate" | "badge";
+  defaultTranslationProvider: "chrome-built-in" | "custom-ai";
   aiBaseUrl: string;
   aiModel: string;
   aiContextSentenceCount: number;
@@ -51,6 +53,8 @@ export const selectContentAppSettings: SettingsSelector<ContentAppSettings> = (
   aiBaseUrl: s.aiBaseUrl,
   aiModel: s.aiModel,
   aiContextSentenceCount: s.aiContextSentenceCount,
+  defaultTranslationProvider: s.defaultTranslationProvider ?? "chrome-built-in",
+  selectionTrigger: s.selectionTrigger ?? "badge",
 });
 
 /**

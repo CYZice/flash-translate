@@ -17,47 +17,35 @@ export function TranslationResultSwitch({
   aiIsLoading,
   onViewChange,
 }: TranslationResultSwitchProps) {
+  const isAi = activeView === "ai" && aiAvailable;
+  const currentLabel = isAi ? getMessage("content_resultAi") : "Chrome";
+  const nextLabel = isAi ? "Chrome" : getMessage("content_resultAi");
+  const label = aiAvailable
+    ? getMessage("content_switchTranslationProvider", [currentLabel, nextLabel])
+    : getMessage("content_resultLocal");
+
   return (
-    <fieldset className="inline-flex shrink-0 gap-0.5 border-none bg-transparent p-0">
-      <legend className="sr-only">
-        {getMessage("content_translationResults")}
-      </legend>
-      <button
-        aria-pressed={activeView === "local"}
-        className={cn(
-          "flex h-7 w-7 items-center justify-center rounded-sm px-0 font-medium text-xs shadow-none transition-colors",
-          activeView === "local"
-            ? "bg-blue-50 text-blue-700"
-            : "text-gray-500 hover:text-gray-800"
-        )}
-        onClick={() => onViewChange("local")}
-        title={getMessage("content_resultLocal")}
-        type="button"
-      >
-        <Languages size={13} />
-        <span className="sr-only">{getMessage("content_resultLocal")}</span>
-      </button>
-      {aiAvailable && (
-        <button
-          aria-pressed={activeView === "ai"}
-          className={cn(
-            "flex h-7 w-7 items-center justify-center rounded-sm px-0 font-medium text-xs shadow-none transition-colors",
-            activeView === "ai"
-              ? "bg-violet-50 text-violet-700"
-              : "text-gray-500 hover:text-gray-800"
-          )}
-          onClick={() => onViewChange("ai")}
-          title={getMessage("content_resultAi")}
-          type="button"
-        >
-          <Sparkles
-            aria-hidden="true"
-            className={aiIsLoading ? "animate-pulse" : undefined}
-            size={13}
-          />
-          <span className="sr-only">{getMessage("content_resultAi")}</span>
-        </button>
+    <button
+      aria-label={label}
+      aria-busy={isAi && aiIsLoading}
+      className={cn(
+        "flex h-7 w-7 shrink-0 items-center justify-center rounded-sm p-0 shadow-none transition-colors disabled:cursor-default",
+        isAi ? "bg-violet-50 text-violet-700" : "bg-blue-50 text-blue-700"
       )}
-    </fieldset>
+      disabled={!aiAvailable}
+      onClick={() => onViewChange(isAi ? "local" : "ai")}
+      title={label}
+      type="button"
+    >
+      {isAi ? (
+        <Sparkles
+          aria-hidden="true"
+          className={aiIsLoading ? "animate-pulse" : undefined}
+          size={13}
+        />
+      ) : (
+        <Languages aria-hidden="true" size={13} />
+      )}
+    </button>
   );
 }

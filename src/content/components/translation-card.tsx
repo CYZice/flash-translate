@@ -1,12 +1,8 @@
-import { Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@/shared/components/button";
-import { getMessage } from "@/shared/utils/i18n";
 import { useCardLayout } from "../hooks/use-card-layout";
 import type { SelectionInfo } from "../hooks/use-text-selection";
 import { useTranslator } from "../hooks/use-translator";
 import type { HoveredTermTranslationState } from "../term-translation/use-hovered-term-translation";
-import { CardSettings } from "./card-settings";
 import { CopyButton } from "./copy-button";
 import { ResizeHandle } from "./resize-handle";
 import { TranslationCardHeader } from "./translation-card-header";
@@ -25,11 +21,13 @@ interface TranslationCardProps {
   autoDetectEnabled: boolean;
   detectedLanguage: string | null;
   isDetecting: boolean;
+  isPinned: boolean;
+  onPinToggle: () => void;
   isAiConfigured: boolean;
+  defaultTranslationProvider: "chrome-built-in" | "custom-ai";
   termTranslation: HoveredTermTranslationState;
   onSourceLanguageOverride: (lang: string | null) => void;
   onClose: () => void;
-  onExcludeSite: () => Promise<void>;
 }
 
 export function TranslationCard({
@@ -39,123 +37,59 @@ export function TranslationCard({
   autoDetectEnabled,
   detectedLanguage,
   isDetecting,
+  isPinned,
+  onPinToggle,
   isAiConfigured,
   termTranslation,
   onSourceLanguageOverride,
   onClose,
-  onExcludeSite,
+  defaultTranslationProvider,
 }: TranslationCardProps) {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [activeResultView, setActiveResultView] =
-    useState<TranslationResultView>("local");
+  const viewResetKey = `${selection.text}\u0000${defaultTranslationProvider}\u0000${isAiConfigured}`;
+  const [resultView, setResultView] = useState<{
+    key: string;
+    view: TranslationResultView;
+  } | null>(null);
+  const defaultView =
+    defaultTranslationProvider === "custom-ai" && isAiConfigured
+      ? "ai"
+      : "local";
+  const activeResultView =
+    resultView?.key === viewResetKey ? resultView.view : defaultView;
   const bodyRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const localTranslation = useTranslator({
+  const currentTranslation = useTranslator({
     sourceLanguage,
     targetLanguage,
-    provider: "chrome-built-in",
-  });
-  const aiTranslation = useTranslator({
-    sourceLanguage,
-    targetLanguage,
-    provider: "custom-ai",
-    resetKey: `${selection.text}\u0000${sourceLanguage}\u0000${targetLanguage}`,
+    provider: activeResultView === "ai" ? "custom-ai" : "chrome-built-in",
+    resetKey: `${selection.text}\u0000${activeResultView}\u0000${sourceLanguage}\u0000${targetLanguage}`,
   });
 
-  // Translate when selection or language changes
-  // biome-ignore lint/correctness/useExhaustiveDependencies: translate is intentionally excluded to avoid infinite loops (it captures sourceLanguage/targetLanguage)
   useEffect(() => {
     if (selection.text && !isDetecting) {
-      localTranslation.translate(selection.text);
+      currentTranslation.translate(selection.text, {
+        contextBefore: selection.contextBefore,
+        contextAfter: selection.contextAfter,
+      });
     }
   }, [
     selection.text,
     selection.contextBefore,
     selection.contextAfter,
-    sourceLanguage,
-    targetLanguage,
     isDetecting,
+    currentTranslation.translate,
   ]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: each new selection starts in the local result view.
-  useEffect(() => {
-    setActiveResultView("local");
-  }, [selection.text]);
-
-  const startAiTranslation = () => {
-    setActiveResultView("ai");
-    aiTranslation.translate(selection.text, {
-      contextBefore: selection.contextBefore,
-      contextAfter: selection.contextAfter,
-    });
-  };
-
   const handleResultViewChange = (view: TranslationResultView) => {
-    setActiveResultView(view);
-    if (
-      view === "ai" &&
-      !aiTranslation.result &&
-      !aiTranslation.isLoading &&
-      !aiTranslation.error
-    ) {
-      startAiTranslation();
-    }
-  };
-
-  const currentTranslation =
-    activeResultView === "ai" ? aiTranslation : localTranslation;
-  const aiHasResponse = Boolean(
-    aiTranslation.result || aiTranslation.isLoading || aiTranslation.error
-  );
-
-  const renderResultContent = () => {
-    if (activeResultView === "local") {
-      return (
-        <TranslationContent
-          availability={localTranslation.availability}
-          error={localTranslation.error}
-          isLoading={localTranslation.isLoading}
-          result={localTranslation.result}
-          sourceLanguage={sourceLanguage}
-          targetLanguage={targetLanguage}
-        />
-      );
-    }
-
-    if (!aiHasResponse) {
-      return (
-        <div className="flex min-h-28 flex-col items-start justify-center gap-3 text-gray-500">
-          <div className="flex items-center gap-2 text-sm">
-            <Sparkles className="text-violet-600" size={18} />
-            <span>{getMessage("content_aiEnhanceDescription")}</span>
-          </div>
-          <Button
-            className="border border-violet-200 bg-violet-50 px-2.5 text-violet-700 hover:bg-violet-100 hover:text-violet-800"
-            onClick={startAiTranslation}
-            variant="ghost"
-          >
-            {getMessage("content_aiEnhance")}
-          </Button>
-        </div>
-      );
-    }
-
-    return (
-      <div>
-        <TranslationContent
-          availability={aiTranslation.availability}
-          error={aiTranslation.error}
-          isLoading={aiTranslation.isLoading}
-          result={aiTranslation.result}
-          sourceLanguage={sourceLanguage}
-          targetLanguage={targetLanguage}
-        />
-      </div>
-    );
+    setResultView({ key: viewResetKey, view });
   };
 
   const layoutKey = `${selection.text}\u0000${selection.rect.left}:${selection.rect.top}:${selection.rect.width}:${selection.rect.height}`;
-  const layout = useCardLayout({ layoutKey, selectionRect: selection.rect });
+  const layout = useCardLayout({
+    layoutKey,
+    selectionRect: selection.rect,
+    isPinned,
+  });
 
   // Measure natural content height so switching views can both grow and shrink the card.
   useEffect(() => {
@@ -228,16 +162,18 @@ export function TranslationCard({
         <TranslationCardHeader
           activeResultView={activeResultView}
           aiAvailable={isAiConfigured}
-          aiIsLoading={aiTranslation.isLoading}
+          aiIsLoading={
+            activeResultView === "ai" && currentTranslation.isLoading
+          }
           autoDetectEnabled={autoDetectEnabled}
           detectedLanguage={detectedLanguage}
           isDetecting={isDetecting}
           isDragging={layout.isDragging}
-          isSettingsOpen={isSettingsOpen}
           onClose={onClose}
+          isPinned={isPinned}
+          onPinToggle={onPinToggle}
           onMovePointerDown={layout.handleDragPointerDown}
           onResultViewChange={handleResultViewChange}
-          onSettingsToggle={() => setIsSettingsOpen((isOpen) => !isOpen)}
           onSourceLanguageOverride={onSourceLanguageOverride}
           sourceLanguage={sourceLanguage}
           targetLanguage={targetLanguage}
@@ -249,16 +185,19 @@ export function TranslationCard({
           ref={bodyRef}
         >
           <div className="min-w-0 break-words" ref={contentRef}>
-            {isSettingsOpen ? (
-              <CardSettings onExcludeSite={onExcludeSite} />
-            ) : (
-              <div className="relative px-4 py-3 pr-12">
-                {renderResultContent()}
-                <div className="absolute top-2 right-2">
-                  <CopyButton text={currentTranslation.result} />
-                </div>
+            <div className="relative px-4 py-3 pr-12">
+              <TranslationContent
+                availability={currentTranslation.availability}
+                error={currentTranslation.error}
+                isLoading={isDetecting || currentTranslation.isLoading}
+                result={currentTranslation.result}
+                sourceLanguage={sourceLanguage}
+                targetLanguage={targetLanguage}
+              />
+              <div className="absolute top-2 right-2">
+                <CopyButton text={currentTranslation.result} />
               </div>
-            )}
+            </div>
           </div>
         </div>
         <ResizeHandle

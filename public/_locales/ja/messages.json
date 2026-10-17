@@ -242,7 +242,10 @@
   "content_translationPlaceholder": {
     "message": "翻訳..."
   },
-  "content_resultLocal": { "message": "ローカル" },
+  "content_resultLocal": { "message": "Chrome 内蔵翻訳" },
+  "content_switchTranslationProvider": {
+    "message": "現在のエンジン: $1。クリックして $2 に切り替えます。"
+  },
   "content_resultAi": { "message": "AI" },
   "content_translationResults": { "message": "翻訳結果の種類" },
   "content_aiEnhance": { "message": "AI で翻訳を補強" },

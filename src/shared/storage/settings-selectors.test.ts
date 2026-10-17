@@ -81,6 +81,8 @@ describe("selectContentAppSettings", () => {
       skipSameLanguage: true,
       autoDetectLanguage: true,
       editorInputAssistEnabled: false,
+      selectionTrigger: "badge",
+      defaultTranslationProvider: "chrome-built-in",
       exclusionPatterns: mockSettings.exclusionPatterns,
       aiBaseUrl: "",
       aiModel: "",
@@ -96,6 +98,18 @@ describe("selectContentAppSettings", () => {
     expect(result).toHaveProperty("autoDetectLanguage");
     expect(result).toHaveProperty("exclusionPatterns");
     expect(result).toHaveProperty("aiContextSentenceCount");
+  });
+
+  it("preserves the selected display mode and provider as ordinary settings", () => {
+    const result = selectContentAppSettings({
+      ...mockSettings,
+      selectionTrigger: "immediate",
+      defaultTranslationProvider: "custom-ai",
+    });
+    expect({ ...result }).toMatchObject({
+      selectionTrigger: "immediate",
+      defaultTranslationProvider: "custom-ai",
+    });
   });
 });
 

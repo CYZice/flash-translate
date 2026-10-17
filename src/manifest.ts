@@ -49,6 +49,13 @@ export default defineManifest({
     },
   ],
 
+  web_accessible_resources: [
+    {
+      resources: ["icons/icon-32.png"],
+      matches: ["https://*/*", "http://127.0.0.1/*", "http://localhost/*"],
+    },
+  ],
+
   minimum_chrome_version: "150",
   homepage_url: "https://github.com/yoshikouki/flash-translate",
 });

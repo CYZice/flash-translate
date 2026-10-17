@@ -244,7 +244,10 @@
   "content_translationPlaceholder": {
     "message": "Translation..."
   },
-  "content_resultLocal": { "message": "Local" },
+  "content_resultLocal": { "message": "Chrome built-in translation" },
+  "content_switchTranslationProvider": {
+    "message": "Current engine: $1. Click to switch to $2."
+  },
   "content_resultAi": { "message": "AI" },
   "content_translationResults": { "message": "Translation result source" },
   "content_aiEnhance": { "message": "Enhance with AI" },

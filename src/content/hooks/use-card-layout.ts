@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   calculateCardWidth,
   calculateMaxCardHeight,
@@ -17,6 +17,7 @@ const VIEWPORT_MARGIN = 8;
 export interface CardLayoutConfig {
   selectionRect: DOMRect;
   layoutKey: string;
+  isPinned?: boolean;
 }
 
 export interface CardLayout {
@@ -66,7 +67,12 @@ export interface CardLayout {
 export function useCardLayout({
   selectionRect,
   layoutKey,
+  isPinned = false,
 }: CardLayoutConfig): CardLayout {
+  const anchorRef = useRef({ rect: selectionRect, layoutKey });
+  if (!isPinned) {
+    anchorRef.current = { rect: selectionRect, layoutKey };
+  }
   const [maxCardWidth, setMaxCardWidth] = useState(() =>
     calculateMaxCardWidth(window.visualViewport?.width ?? window.innerWidth)
   );
@@ -76,7 +82,11 @@ export function useCardLayout({
   const [isHeightManuallySized, setIsHeightManuallySized] = useState(false);
   const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
   const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-  const initialWidth = calculateCardWidth(selectionRect.width, maxCardWidth);
+  const initialWidth = calculateCardWidth(
+    anchorRef.current.rect.width,
+    maxCardWidth
+  );
+  const resetKey = anchorRef.current.layoutKey;
 
   // Update max dimensions on window resize with debounce
   useEffect(() => {
@@ -131,7 +141,7 @@ export function useCardLayout({
     setHeight,
   } = useResizable({
     initialWidth,
-    resetKey: layoutKey,
+    resetKey,
     viewportWidth,
     viewportHeight,
     minWidth,
@@ -151,15 +161,15 @@ export function useCardLayout({
     isDragging,
     handlePointerDown: handleDragPointerDown,
     handleKeyDown: handleDragKeyDown,
-  } = useDraggable({ resetKey: layoutKey });
+  } = useDraggable({ resetKey });
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: layoutKey is the explicit reset boundary for this card
+  // biome-ignore lint/correctness/useExhaustiveDependencies: resetKey is the explicit reset boundary for this card
   useEffect(() => {
     setIsHeightManuallySized(false);
-  }, [layoutKey]);
+  }, [resetKey]);
 
   const position = calculateCardPosition(
-    selectionRect,
+    anchorRef.current.rect,
     {
       cardWidth: width,
       cardHeight: height,
@@ -167,16 +177,20 @@ export function useCardLayout({
     },
     { width: viewportWidth, height: viewportHeight }
   );
+  const positionRef = useRef(position);
+  if (!isPinned) {
+    positionRef.current = position;
+  }
 
   const cardLeft = Math.max(
     VIEWPORT_MARGIN,
     Math.min(
       Math.max(VIEWPORT_MARGIN, viewportWidth - VIEWPORT_MARGIN - width),
-      position.x + offset.x + resizeOffsetX
+      positionRef.current.x + offset.x + resizeOffsetX
     )
   );
   const top = clampCardTop(
-    position.y + offset.y,
+    positionRef.current.y + offset.y,
     height,
     viewportHeight,
     VIEWPORT_MARGIN

@@ -12,6 +12,12 @@ export function TranslationBehaviorSettings() {
   const [autoDetectLanguage, setAutoDetectLanguage] = useState(true);
   const [editorInputAssistEnabled, setEditorInputAssistEnabled] =
     useState(false);
+  const [selectionTrigger, setSelectionTrigger] = useState<
+    "immediate" | "badge"
+  >("badge");
+  const [defaultTranslationProvider, setDefaultTranslationProvider] = useState<
+    "chrome-built-in" | "custom-ai"
+  >("chrome-built-in");
   const [isCopied, setIsCopied] = useState(false);
   const {
     availability: detectorAvailability,
@@ -24,6 +30,10 @@ export function TranslationBehaviorSettings() {
       setSkipSameLanguage(settings.skipSameLanguage);
       setAutoDetectLanguage(settings.autoDetectLanguage);
       setEditorInputAssistEnabled(settings.editorInputAssistEnabled);
+      setSelectionTrigger(settings.selectionTrigger ?? "badge");
+      setDefaultTranslationProvider(
+        settings.defaultTranslationProvider ?? "chrome-built-in"
+      );
     };
     initialize();
   }, []);
@@ -34,10 +44,22 @@ export function TranslationBehaviorSettings() {
     await saveSettings({ skipSameLanguage: newValue });
   };
 
+  const handleSelectionTriggerChange = async (value: "immediate" | "badge") => {
+    setSelectionTrigger(value);
+    await saveSettings({ selectionTrigger: value });
+  };
+
   const handleAutoDetectToggle = async () => {
     const newValue = !autoDetectLanguage;
     setAutoDetectLanguage(newValue);
     await saveSettings({ autoDetectLanguage: newValue });
+  };
+
+  const handleDefaultProviderChange = async (
+    value: "chrome-built-in" | "custom-ai"
+  ) => {
+    setDefaultTranslationProvider(value);
+    await saveSettings({ defaultTranslationProvider: value });
   };
 
   const handleEditorInputAssistToggle = async () => {
@@ -88,6 +110,61 @@ export function TranslationBehaviorSettings() {
             disabled={isDetectorUnavailable}
             onChange={handleAutoDetectToggle}
           />
+        </div>
+        <div className="py-3">
+          <span className="text-gray-700 text-sm">选中文本后的翻译方式</span>
+          <div className="mt-2 flex gap-2">
+            {(
+              [
+                ["badge", "点击右下角图标"],
+                ["immediate", "立即显示"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                className={cn(
+                  "rounded-md border px-2.5 py-1 text-xs",
+                  selectionTrigger === value
+                    ? "border-blue-500 bg-blue-50 text-blue-700"
+                    : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                )}
+                key={value}
+                onClick={() => handleSelectionTriggerChange(value)}
+                type="button"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="py-3">
+          <span className="text-gray-700 text-sm">默认翻译引擎</span>
+          <div className="mt-2 flex gap-2">
+            {(
+              [
+                ["chrome-built-in", "Chrome 内置翻译"],
+                ["custom-ai", "AI 翻译"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                className={cn(
+                  "rounded-md border px-2.5 py-1 text-xs",
+                  defaultTranslationProvider === value
+                    ? "border-blue-500 bg-blue-50 text-blue-700"
+                    : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                )}
+                key={value}
+                onClick={() => handleDefaultProviderChange(value)}
+                type="button"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {defaultTranslationProvider === "custom-ai" && (
+            <p className="mt-1 text-amber-600 text-xs">
+              需要先在下方 AI 设置中配置接口和模型。
+            </p>
+          )}
         </div>
         <div className="flex items-center justify-between py-3">
           <div className="flex-1 pr-3">

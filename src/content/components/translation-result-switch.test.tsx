@@ -1,91 +1,88 @@
-/**
- * @vitest-environment jsdom
- */
+/** @vitest-environment jsdom */
 
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { TranslationResultSwitch } from "./translation-result-switch";
+import {
+  TranslationResultSwitch,
+  type TranslationResultView,
+} from "./translation-result-switch";
 
-const originalChrome = globalThis.chrome;
+let container: HTMLDivElement;
+let root: Root;
+const onViewChange = vi.fn();
+
+function render(
+  activeView: TranslationResultView,
+  aiAvailable = true,
+  aiIsLoading = false
+) {
+  act(() =>
+    root.render(
+      <TranslationResultSwitch
+        activeView={activeView}
+        aiAvailable={aiAvailable}
+        aiIsLoading={aiIsLoading}
+        onViewChange={onViewChange}
+      />
+    )
+  );
+  return container.querySelector<HTMLButtonElement>("button");
+}
+
+beforeEach(() => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  vi.stubGlobal("chrome", {
+    i18n: {
+      getMessage: (key: string, values?: string[]) =>
+        values ? `${key}: ${values.join(" → ")}` : key,
+    },
+  });
+  onViewChange.mockClear();
+  container = document.createElement("div");
+  document.body.append(container);
+  root = createRoot(container);
+});
+
+afterEach(() => {
+  act(() => root.unmount());
+  container.remove();
+  vi.unstubAllGlobals();
+});
 
 describe("TranslationResultSwitch", () => {
-  let container: HTMLDivElement;
-  let root: Root;
-
-  beforeEach(() => {
-    Object.defineProperty(globalThis, "chrome", {
-      configurable: true,
-      value: { i18n: { getMessage: (key: string) => key } },
-    });
-    container = document.createElement("div");
-    document.body.append(container);
-    root = createRoot(container);
-  });
-
-  afterEach(() => {
-    act(() => root.unmount());
-    container.remove();
-    Object.defineProperty(globalThis, "chrome", {
-      configurable: true,
-      value: originalChrome,
-    });
-  });
-
-  it("shows only the local control when AI is unavailable", () => {
-    act(() => {
-      root.render(
-        <TranslationResultSwitch
-          activeView="local"
-          aiAvailable={false}
-          aiIsLoading={false}
-          onViewChange={vi.fn()}
-        />
-      );
-    });
-
+  it("uses a single icon-only button to switch in both directions", () => {
+    const button = render("local");
     expect(container.querySelectorAll("button")).toHaveLength(1);
+    expect(button?.textContent).toBe("");
+    expect(button?.classList.contains("w-7")).toBe(true);
+    expect(button?.querySelector(".lucide-languages")).not.toBeNull();
+    expect(button?.getAttribute("aria-label")).toContain(
+      "Chrome → content_resultAi"
+    );
+    act(() => button?.click());
+    expect(onViewChange).toHaveBeenLastCalledWith("ai");
+
+    const aiButton = render("ai");
+    expect(aiButton?.textContent).toBe("");
+    expect(aiButton?.querySelector(".lucide-sparkles")).not.toBeNull();
+    act(() => aiButton?.click());
+    expect(onViewChange).toHaveBeenLastCalledWith("local");
+    expect(onViewChange).toHaveBeenCalledTimes(2);
   });
 
-  it("switches to AI on request", () => {
-    const onViewChange = vi.fn();
-    act(() => {
-      root.render(
-        <TranslationResultSwitch
-          activeView="local"
-          aiAvailable
-          aiIsLoading={false}
-          onViewChange={onViewChange}
-        />
-      );
-    });
-
-    act(() => {
-      container
-        .querySelector<HTMLButtonElement>('[title="content_resultAi"]')
-        ?.click();
-    });
-    expect(onViewChange).toHaveBeenCalledWith("ai");
+  it("does not switch to an unconfigured AI provider", () => {
+    const button = render("local", false);
+    expect(button?.disabled).toBe(true);
+    act(() => button?.click());
+    expect(onViewChange).not.toHaveBeenCalled();
   });
 
-  it("renders the AI control as an icon-only button", () => {
-    act(() => {
-      root.render(
-        <TranslationResultSwitch
-          activeView="local"
-          aiAvailable
-          aiIsLoading={false}
-          onViewChange={vi.fn()}
-        />
-      );
-    });
-
-    const aiButton = container.querySelector<HTMLButtonElement>(
-      '[title="content_resultAi"]'
-    );
-    expect(aiButton?.querySelector("svg")).not.toBeNull();
-    expect(aiButton?.querySelector(".sr-only")?.textContent).toBe(
-      "content_resultAi"
-    );
+  it("indicates loading without blocking a switch back to Chrome", () => {
+    const button = render("ai", true, true);
+    expect(button?.getAttribute("aria-busy")).toBe("true");
+    expect(button?.disabled).toBe(false);
+    act(() => button?.click());
+    expect(onViewChange).toHaveBeenCalledWith("local");
   });
 });

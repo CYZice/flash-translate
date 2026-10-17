@@ -1,4 +1,4 @@
-import { Settings, X } from "lucide-react";
+import { Pin, PinOff, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/shared/components/button";
 import { saveSettings } from "@/shared/storage/settings";
@@ -17,16 +17,16 @@ interface TranslationCardHeaderProps {
   detectedLanguage: string | null;
   isDetecting: boolean;
   autoDetectEnabled: boolean;
-  isSettingsOpen: boolean;
   activeResultView: TranslationResultView;
   aiAvailable: boolean;
   aiIsLoading: boolean;
   termTranslation: HoveredTermTranslationState;
   isDragging: boolean;
+  isPinned: boolean;
   onClose: () => void;
+  onPinToggle: () => void;
   onMovePointerDown: (event: React.PointerEvent<HTMLElement>) => void;
   onResultViewChange: (view: TranslationResultView) => void;
-  onSettingsToggle: () => void;
   onSourceLanguageOverride: (lang: string | null) => void;
 }
 
@@ -36,7 +36,6 @@ export function TranslationCardHeader({
   detectedLanguage,
   isDetecting,
   autoDetectEnabled,
-  isSettingsOpen,
   activeResultView,
   aiAvailable,
   aiIsLoading,
@@ -45,8 +44,9 @@ export function TranslationCardHeader({
   onClose,
   onMovePointerDown,
   onResultViewChange,
-  onSettingsToggle,
   onSourceLanguageOverride,
+  isPinned,
+  onPinToggle,
 }: TranslationCardHeaderProps) {
   const onSourceChange = async (lang: string) => {
     // When auto-detect is enabled, override the detected language
@@ -94,29 +94,25 @@ export function TranslationCardHeader({
         />
       </div>
       <div className="flex shrink-0 items-stretch gap-1">
-        {!isSettingsOpen && (
-          <TranslationResultSwitch
-            activeView={activeResultView}
-            aiAvailable={aiAvailable}
-            aiIsLoading={aiIsLoading}
-            onViewChange={onResultViewChange}
-          />
-        )}
+        <TranslationResultSwitch
+          activeView={activeResultView}
+          aiAvailable={aiAvailable}
+          aiIsLoading={aiIsLoading}
+          onViewChange={onResultViewChange}
+        />
         <Button
-          aria-controls="translation-card-body"
-          aria-expanded={isSettingsOpen}
-          aria-label={getMessage("content_toggleSettings")}
-          aria-pressed={isSettingsOpen}
+          aria-label={isPinned ? "取消钉住翻译卡片" : "钉住翻译卡片"}
+          aria-pressed={isPinned}
           className={cn(
             "min-h-7 min-w-7 rounded-sm p-0 shadow-none",
-            isSettingsOpen && "bg-blue-50 text-blue-600"
+            isPinned && "bg-amber-50 text-amber-700"
           )}
-          onClick={onSettingsToggle}
-          tooltip={getMessage("content_toggleSettings")}
+          onClick={onPinToggle}
+          tooltip={isPinned ? "取消钉住" : "钉住"}
           tooltipAlign="end"
           variant="default"
         >
-          <Settings size={14} />
+          {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
         </Button>
         <Button
           aria-label={getMessage("content_close")}

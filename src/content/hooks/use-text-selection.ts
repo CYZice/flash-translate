@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useLatestRef } from "@/shared/hooks/use-latest-ref";
 import {
   DEFAULT_AI_CONTEXT_SENTENCE_COUNT,
   getContextAroundSelection,
@@ -113,22 +114,41 @@ function handlePendingClear(
 }
 
 export function useTextSelection(
-  sentenceCount = DEFAULT_AI_CONTEXT_SENTENCE_COUNT
+  sentenceCount = DEFAULT_AI_CONTEXT_SENTENCE_COUNT,
+  selectionTrigger: "immediate" | "badge" = "badge"
 ) {
   const [selection, setSelection] = useState<SelectionInfo | null>(null);
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
+  const pinnedRef = useLatestRef(isPinned);
+  const selectionRef = useLatestRef(selection);
   const lastSelectionTextRef = useRef<string | null>(null);
   const pendingClearRef = useRef(false);
   const selectionTextAtPointerDownRef = useRef<string | null>(null);
+  const selectionTimerRef = useRef<number | null>(null);
 
-  const handleMouseUp = () => {
+  const scheduleCardDisplay = () => {
+    setIsVisible(pinnedRef.current || selectionTrigger === "immediate");
+  };
+
+  const handleMouseUp = (event: Event) => {
+    if (isClickInsideShadowHost(event.composedPath(), HOST_ID)) {
+      return;
+    }
     // Delay to ensure selection is complete
-    setTimeout(() => {
+    if (selectionTimerRef.current !== null) {
+      window.clearTimeout(selectionTimerRef.current);
+    }
+    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: selection extraction and dismissal must run atomically after the DOM settles
+    selectionTimerRef.current = window.setTimeout(() => {
+      selectionTimerRef.current = null;
       const windowSelection = window.getSelection();
       const controlSelection = getControlSelection(sentenceCount);
       if (controlSelection) {
         pendingClearRef.current = false;
-        setIsVisible(true);
+        if (controlSelection.text !== lastSelectionTextRef.current) {
+          scheduleCardDisplay();
+        }
         lastSelectionTextRef.current = controlSelection.text;
         setSelection(controlSelection);
         return;
@@ -141,6 +161,7 @@ export function useTextSelection(
         sentenceCount
       );
       if (
+        !pinnedRef.current &&
         pendingClearRef.current &&
         shouldClearSelectionAfterOutsideInteraction(
           selectionInfo?.text ?? null,
@@ -153,7 +174,14 @@ export function useTextSelection(
         return;
       }
       if (!selectionInfo) {
-        handlePendingClear(pendingClearRef, setSelection, lastSelectionTextRef);
+        if (!pinnedRef.current) {
+          handlePendingClear(
+            pendingClearRef,
+            setSelection,
+            lastSelectionTextRef
+          );
+        }
+        pendingClearRef.current = false;
         selectionTextAtPointerDownRef.current = null;
         return;
       }
@@ -166,7 +194,7 @@ export function useTextSelection(
           lastSelectionTextRef.current
         )
       ) {
-        setIsVisible(true);
+        scheduleCardDisplay();
       }
       lastSelectionTextRef.current = selectionInfo.text;
       setSelection(selectionInfo);
@@ -195,16 +223,32 @@ export function useTextSelection(
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Escape") {
       // Escape key hides card but keeps text selection
-      setIsVisible(false);
+      dismissCard();
     }
   };
 
   // Dismiss card without clearing text selection
   const dismissCard = () => {
+    if (selectionTimerRef.current !== null) {
+      window.clearTimeout(selectionTimerRef.current);
+      selectionTimerRef.current = null;
+    }
+    setIsPinned(false);
     setIsVisible(false);
   };
 
+  const activateCard = () => {
+    if (selection) {
+      setIsVisible(true);
+    }
+  };
+
   const dismissForPageLifecycle = () => {
+    if (selectionTimerRef.current !== null) {
+      window.clearTimeout(selectionTimerRef.current);
+      selectionTimerRef.current = null;
+    }
+    setIsPinned(false);
     pendingClearRef.current = false;
     selectionTextAtPointerDownRef.current = null;
     clearSelectionState(setSelection, lastSelectionTextRef);
@@ -219,6 +263,21 @@ export function useTextSelection(
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: React Compiler handles function memoization
   useEffect(() => {
+    const dispatchHistoryNavigation = () =>
+      window.dispatchEvent(new Event("flash-translate:navigation"));
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+    history.pushState = function (...args) {
+      const result = originalPushState.apply(this, args);
+      dispatchHistoryNavigation();
+      return result;
+    };
+    history.replaceState = function (...args) {
+      const result = originalReplaceState.apply(this, args);
+      dispatchHistoryNavigation();
+      return result;
+    };
+
     document.addEventListener("mouseup", handleMouseUp, true);
     document.addEventListener("mousedown", handleMouseDown, true);
     document.addEventListener("keydown", handleKeyDown, true);
@@ -228,6 +287,10 @@ export function useTextSelection(
     window.addEventListener("pagehide", dismissForPageLifecycle);
     window.addEventListener("popstate", dismissForPageLifecycle);
     window.addEventListener("hashchange", dismissForPageLifecycle);
+    window.addEventListener(
+      "flash-translate:navigation",
+      dismissForPageLifecycle
+    );
 
     return () => {
       document.removeEventListener("mouseup", handleMouseUp, true);
@@ -239,8 +302,33 @@ export function useTextSelection(
       window.removeEventListener("pagehide", dismissForPageLifecycle);
       window.removeEventListener("popstate", dismissForPageLifecycle);
       window.removeEventListener("hashchange", dismissForPageLifecycle);
+      window.removeEventListener(
+        "flash-translate:navigation",
+        dismissForPageLifecycle
+      );
+      history.pushState = originalPushState;
+      history.replaceState = originalReplaceState;
+      if (selectionTimerRef.current !== null) {
+        window.clearTimeout(selectionTimerRef.current);
+      }
     };
-  }, [sentenceCount]);
+  }, [sentenceCount, selectionTrigger]);
 
-  return { selection, isVisible, dismissCard };
+  // Apply a mode change to the current selection, not only the next one.
+  useEffect(() => {
+    if (selectionRef.current) {
+      setIsVisible(pinnedRef.current || selectionTrigger === "immediate");
+    }
+  }, [selectionTrigger, pinnedRef, selectionRef]);
+
+  const togglePin = () => setIsPinned((pinned) => !pinned);
+
+  return {
+    selection,
+    isVisible,
+    isPinned,
+    togglePin,
+    dismissCard,
+    activateCard,
+  };
 }

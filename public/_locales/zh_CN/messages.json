@@ -127,7 +127,10 @@
   "content_downloadingModel": { "message": "正在下载翻译模型..." },
   "content_translating": { "message": "翻译中..." },
   "content_translationPlaceholder": { "message": "翻译结果..." },
-  "content_resultLocal": { "message": "本地翻译" },
+  "content_resultLocal": { "message": "Chrome 内置翻译" },
+  "content_switchTranslationProvider": {
+    "message": "当前引擎：$1。点击切换为 $2。"
+  },
   "content_resultAi": { "message": "AI 翻译" },
   "content_translationResults": { "message": "翻译结果来源" },
   "content_aiEnhance": { "message": "使用 AI 润色" },

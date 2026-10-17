@@ -46,11 +46,11 @@ function render(termTranslation: HoveredTermTranslationState) {
         detectedLanguage={null}
         isDetecting={false}
         isDragging={false}
-        isSettingsOpen={false}
+        isPinned={false}
+        onPinToggle={vi.fn()}
         onClose={vi.fn()}
         onMovePointerDown={vi.fn()}
         onResultViewChange={vi.fn()}
-        onSettingsToggle={vi.fn()}
         onSourceLanguageOverride={vi.fn()}
         sourceLanguage="en"
         targetLanguage="ja"
@@ -135,12 +135,17 @@ describe("TranslationCardHeader", () => {
     expect(status?.querySelector("strong")).toBeNull();
   });
 
-  it("shows compact local and AI result controls", () => {
+  it("shows one engine switch and no card settings button", () => {
     render(IDLE_TERM_TRANSLATION);
 
-    expect(container.querySelectorAll('[aria-pressed="true"]')).toHaveLength(1);
+    expect(container.querySelectorAll("button")).toHaveLength(3);
     expect(
-      container.querySelector('[title="content_resultAi"]')
+      container.querySelector(
+        '[aria-label="content_switchTranslationProvider"]'
+      )
     ).not.toBeNull();
+    expect(
+      container.querySelector('[aria-label="content_toggleSettings"]')
+    ).toBeNull();
   });
 });
