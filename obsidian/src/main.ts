@@ -76,14 +76,19 @@ export default class FlashTranslatePlugin extends Plugin {
         );
       }
       this.preview?.close();
+      const input = {
+        text: snapshot.text,
+        contextBefore: snapshot.contextBefore,
+        contextAfter: snapshot.contextAfter,
+        sourceLanguage: settings.sourceLanguage,
+      };
       const preview = new TranslationPreview(this.app, snapshot, {
         model: settings.model,
         targetLanguage: settings.targetLanguage,
         translate: (targetLanguage) =>
           translateNoteSelection(
             {
-              ...snapshot,
-              sourceLanguage: settings.sourceLanguage,
+              ...input,
               targetLanguage,
             },
             settings,

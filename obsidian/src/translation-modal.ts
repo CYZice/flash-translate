@@ -11,8 +11,8 @@ interface TranslationPreviewOptions {
 }
 
 export class TranslationPreview extends Modal {
-  private readonly snapshot: NoteSelection;
-  private readonly options: TranslationPreviewOptions;
+  private sourceText: string;
+  private options: TranslationPreviewOptions | null;
   private generation = 0;
   private resultEl: HTMLTextAreaElement | null = null;
   private statusEl: HTMLElement | null = null;
@@ -26,12 +26,15 @@ export class TranslationPreview extends Modal {
     options: TranslationPreviewOptions
   ) {
     super(app);
-    this.snapshot = snapshot;
+    this.sourceText = snapshot.text;
     this.options = options;
     this.target = options.targetLanguage;
   }
 
   onOpen(): void {
+    if (!this.options) {
+      return;
+    }
     this.modalEl.addClass("flash-translate-modal");
     this.setTitle("Flash Translate");
     const toolbar = this.contentEl.createDiv({
@@ -57,9 +60,9 @@ export class TranslationPreview extends Modal {
     const source = this.contentEl.createEl("details", {
       cls: "flash-translate-source",
     });
-    source.open = this.snapshot.text.length < 400;
+    source.open = this.sourceText.length < 400;
     source.createEl("summary", { text: "Selected text" });
-    source.createEl("p", { text: this.snapshot.text });
+    source.createEl("p", { text: this.sourceText });
     const resultLabel = this.contentEl.createEl("label", {
       text: "Translation",
       cls: "flash-translate-result-label",
@@ -115,6 +118,9 @@ export class TranslationPreview extends Modal {
   }
 
   private async runTranslation(): Promise<void> {
+    if (!this.options) {
+      return;
+    }
     const generation = ++this.generation;
     this.setActionsEnabled(false);
     if (this.resultEl) {
@@ -154,7 +160,7 @@ export class TranslationPreview extends Modal {
 
   private apply(mode: "replace" | "insert"): void {
     try {
-      this.options.apply(this.resultEl?.value ?? "", mode);
+      this.options?.apply(this.resultEl?.value ?? "", mode);
       this.close();
     } catch (error) {
       this.showError(
@@ -167,7 +173,18 @@ export class TranslationPreview extends Modal {
 
   onClose(): void {
     this.generation += 1;
+    if (this.resultEl) {
+      this.resultEl.value = "";
+    }
     this.contentEl.empty();
-    this.options.onClose();
+    this.resultEl = null;
+    this.statusEl = null;
+    this.actions = [];
+    this.retry = null;
+    this.sourceText = "";
+    this.target = "";
+    const onClose = this.options?.onClose;
+    this.options = null;
+    onClose?.();
   }
 }

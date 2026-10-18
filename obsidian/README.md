@@ -63,8 +63,10 @@ Assign a keyboard shortcut to **Flash Translate: Translate selection** under
   plugin refuses the stale edit.
 - Edits use Obsidian's editor API and participate in its normal undo history.
 - Changing the target starts a new request; older results cannot overwrite it.
-- Closing the preview or disabling the plugin prevents late UI updates. A
-  request already sent through Obsidian's HTTP API can still finish at the provider.
+- Closing the preview releases its note-edit callbacks, selected text, output,
+  and UI references, and prevents late UI updates. Obsidian's HTTP API does not
+  expose cancellation: an already-sent request can still finish. Its payload
+  contains only selected text and context, not the full note snapshot.
 
 Only settings and an API-key reference are saved in the vault's plugin
 `data.json`; the key itself is managed by Obsidian's secret storage. Translation
