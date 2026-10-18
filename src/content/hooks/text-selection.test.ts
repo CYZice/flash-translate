@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   cloneSelectionRanges,
   getSelectionContext,
@@ -37,6 +37,25 @@ describe("cloneSelectionRanges", () => {
 });
 
 describe("getSelectionContext", () => {
+  it("skips DOM extraction entirely when context is disabled", () => {
+    const selection = window.getSelection();
+    const paragraph = document.createElement("p");
+    paragraph.textContent = "Large surrounding text. Selected text.";
+    document.body.append(paragraph);
+    const range = document.createRange();
+    range.selectNodeContents(paragraph);
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    const clone = vi.spyOn(Range.prototype, "cloneContents");
+    expect(getSelectionContext(selection, 0)).toEqual({
+      contextBefore: "",
+      contextAfter: "",
+    });
+    expect(clone).not.toHaveBeenCalled();
+    clone.mockRestore();
+    selection?.removeAllRanges();
+    paragraph.remove();
+  });
   it("captures bounded text around the selected range", () => {
     const paragraph = document.createElement("p");
     paragraph.textContent =

@@ -4,6 +4,8 @@ export const MAX_AI_CONTEXT_SENTENCE_COUNT = 3;
 
 const SENTENCE_END_REGEX =
   /[.!?\u3002\uff01\uff1f]+(?:["'\u201d\u2019\uff09\]]*)/g;
+const SENTENCE_PUNCTUATION = /[.!?\u3002\uff01\uff1f]/;
+const SENTENCE_CLOSER = /["'\u201d\u2019\uff09\]]/;
 
 export function normalizeAiContextSentenceCount(value: unknown): number {
   if (typeof value !== "number" || !Number.isInteger(value)) {
@@ -19,35 +21,77 @@ function normalizeContextText(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
+function findPreviousSentenceEnd(
+  text: string,
+  before: number
+): { start: number; end: number } | null {
+  for (let index = before - 1; index >= 0; index--) {
+    if (!SENTENCE_PUNCTUATION.test(text[index])) {
+      continue;
+    }
+    let end = index + 1;
+    while (end < text.length && SENTENCE_CLOSER.test(text[end])) {
+      end++;
+    }
+    while (index > 0 && SENTENCE_PUNCTUATION.test(text[index - 1])) {
+      index--;
+    }
+    return { start: index, end };
+  }
+  return null;
+}
+
+function getContextBefore(text: string, count: number): string {
+  const sentences: string[] = [];
+  let end = text.length;
+  let cursor = end;
+  while (sentences.length < count) {
+    const boundary = findPreviousSentenceEnd(text, cursor);
+    const sentence = normalizeContextText(text.slice(boundary?.end ?? 0, end));
+    if (sentence) {
+      sentences.unshift(sentence);
+    }
+    if (!boundary) {
+      break;
+    }
+    end = boundary.end;
+    cursor = boundary.start;
+  }
+  return sentences.join(" ");
+}
+
 export function getAdjacentContext(
   text: string,
   direction: "before" | "after",
   sentenceCount: number
 ): string {
-  const normalized = normalizeContextText(text);
   const count = normalizeAiContextSentenceCount(sentenceCount);
-  if (!normalized || count === 0) {
+  if (!text || count === 0) {
     return "";
+  }
+  if (direction === "before") {
+    return getContextBefore(text, count);
   }
 
   const sentences: string[] = [];
   let start = 0;
-  for (const match of normalized.matchAll(SENTENCE_END_REGEX)) {
+  for (const match of text.matchAll(SENTENCE_END_REGEX)) {
     const end = match.index + match[0].length;
-    const sentence = normalized.slice(start, end).trim();
+    const sentence = normalizeContextText(text.slice(start, end));
     if (sentence) {
       sentences.push(sentence);
     }
+    if (sentences.length === count) {
+      return sentences.join(" ");
+    }
     start = end;
   }
-  const trailingText = normalized.slice(start).trim();
+  const trailingText = normalizeContextText(text.slice(start));
   if (trailingText) {
     sentences.push(trailingText);
   }
 
-  const selectedSentences =
-    direction === "after" ? sentences.slice(0, count) : sentences.slice(-count);
-  return selectedSentences.join(" ");
+  return sentences.join(" ");
 }
 
 export function getContextAroundSelection(

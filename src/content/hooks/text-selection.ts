@@ -133,7 +133,7 @@ export function getSelectionContext(
   contextBefore: string;
   contextAfter: string;
 } {
-  if (!selection || selection.rangeCount === 0) {
+  if (!selection || selection.rangeCount === 0 || sentenceCount === 0) {
     return { contextBefore: "", contextAfter: "" };
   }
 
