@@ -4,7 +4,8 @@
 
 A Chrome extension for instant translation using Chrome's built-in Translator API
 or your own AI provider. An [Obsidian plugin](obsidian/README.md) is also available
-for translating selected note text and inserting the result.
+for translating workspace selections in a draggable, pinnable card and safely
+inserting results in editable notes.
 
 ## Features
 

@@ -13,6 +13,25 @@ export class TranslationSettingsTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
+    new Setting(containerEl)
+      .setName("Selection translation")
+      .setDesc(
+        "Works in note editors, reading views, and selectable plugin output. A pinned card updates in place on each new selection."
+      )
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOptions({
+            badge: "Show translation button",
+            immediate: "Translate immediately",
+            off: "Command only",
+          })
+          .setValue(this.plugin.settings.selectionTrigger)
+          .onChange((value) =>
+            this.plugin.updateSettings({
+              selectionTrigger: value as "badge" | "immediate" | "off",
+            })
+          )
+      );
     new Setting(containerEl).setName("Translation service").setHeading();
     new Setting(containerEl)
       .setName("Base URL")

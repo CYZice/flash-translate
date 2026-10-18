@@ -2,6 +2,16 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_SETTINGS, normalizeSettings } from "./settings";
 
 describe("Obsidian settings boundary", () => {
+  it("validates the automatic selection trigger", () => {
+    expect(
+      normalizeSettings({ selectionTrigger: "invalid" }).selectionTrigger
+    ).toBe("badge");
+    for (const selectionTrigger of ["badge", "immediate", "off"]) {
+      expect(normalizeSettings({ selectionTrigger }).selectionTrigger).toBe(
+        selectionTrigger
+      );
+    }
+  });
   it.each([null, undefined, [], "invalid"])(
     "uses defaults for invalid storage",
     (input) => {

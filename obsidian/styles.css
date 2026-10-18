@@ -1,72 +1,120 @@
-.flash-translate-modal {
-  width: min(580px, 92vw);
+.flash-translate-card,
+.flash-translate-badge {
+  position: fixed;
+  z-index: var(--layer-popover, 30);
+  color: var(--text-normal);
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  box-shadow: var(--shadow-s);
+  box-sizing: border-box;
 }
-.flash-translate-toolbar {
+.flash-translate-badge {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  border-radius: 8px;
+  color: var(--interactive-accent);
+  cursor: pointer;
+}
+.flash-translate-card {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 18px;
-}
-.flash-translate-model {
-  color: var(--text-muted);
+  flex-direction: column;
+  width: min(380px, calc(100vw - 16px));
+  min-width: min(280px, calc(100vw - 16px));
+  height: 220px;
+  min-height: 160px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vh - 16px);
+  overflow: hidden;
+  resize: both;
+  border-radius: 12px;
   font-size: var(--font-ui-small);
-  overflow-wrap: anywhere;
 }
-.flash-translate-target {
+.flash-translate-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: var(--font-ui-small);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  cursor: move;
+  touch-action: none;
+  user-select: none;
 }
-.flash-translate-source {
-  background: var(--background-secondary);
-  border-radius: var(--radius-m);
-  padding: 12px 14px;
-  margin-bottom: 18px;
+.flash-translate-language,
+.flash-translate-header select {
+  color: var(--interactive-accent);
+  font-weight: 600;
 }
-.flash-translate-source summary {
-  color: var(--text-muted);
+.flash-translate-header select {
+  width: 64px;
+  border: 0;
+  box-shadow: none;
+  background-color: transparent;
   cursor: pointer;
-  font-size: var(--font-ui-small);
 }
-.flash-translate-source p {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  max-height: 150px;
-  overflow: auto;
-  margin: 10px 0 0;
+.flash-translate-spacer {
+  flex: 1;
 }
-.flash-translate-result-label {
-  display: block;
-  font-size: var(--font-ui-small);
-  font-weight: var(--font-medium);
+.flash-translate-card button.flash-translate-icon {
+  display: grid;
+  place-items: center;
+  padding: 5px;
+  width: 28px;
+  height: 28px;
+  color: var(--text-muted);
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+  cursor: pointer;
 }
-.flash-translate-result {
-  display: block;
+.flash-translate-card button.flash-translate-icon:hover,
+.flash-translate-card button[aria-pressed="true"] {
+  background: var(--background-modifier-hover);
+  color: var(--interactive-accent);
+}
+.flash-translate-card svg,
+.flash-translate-badge svg {
+  width: 18px;
+  height: 18px;
+}
+.flash-translate-card textarea.flash-translate-result {
+  flex: 1;
   width: 100%;
-  min-height: 160px;
-  max-height: 40vh;
-  margin-top: 8px;
-  padding: 12px;
-  resize: vertical;
+  min-height: 40px;
+  padding: 14px 18px 6px;
+  resize: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  color: var(--text-normal);
   font: inherit;
-  font-weight: var(--font-normal);
-  line-height: 1.6;
+  font-size: 17px;
+  line-height: 1.55;
+}
+.flash-translate-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 10px;
 }
 .flash-translate-status {
-  min-height: 2.5em;
-  margin: 12px 0;
-  font-size: var(--font-ui-small);
+  flex: 1;
+  min-width: 0;
   color: var(--text-muted);
+  overflow-wrap: anywhere;
+  max-height: 5em;
+  overflow: auto;
 }
 .flash-translate-status.is-error {
   color: var(--text-error);
 }
-.flash-translate-actions {
+.flash-translate-edits {
   display: flex;
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 8px;
+  padding: 0 12px 12px;
 }

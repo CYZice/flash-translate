@@ -14,9 +14,10 @@ settings through the extension popup.
 The extension requires Chrome 150 or later with the Translator API enabled in
 `chrome://flags`.
 
-An independent Obsidian plugin lives in `obsidian/`. It translates selected
-Markdown note text through a configured AI endpoint and previews explicit
-replace/insert actions. It requires Obsidian 1.11.4+ for secret storage; it does
+An independent Obsidian plugin lives in `obsidian/`. It translates workspace
+selections through a configured AI endpoint in a draggable, pinnable floating
+card. Only editable note selections offer guarded replace/insert actions.
+It requires Obsidian 1.11.4+ for secret storage; it does
 not use Chrome's built-in translation APIs.
 
 ## Commands
@@ -54,7 +55,11 @@ checkable style rules. Do not duplicate those rules in agent instructions.
 - `src/manifest.ts` defines the extension manifest through
   `@crxjs/vite-plugin`.
 - `obsidian/src/main.ts` registers the Obsidian command and editor menu, owns
-  plugin lifecycle, and integrates editor operations, settings, and secrets.
+  per-window selection controllers and the floating card, and integrates editor
+  operations, settings, and secrets. `workspace-selection.ts` distinguishes editor
+  selections from read-only DOM selections; `translation-card.ts` is non-modal.
+- `src/shared/selection/` extracts visible selected text and formula sources
+  without cloning DOM trees; optional context uses separate traversal budgets.
 - `src/shared/translation/` contains browser-independent AI configuration,
   request construction, and response parsing shared by both applications.
 

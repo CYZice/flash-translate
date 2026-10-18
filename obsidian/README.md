@@ -1,13 +1,28 @@
 # Flash Translate for Obsidian
 
-Select text in an editable Markdown note, run **Flash Translate: Translate
-selection** from the command palette, then review and edit the translation.
-Choose **Replace selection**, **Insert below**, or **Copy**. The editor context
-menu also has a **Translate selection** action.
-File-backed embedded Markdown editors, including Canvas note editors, use the
-same preview and edit actions.
+Select text and click the small translation button. The translation opens in a
+compact floating card, without a modal or scroll-blocking overlay. Drag its header
+to move it, or use the header's arrow keys. Resize from its bottom-right corner.
 
-## Install the first development build
+**Pin position** keeps the card at the same screen coordinates while you scroll
+and select more text. Each new selection updates that card instead of moving it
+next to the selection. The chosen target language stays selected. An unpinned card
+closes on outside clicks or workspace scrolling; **Escape**, window blur, and
+plugin unload close either kind of card.
+
+Selections work in Markdown editing/live preview, reading views, and selectable
+plugin output within workspace leaves, including chat output such as YoloAgent's.
+Complete KaTeX/MathJax formulas use their TeX source when available, or readable
+MathML structure; partial formula selections remain partial. Image-only content
+and external embedded webviews are not converted to text.
+
+Editable notes offer **Replace selection**, **Insert below**, and **Copy**.
+File-backed embedded Markdown editors, including Canvas note editors, use the
+same guarded edit actions. Reading views and other plugin output offer copy, not
+note edits. You can also run **Flash Translate: Translate selection** from the
+command palette or use the editor's **Translate selection** context-menu action.
+
+## Install the development build
 
 Requires Obsidian **1.11.4+** for its secret-storage API.
 
@@ -42,9 +57,14 @@ Open **Settings → Flash Translate**:
 3. Choose or create an **API key** through Obsidian's secret selector. Leave
    it empty for a local server that does not require authentication.
 4. Choose the source and default target languages. Auto detection is performed
-   by the selected model, not Chrome. You can change the target in the preview.
+   by the selected model, not Chrome. You can change the target in the card.
 5. Optionally change the prompt and context sentence count. Use **0** to send
    only selected text.
+
+**Selection translation** chooses between a small button (default), immediate
+translation, and command-only operation. The button alone makes no network
+request and reads no optional context. A pinned card updates immediately on new
+selections in either automatic mode. Command-only mode stays manual even if pinned.
 
 The endpoint must support Chat Completions requests with `stream: false`.
 Requests use Obsidian's HTTP API, so browser CORS policies do not restrict them.
@@ -62,11 +82,12 @@ Assign a keyboard shortcut to **Flash Translate: Translate selection** under
   selected range. If any changed, the result remains available to copy, but the
   plugin refuses the stale edit.
 - Edits use Obsidian's editor API and participate in its normal undo history.
-- Changing the target cancels the previous UI task. Across previews, at most one
-  HTTP request runs and only the newest waiting request is kept. Older results
+- Changing the target or selected text cancels the previous UI task. Across
+  cards, at most one HTTP request runs and only the newest waiting request is kept. Older results
   cannot overwrite the current target.
-- Closing the preview releases its note-edit callbacks, selected text, output,
-  and UI references, and prevents late UI updates. Obsidian's HTTP API does not
+- Closing the card releases its note-edit callbacks, selected text, output,
+  selection ranges, and UI references, and prevents late UI updates. Closing a
+  pop-out window also removes its selection listeners. Obsidian's HTTP API does not
   expose cancellation: an already-sent request can still finish. No replacement
   request is sent until it settles; closing cancels any waiting request. A slow
   endpoint can therefore delay the next translation. Disabling the plugin also
@@ -74,7 +95,7 @@ Assign a keyboard shortcut to **Flash Translate: Translate selection** under
   note snapshot.
 
 The [public `requestUrl` API](https://github.com/obsidianmd/obsidian-api/blob/master/obsidian.d.ts)
-has no abort signal or cancellation handle. Clearing a preview does not close
+has no abort signal or cancellation handle. Closing a card does not close
 that underlying connection. The queue retains its transport slot until the
 request actually ends, rather than pretending a UI timeout cancelled the network
 operation. This preserves the API's cross-origin support without creating
@@ -89,7 +110,12 @@ retention and billing. There is no telemetry in this plugin.
 
 The Chrome extension remains in `src/`. The two applications share request
 construction, response parsing, prompts, language constants, and context rules
-through `src/shared/translation/` and adjacent pure modules.
+through `src/shared/translation/` and adjacent pure modules. Both use
+`src/shared/selection/` to walk selected DOM ranges without cloning page trees.
+Context is read lazily at translation time and bounded independently of the
+selected text. CodeMirror selections use the editor API so virtualized lines are
+not silently omitted; full note snapshots are captured only when translating an
+editable selection and released when that translation is replaced or closed.
 
 ```powershell
 # Run all pure/unit tests, including the Obsidian tests (root dependencies needed)
@@ -102,7 +128,9 @@ npm --prefix obsidian run build
 npm --prefix obsidian run dev
 ```
 
-Version 0.1 provides command/context-menu translation in Markdown editing mode.
-Automatic selection popups, live typing hints, rendered-note/PDF selection,
-and system-wide translation are separate follow-up features. Mobile behavior
-has not yet been verified.
+Version 0.2 adds the non-modal floating card and generic workspace selections.
+The development build is checked with unit/integration tests and a real Chromium
+host harness using the built bundle and a local test provider. Native Obsidian
+and installed YoloAgent behavior still need verification in a test vault; the
+host harness does not reproduce their full runtime. Mobile behavior has not yet
+been verified. System-wide translation and live typing hints remain separate work.

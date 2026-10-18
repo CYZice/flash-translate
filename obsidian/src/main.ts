@@ -1,20 +1,30 @@
 import { type Editor, Notice, Plugin, requestUrl } from "obsidian";
 import { readActiveSelection } from "./editor-selection";
 import { captureSelection, planTranslationEdit } from "./selection";
+import { SelectionController } from "./selection-controller";
 import {
   DEFAULT_SETTINGS,
   normalizeSettings,
   type ObsidianTranslationSettings,
 } from "./settings";
 import { TranslationSettingsTab } from "./settings-tab";
-import { TranslationPreview } from "./translation-modal";
+import {
+  TranslationCard,
+  type TranslationCardContent,
+} from "./translation-card";
 import { TranslationRequestQueue } from "./translation-request-queue";
 import { translateNoteSelection } from "./translation-service";
+import {
+  readWorkspaceSelection,
+  type SelectedSource,
+} from "./workspace-selection";
 
 export default class FlashTranslatePlugin extends Plugin {
   settings: ObsidianTranslationSettings = { ...DEFAULT_SETTINGS };
-  private preview: TranslationPreview | null = null;
+  private card: TranslationCard | null = null;
+  private readonly controllers = new Map<Document, SelectionController>();
   private readonly requests = new TranslationRequestQueue(requestUrl);
+  private unloaded = false;
 
   async onload(): Promise<void> {
     this.settings = normalizeSettings(await this.loadData());
@@ -22,105 +32,253 @@ export default class FlashTranslatePlugin extends Plugin {
     this.addCommand({
       id: "translate-selection",
       name: "Translate selection",
-      editorCheckCallback: (checking, editor, view) => {
-        const available = Boolean(view.file && editor.getSelection().trim());
-        if (!checking && available && view.file) {
-          this.translateSelection(editor, view.file.path);
+      checkCallback: (checking) => {
+        const source = this.commandSelection();
+        if (source && !checking) {
+          this.translate(source);
         }
-        return available;
+        return Boolean(source);
       },
     });
+    const workspace = this.app.workspace;
     this.registerEvent(
-      this.app.workspace.on("editor-menu", (menu, editor, view) => {
-        const file = view.file;
-        if (file && editor.getSelection().trim()) {
+      workspace.on("editor-menu", (menu, editor, view) => {
+        const path = view.file?.path;
+        if (path && editor.getSelection().trim()) {
           menu.addItem((item) =>
             item
               .setTitle("Translate selection")
               .setIcon("languages")
-              .onClick(() => this.translateSelection(editor, file.path))
+              .onClick(() =>
+                this.translateEditor(editor, path, editor.getSelection())
+              )
           );
         }
       })
     );
+    this.registerEvent(
+      workspace.on("window-open", (_workspaceWindow, win) =>
+        this.attach(win.document)
+      )
+    );
+    this.registerEvent(
+      workspace.on("window-close", (_workspaceWindow, win) => {
+        if (this.card?.document === win.document) {
+          this.card.close();
+        }
+        this.controllers.get(win.document)?.dispose();
+        this.controllers.delete(win.document);
+      })
+    );
+    this.attach(workspace.containerEl.ownerDocument);
+    workspace.onLayoutReady(() =>
+      workspace.iterateAllLeaves((leaf) =>
+        this.attach(leaf.view.containerEl.ownerDocument)
+      )
+    );
+  }
+
+  private contains(document: Document, node: Node): boolean {
+    let found = false;
+    this.app.workspace.iterateAllLeaves((leaf) => {
+      const container = leaf.view.containerEl;
+      if (container.ownerDocument === document && container.contains(node)) {
+        found = true;
+      }
+    });
+    return found;
+  }
+
+  private read(document: Document): SelectedSource | null {
+    return readWorkspaceSelection(
+      document,
+      this.app.workspace.activeEditor,
+      (node) => this.contains(document, node)
+    );
+  }
+
+  private attach(document: Document): void {
+    if (this.unloaded || this.controllers.has(document)) {
+      return;
+    }
+    this.controllers.set(
+      document,
+      new SelectionController(document, {
+        read: () => this.read(document),
+        trigger: () => this.settings.selectionTrigger,
+        pinned: () =>
+          Boolean(this.card?.document === document && this.card.isPinned),
+        translate: (source) => this.translate(source),
+        dismiss: () => {
+          if (this.card?.document === document) {
+            this.card.close();
+          }
+        },
+      })
+    );
+  }
+
+  private commandSelection(): SelectedSource | null {
+    for (const [document, controller] of this.controllers) {
+      if (!document.hasFocus()) {
+        continue;
+      }
+      const source =
+        this.read(document) ??
+        (document.activeElement?.closest(".prompt")
+          ? controller.pending
+          : null);
+      if (source) {
+        return source;
+      }
+    }
+    return null;
   }
 
   async updateSettings(
     patch: Partial<ObsidianTranslationSettings>
   ): Promise<void> {
     this.settings = normalizeSettings({ ...this.settings, ...patch });
+    for (const controller of this.controllers.values()) {
+      controller.reset();
+    }
     await this.saveData(this.settings);
   }
 
-  private translateSelection(editor: Editor, path: string): void {
-    if (!(this.settings.baseUrl && this.settings.model)) {
-      // biome-ignore lint/correctness/noUnusedInstantiation: Obsidian displays Notice instances immediately.
-      new Notice(
-        "Configure the API endpoint and model in Settings → Flash Translate first."
-      );
-      return;
+  private translateEditor(editor: Editor, path: string, text: string): void {
+    // Editor menu callbacks can also originate in pop-out windows.
+    let document = this.app.workspace.containerEl.ownerDocument;
+    for (const candidate of this.controllers.keys()) {
+      if (candidate.hasFocus()) {
+        document = candidate;
+        break;
+      }
     }
-    try {
-      const snapshot = captureSelection(
-        editor.getValue(),
+    const selection = document.getSelection();
+    this.translate({
+      document,
+      text,
+      rect: selection?.rangeCount
+        ? selection.getRangeAt(0).getBoundingClientRect()
+        : document.body.getBoundingClientRect(),
+      note: {
+        editor,
         path,
-        editor.posToOffset(editor.getCursor("from")),
-        editor.posToOffset(editor.getCursor("to")),
-        this.settings.contextSentenceCount
+        start: editor.posToOffset(editor.getCursor("from")),
+        end: editor.posToOffset(editor.getCursor("to")),
+      },
+      readContext: () => ({ contextBefore: "", contextAfter: "" }),
+    });
+  }
+
+  private content(source: SelectedSource): TranslationCardContent {
+    const settings = { ...this.settings };
+    const apiKey = settings.apiKeySecret
+      ? this.app.secretStorage.getSecret(settings.apiKeySecret)
+      : "";
+    if (settings.apiKeySecret && !apiKey) {
+      throw new Error(
+        "The selected API key is missing. Choose a secret in Settings → Flash Translate."
       );
-      const settings = { ...this.settings };
-      const apiKey = settings.apiKeySecret
-        ? this.app.secretStorage.getSecret(settings.apiKeySecret)
-        : "";
-      if (settings.apiKeySecret && !apiKey) {
+    }
+    let apply: TranslationCardContent["apply"];
+    let text = source.text;
+    let context: { contextBefore: string; contextAfter: string };
+    const note = source.note;
+    if (note) {
+      const current = readActiveSelection(
+        note.editor,
+        this.app.workspace.activeEditor
+      );
+      if (
+        current.path !== note.path ||
+        current.start !== note.start ||
+        current.end !== note.end ||
+        current.document.slice(note.start, note.end) !== source.text
+      ) {
+        throw new Error("The selection changed. Select the text again.");
+      }
+      const snapshot = captureSelection(
+        current.document,
+        note.path,
+        note.start,
+        note.end,
+        settings.contextSentenceCount
+      );
+      text = snapshot.text;
+      context = snapshot;
+      const editor = note.editor;
+      apply = (translation, mode) => {
+        const edit = planTranslationEdit(
+          snapshot,
+          readActiveSelection(editor, this.app.workspace.activeEditor),
+          translation,
+          mode
+        );
+        editor.replaceRange(
+          edit.text,
+          editor.offsetToPos(edit.from),
+          editor.offsetToPos(edit.to)
+        );
+        editor.setCursor(editor.offsetToPos(edit.from + edit.text.length));
+        editor.focus();
+      };
+    } else {
+      context = source.readContext(settings.contextSentenceCount);
+    }
+    const input = {
+      text,
+      contextBefore: context.contextBefore,
+      contextAfter: context.contextAfter,
+      sourceLanguage: settings.sourceLanguage,
+    };
+    return {
+      text,
+      model: settings.model,
+      sourceLanguage: settings.sourceLanguage,
+      targetLanguage: settings.targetLanguage,
+      apply,
+      translate: (targetLanguage, signal) =>
+        translateNoteSelection(
+          { ...input, targetLanguage },
+          settings,
+          apiKey ?? "",
+          this.requests.request,
+          signal
+        ),
+    };
+  }
+
+  private translate(source: SelectedSource): void {
+    try {
+      if (!(this.settings.baseUrl && this.settings.model)) {
         throw new Error(
-          "The selected API key is missing. Choose a secret in Settings → Flash Translate."
+          "Configure the API endpoint and model in Settings → Flash Translate first."
         );
       }
-      this.preview?.close();
-      const input = {
-        text: snapshot.text,
-        contextBefore: snapshot.contextBefore,
-        contextAfter: snapshot.contextAfter,
-        sourceLanguage: settings.sourceLanguage,
-      };
-      const preview = new TranslationPreview(this.app, snapshot, {
-        model: settings.model,
-        targetLanguage: settings.targetLanguage,
-        translate: (targetLanguage, signal) =>
-          translateNoteSelection(
-            {
-              ...input,
-              targetLanguage,
-            },
-            settings,
-            apiKey ?? "",
-            this.requests.request,
-            signal
-          ),
-        apply: (translation, mode) => {
-          const edit = planTranslationEdit(
-            snapshot,
-            readActiveSelection(editor, this.app.workspace.activeEditor),
-            translation,
-            mode
-          );
-          editor.replaceRange(
-            edit.text,
-            editor.offsetToPos(edit.from),
-            editor.offsetToPos(edit.to)
-          );
-          editor.setCursor(editor.offsetToPos(edit.from + edit.text.length));
-          editor.focus();
-        },
-        onClose: () => {
-          if (this.preview === preview) {
-            this.preview = null;
+      const content = this.content(source);
+      if (this.card?.document !== source.document) {
+        this.card?.close();
+      }
+      for (const [document, controller] of this.controllers) {
+        if (document === source.document) {
+          controller.acknowledge(source);
+        } else {
+          controller.reset();
+        }
+      }
+      if (!this.card) {
+        const card = new TranslationCard(source.document, () => {
+          if (this.card === card) {
+            this.card = null;
           }
-        },
-      });
-      this.preview = preview;
-      preview.open();
+          for (const controller of this.controllers.values()) {
+            controller.reset();
+          }
+        });
+        this.card = card;
+      }
+      this.card.update(content, source.rect);
     } catch (error) {
       // biome-ignore lint/correctness/noUnusedInstantiation: Obsidian displays Notice instances immediately.
       new Notice(
@@ -132,7 +290,12 @@ export default class FlashTranslatePlugin extends Plugin {
   }
 
   onunload(): void {
-    this.preview?.close();
+    this.unloaded = true;
+    this.card?.close();
+    for (const controller of this.controllers.values()) {
+      controller.dispose();
+    }
+    this.controllers.clear();
     this.requests.dispose();
   }
 }

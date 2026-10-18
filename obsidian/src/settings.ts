@@ -10,6 +10,7 @@ export interface ObsidianTranslationSettings {
   targetLanguage: string;
   systemPrompt: string;
   contextSentenceCount: number;
+  selectionTrigger: "badge" | "immediate" | "off";
 }
 
 export const DEFAULT_SETTINGS: ObsidianTranslationSettings = {
@@ -20,6 +21,7 @@ export const DEFAULT_SETTINGS: ObsidianTranslationSettings = {
   targetLanguage: "en",
   systemPrompt: DEFAULT_AI_SYSTEM_PROMPT,
   contextSentenceCount: 1,
+  selectionTrigger: "badge",
 };
 
 const LANGUAGE_CODES = new Set(
@@ -32,6 +34,13 @@ export function normalizeSettings(value: unknown): ObsidianTranslationSettings {
     return settings;
   }
   const data = value as Record<string, unknown>;
+  if (
+    data.selectionTrigger === "badge" ||
+    data.selectionTrigger === "immediate" ||
+    data.selectionTrigger === "off"
+  ) {
+    settings.selectionTrigger = data.selectionTrigger;
+  }
   for (const key of [
     "baseUrl",
     "model",
