@@ -5,7 +5,7 @@ import type { NoteSelection } from "./selection";
 interface TranslationPreviewOptions {
   model: string;
   targetLanguage: string;
-  translate: (target: string) => Promise<string>;
+  translate: (target: string, signal: AbortSignal) => Promise<string>;
   apply: (translation: string, mode: "replace" | "insert") => void;
   onClose: () => void;
 }
@@ -14,6 +14,7 @@ export class TranslationPreview extends Modal {
   private sourceText: string;
   private options: TranslationPreviewOptions | null;
   private generation = 0;
+  private controller: AbortController | null = null;
   private resultEl: HTMLTextAreaElement | null = null;
   private statusEl: HTMLElement | null = null;
   private actions: ButtonComponent[] = [];
@@ -122,6 +123,9 @@ export class TranslationPreview extends Modal {
       return;
     }
     const generation = ++this.generation;
+    this.controller?.abort();
+    const controller = new AbortController();
+    this.controller = controller;
     this.setActionsEnabled(false);
     if (this.resultEl) {
       this.resultEl.value = "";
@@ -133,7 +137,10 @@ export class TranslationPreview extends Modal {
     this.statusEl?.removeClass("is-error");
     this.statusEl?.setText("Translating…");
     try {
-      const result = await this.options.translate(this.target);
+      const result = await this.options.translate(
+        this.target,
+        controller.signal
+      );
       if (generation !== this.generation) {
         return;
       }
@@ -155,6 +162,10 @@ export class TranslationPreview extends Modal {
       if (this.retry) {
         this.retry.buttonEl.hidden = false;
       }
+    } finally {
+      if (this.controller === controller) {
+        this.controller = null;
+      }
     }
   }
 
@@ -173,6 +184,8 @@ export class TranslationPreview extends Modal {
 
   onClose(): void {
     this.generation += 1;
+    this.controller?.abort();
+    this.controller = null;
     if (this.resultEl) {
       this.resultEl.value = "";
     }

@@ -8,11 +8,13 @@ import {
 } from "./settings";
 import { TranslationSettingsTab } from "./settings-tab";
 import { TranslationPreview } from "./translation-modal";
+import { TranslationRequestQueue } from "./translation-request-queue";
 import { translateNoteSelection } from "./translation-service";
 
 export default class FlashTranslatePlugin extends Plugin {
   settings: ObsidianTranslationSettings = { ...DEFAULT_SETTINGS };
   private preview: TranslationPreview | null = null;
+  private readonly requests = new TranslationRequestQueue(requestUrl);
 
   async onload(): Promise<void> {
     this.settings = normalizeSettings(await this.loadData());
@@ -85,7 +87,7 @@ export default class FlashTranslatePlugin extends Plugin {
       const preview = new TranslationPreview(this.app, snapshot, {
         model: settings.model,
         targetLanguage: settings.targetLanguage,
-        translate: (targetLanguage) =>
+        translate: (targetLanguage, signal) =>
           translateNoteSelection(
             {
               ...input,
@@ -93,7 +95,8 @@ export default class FlashTranslatePlugin extends Plugin {
             },
             settings,
             apiKey ?? "",
-            requestUrl
+            this.requests.request,
+            signal
           ),
         apply: (translation, mode) => {
           const edit = planTranslationEdit(
@@ -130,5 +133,6 @@ export default class FlashTranslatePlugin extends Plugin {
 
   onunload(): void {
     this.preview?.close();
+    this.requests.dispose();
   }
 }
