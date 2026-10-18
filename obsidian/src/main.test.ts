@@ -65,6 +65,10 @@ const tick = async (): Promise<void> => {
   await vi.advanceTimersByTimeAsync(60);
 };
 beforeEach(async () => {
+  Object.defineProperty(document, "elementsFromPoint", {
+    configurable: true,
+    value: () => [],
+  });
   vi.useFakeTimers();
   host.request.mockClear();
   host.notice.mockClear();

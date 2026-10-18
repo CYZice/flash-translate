@@ -31,7 +31,13 @@ function select(): void {
   document.dispatchEvent(new Event("selectionchange"));
   vi.advanceTimersByTime(60);
 }
-beforeEach(() => vi.useFakeTimers());
+beforeEach(() => {
+  vi.useFakeTimers();
+  Object.defineProperty(document, "elementsFromPoint", {
+    configurable: true,
+    value: () => [],
+  });
+});
 afterEach(() => {
   for (const controller of controllers.splice(0)) {
     controller.dispose();

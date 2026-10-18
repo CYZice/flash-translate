@@ -1,5 +1,5 @@
 import { setIcon } from "obsidian";
-import { positionSelectionBadge } from "../../src/shared/selection/selection-geometry";
+import { placeSelectionBadge } from "../../src/shared/selection/badge-placement";
 import { isTranslationUI, type SelectedSource } from "./workspace-selection";
 
 const SELECTION_KEYS = /^(Arrow|Home$|End$|Shift$)/;
@@ -16,6 +16,7 @@ export class SelectionController {
   private readonly document: Document;
   private options: SelectionControllerOptions | null;
   private badge: HTMLButtonElement | null = null;
+  private clearBadgePosition: (() => void) | null = null;
   private source: SelectedSource | null = null;
   private last: {
     text: string;
@@ -172,16 +173,7 @@ export class SelectionController {
     badge.addEventListener("mousedown", (event) => event.preventDefault());
     badge.addEventListener("click", () => this.activate());
     this.document.body.append(badge);
-    const win = this.document.defaultView;
-    if (win) {
-      const point = positionSelectionBadge(
-        source.rect,
-        badge.getBoundingClientRect(),
-        { width: win.innerWidth, height: win.innerHeight }
-      );
-      badge.style.left = `${point.x}px`;
-      badge.style.top = `${point.y}px`;
-    }
+    this.clearBadgePosition = placeSelectionBadge(badge, source.rect);
     this.badge = badge;
   }
 
@@ -195,6 +187,8 @@ export class SelectionController {
 
   private clearPending(): void {
     this.cancelTimer();
+    this.clearBadgePosition?.();
+    this.clearBadgePosition = null;
     this.badge?.remove();
     this.badge = null;
     this.source = null;
