@@ -14,6 +14,7 @@ const mockSettings: TranslationSettings = {
   sourceLanguage: "en",
   skipSameLanguage: true,
   autoDetectLanguage: true,
+  autoZhEn: false,
   editorInputAssistEnabled: false,
   exclusionPatterns: [
     { id: "1", pattern: "https://example.com", enabled: true },
@@ -80,6 +81,7 @@ describe("selectContentAppSettings", () => {
       targetLanguage: "ja",
       skipSameLanguage: true,
       autoDetectLanguage: true,
+      autoZhEn: false,
       editorInputAssistEnabled: false,
       selectionTrigger: "badge",
       defaultTranslationProvider: "chrome-built-in",
@@ -119,6 +121,7 @@ describe("selectLanguageSettings", () => {
     expect(result).toEqual({
       sourceLanguage: "en",
       targetLanguage: "ja",
+      autoZhEn: false,
     });
   });
 

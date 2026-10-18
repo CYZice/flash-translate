@@ -3,10 +3,12 @@
 Select text and click the small translation button. The translation opens in a
 compact floating card, without a modal or scroll-blocking overlay. Drag its header
 to move it, or use the header's arrow keys. Resize from its bottom-right corner.
+The small button follows the moving end of your selection, including wrapped
+text. Copy, retry, insert, and replace use compact icons with hover labels.
 
 **Pin position** keeps the card at the same screen coordinates while you scroll
 and select more text. Each new selection updates that card instead of moving it
-next to the selection. The chosen target language stays selected. An unpinned card
+next to the selection. In manual mode, the chosen target stays selected. An unpinned card
 closes on outside clicks or workspace scrolling; **Escape**, window blur, and
 plugin unload close either kind of card.
 
@@ -56,10 +58,17 @@ Open **Settings → Flash Translate**:
 2. Enter the exact **Model** ID.
 3. Choose or create an **API key** through Obsidian's secret selector. Leave
    it empty for a local server that does not require authentication.
-4. Choose the source and default target languages. Auto detection is performed
-   by the selected model, not Chrome. You can change the target in the card.
+4. Choose the source and default target languages. With **Source language → Auto
+   detect**, the selected model detects the source. You can change the target in the card.
 5. Optionally change the prompt and context sentence count. Use **0** to send
    only selected text.
+
+Enable **自动中英互译 / Auto Chinese ↔ English** to choose both languages
+automatically: English → Chinese; Chinese (including mixed technical text) →
+English. The header shows the actual pair and a pinned card changes direction
+on each new selection. Choosing a target language in the card leaves this mode.
+This Chinese/English mode uses a local character rule, not a downloaded detector
+or an extra AI request. For other languages, turn it off and choose languages.
 
 **Selection translation** chooses between a small button (default), immediate
 translation, and command-only operation. The button alone makes no network

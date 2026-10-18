@@ -11,6 +11,7 @@ export interface ObsidianTranslationSettings {
   systemPrompt: string;
   contextSentenceCount: number;
   selectionTrigger: "badge" | "immediate" | "off";
+  autoZhEn: boolean;
 }
 
 export const DEFAULT_SETTINGS: ObsidianTranslationSettings = {
@@ -22,6 +23,7 @@ export const DEFAULT_SETTINGS: ObsidianTranslationSettings = {
   systemPrompt: DEFAULT_AI_SYSTEM_PROMPT,
   contextSentenceCount: 1,
   selectionTrigger: "badge",
+  autoZhEn: false,
 };
 
 const LANGUAGE_CODES = new Set(
@@ -34,6 +36,9 @@ export function normalizeSettings(value: unknown): ObsidianTranslationSettings {
     return settings;
   }
   const data = value as Record<string, unknown>;
+  if (typeof data.autoZhEn === "boolean") {
+    settings.autoZhEn = data.autoZhEn;
+  }
   if (
     data.selectionTrigger === "badge" ||
     data.selectionTrigger === "immediate" ||

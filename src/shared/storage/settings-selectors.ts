@@ -33,6 +33,7 @@ interface ContentAppSettings {
   skipSameLanguage: boolean;
   exclusionPatterns: ExclusionPattern[];
   autoDetectLanguage: boolean;
+  autoZhEn: boolean;
   editorInputAssistEnabled: boolean;
   selectionTrigger: "immediate" | "badge";
   defaultTranslationProvider: "chrome-built-in" | "custom-ai";
@@ -49,6 +50,7 @@ export const selectContentAppSettings: SettingsSelector<ContentAppSettings> = (
   skipSameLanguage: s.skipSameLanguage,
   exclusionPatterns: s.exclusionPatterns,
   autoDetectLanguage: s.autoDetectLanguage,
+  autoZhEn: s.autoZhEn,
   editorInputAssistEnabled: s.editorInputAssistEnabled,
   aiBaseUrl: s.aiBaseUrl,
   aiModel: s.aiModel,
@@ -63,6 +65,7 @@ export const selectContentAppSettings: SettingsSelector<ContentAppSettings> = (
 interface LanguageSettingsData {
   sourceLanguage: string;
   targetLanguage: string;
+  autoZhEn: boolean;
 }
 
 export const selectLanguageSettings: SettingsSelector<LanguageSettingsData> = (
@@ -70,4 +73,5 @@ export const selectLanguageSettings: SettingsSelector<LanguageSettingsData> = (
 ) => ({
   sourceLanguage: s.sourceLanguage,
   targetLanguage: s.targetLanguage,
+  autoZhEn: s.autoZhEn,
 });

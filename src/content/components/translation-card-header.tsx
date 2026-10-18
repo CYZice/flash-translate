@@ -17,6 +17,7 @@ interface TranslationCardHeaderProps {
   detectedLanguage: string | null;
   isDetecting: boolean;
   autoDetectEnabled: boolean;
+  autoZhEn: boolean;
   activeResultView: TranslationResultView;
   aiAvailable: boolean;
   aiIsLoading: boolean;
@@ -36,6 +37,7 @@ export function TranslationCardHeader({
   detectedLanguage,
   isDetecting,
   autoDetectEnabled,
+  autoZhEn,
   activeResultView,
   aiAvailable,
   aiIsLoading,
@@ -53,12 +55,22 @@ export function TranslationCardHeader({
     if (autoDetectEnabled) {
       onSourceLanguageOverride(lang);
     } else {
-      await saveSettings({ sourceLanguage: lang });
+      await saveSettings({ sourceLanguage: lang, autoZhEn: false });
+      onSourceLanguageOverride(lang);
     }
   };
 
   const onTargetChange = async (lang: string) => {
-    await saveSettings({ targetLanguage: lang });
+    if (autoZhEn) {
+      onSourceLanguageOverride(sourceLanguage);
+      await saveSettings({
+        targetLanguage: lang,
+        sourceLanguage,
+        autoZhEn: false,
+      });
+    } else {
+      await saveSettings({ targetLanguage: lang });
+    }
   };
 
   if (termTranslation.hoveredTerm) {

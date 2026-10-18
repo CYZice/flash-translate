@@ -9,6 +9,12 @@ inserting results in editable notes.
 
 ## Features
 
+- **Automatic Chinese ↔ English**: Enable **自动中英互译** in the extension's
+  language settings, or in Obsidian's Flash Translate settings. English selections
+  translate to Chinese; selections containing Chinese (including mixed technical
+  text) translate to English. Both languages are chosen locally without a detector
+  model. Choosing a language in the translation card returns to manual mode.
+
 - **Instant translation on text selection**: Select text to view translations immediately
 - **Auto-detect source language**: Automatically detects the language of selected text using Chrome's Language Detection API
 - **Handles long text**: Translate large paragraphs without length limits

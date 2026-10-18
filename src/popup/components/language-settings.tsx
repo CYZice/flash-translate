@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ToggleSwitch } from "@/shared/components/toggle-switch";
 import {
   DEFAULT_SOURCE_LANGUAGE,
   DEFAULT_TARGET_LANGUAGE,
@@ -27,6 +28,7 @@ export function LanguageSettings() {
     DEFAULT_TARGET_LANGUAGE
   );
   const [pairs, setPairs] = useState<LanguagePairStatus[]>([]);
+  const [autoZhEn, setAutoZhEn] = useState(false);
   const [isLoadingPairs, setIsLoadingPairs] = useState(false);
 
   // Apply initial settings when loaded
@@ -34,11 +36,17 @@ export function LanguageSettings() {
     if (initialSettings) {
       setSourceLanguage(initialSettings.sourceLanguage);
       setTargetLanguage(initialSettings.targetLanguage);
+      setAutoZhEn(initialSettings.autoZhEn);
     }
   }, [initialSettings]);
 
   // Load pairs when target language changes
   useEffect(() => {
+    if (autoZhEn) {
+      setPairs([]);
+      setIsLoadingPairs(false);
+      return;
+    }
     const loadPairs = async () => {
       setIsLoadingPairs(true);
       const sourceCodes = SUPPORTED_LANGUAGES.map((l) => l.code);
@@ -47,16 +55,18 @@ export function LanguageSettings() {
       setIsLoadingPairs(false);
     };
     loadPairs();
-  }, [targetLanguage]);
+  }, [targetLanguage, autoZhEn]);
 
   const handleSourceLanguageChange = async (code: string) => {
     setSourceLanguage(code);
-    await saveSettings({ sourceLanguage: code });
+    setAutoZhEn(false);
+    await saveSettings({ sourceLanguage: code, autoZhEn: false });
   };
 
   const handleTargetLanguageChange = async (code: string) => {
     setTargetLanguage(code);
-    await saveSettings({ targetLanguage: code });
+    setAutoZhEn(false);
+    await saveSettings({ targetLanguage: code, autoZhEn: false });
   };
 
   if (isLoading) {
@@ -70,18 +80,46 @@ export function LanguageSettings() {
           {getMessage("popup_section_languages")}
         </h2>
       </div>
-      <TargetLanguageChips
-        onChangeTargetLanguage={handleTargetLanguageChange}
-        targetLanguage={targetLanguage}
-      />
-      <SourceLanguageChips
-        isLoading={isLoadingPairs}
-        onPairsChange={setPairs}
-        onSourceLanguageChange={handleSourceLanguageChange}
-        pairs={pairs}
-        sourceLanguage={sourceLanguage}
-        targetLanguage={targetLanguage}
-      />
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        <div>
+          <label className="text-gray-700 text-sm" htmlFor="auto-zh-en">
+            自动中英互译
+          </label>
+          <p className="m-0 mt-1 text-gray-500 text-xs">
+            含中文译英文，英文译中文。无需语言检测模型。
+          </p>
+        </div>
+        <ToggleSwitch
+          id="auto-zh-en"
+          ariaLabel="自动中英互译"
+          checked={autoZhEn}
+          onChange={() => {
+            const enabled = !autoZhEn;
+            setAutoZhEn(enabled);
+            saveSettings({ autoZhEn: enabled });
+          }}
+        />
+      </div>
+      {autoZhEn ? (
+        <div className="px-4 pb-3 text-blue-700 text-xs">
+          EN ⇄ 中文 · 关闭后可手动指定语言
+        </div>
+      ) : (
+        <>
+          <TargetLanguageChips
+            onChangeTargetLanguage={handleTargetLanguageChange}
+            targetLanguage={targetLanguage}
+          />
+          <SourceLanguageChips
+            isLoading={isLoadingPairs}
+            onPairsChange={setPairs}
+            onSourceLanguageChange={handleSourceLanguageChange}
+            pairs={pairs}
+            sourceLanguage={sourceLanguage}
+            targetLanguage={targetLanguage}
+          />
+        </>
+      )}
     </div>
   );
 }

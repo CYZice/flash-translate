@@ -280,6 +280,22 @@ describe("non-modal translation card", () => {
     expect(translate).toHaveBeenCalledWith("zh", expect.any(AbortSignal));
   });
 
+  it("restores the configured target when leaving automatic bilingual mode", () => {
+    const card = preview({ autoZhEn: true, targetLanguage: "zh" });
+    card.update(
+      {
+        text: "Next",
+        model: "test",
+        sourceLanguage: "auto",
+        targetLanguage: "fr",
+        autoZhEn: false,
+        translate: async () => "Suite",
+      },
+      anchor
+    );
+    expect(document.querySelector("select")?.value).toBe("fr");
+  });
+
   it("explains clipboard failures without closing the result", async () => {
     preview();
     await Promise.resolve();

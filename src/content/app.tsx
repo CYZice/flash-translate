@@ -26,6 +26,7 @@ export default function App() {
     sourceLanguage,
     targetLanguage,
     autoDetectEnabled,
+    autoZhEn,
     detectedLanguage,
     isDetecting,
     isAiConfigured,
@@ -39,8 +40,8 @@ export default function App() {
   } = useTranslationFlow();
   const inputAssist = useEditorInputAssist(
     editorInputAssistEnabled,
-    sourceLanguage,
-    targetLanguage
+    autoZhEn ? "en" : sourceLanguage,
+    autoZhEn ? "zh" : targetLanguage
   );
   const hoveredTermTranslation = useHoveredTermTranslation({
     selection,
@@ -89,6 +90,7 @@ export default function App() {
       <div hidden={skipResult.shouldSkip}>
         <TranslationCard
           autoDetectEnabled={autoDetectEnabled}
+          autoZhEn={autoZhEn}
           detectedLanguage={detectedLanguage}
           isDetecting={isDetecting || skipResult.shouldSkip}
           isPinned={isPinned}

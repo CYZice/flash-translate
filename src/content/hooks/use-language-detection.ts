@@ -68,7 +68,10 @@ export function useLanguageDetection({
   // Perform language detection
   useEffect(() => {
     // Skip if detection should be skipped
-    if (shouldSkipDetection(text, enabled)) {
+    if (
+      shouldSkipDetection(text, enabled) ||
+      state.overriddenLanguage !== null
+    ) {
       setState((prev) => ({
         ...prev,
         detectedLanguage: null,
@@ -128,7 +131,7 @@ export function useLanguageDetection({
       controller.abort();
       releaseResource();
     };
-  }, [text, enabled]);
+  }, [text, enabled, state.overriddenLanguage]);
 
   const setOverriddenLanguage = (lang: string | null) => {
     setState((prev) => ({ ...prev, overriddenLanguage: lang }));
@@ -147,7 +150,7 @@ export function useLanguageDetection({
     detectedLanguage: state.detectedLanguage,
     confidence: state.confidence,
     effectiveSourceLanguage,
-    isDetecting: state.isDetecting,
+    isDetecting: state.isDetecting && state.overriddenLanguage === null,
     availability: state.availability,
     error: state.error,
     overriddenLanguage: state.overriddenLanguage,

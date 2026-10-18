@@ -29,6 +29,7 @@ export interface TranslationSettings {
   exclusionPatterns: ExclusionPattern[];
   skipSameLanguage: boolean;
   autoDetectLanguage: boolean;
+  autoZhEn: boolean;
   editorInputAssistEnabled: boolean;
   selectionTrigger?: SelectionTrigger;
   defaultTranslationProvider?: DefaultTranslationProvider;
@@ -49,6 +50,7 @@ const DEFAULT_SETTINGS: TranslationSettings = {
   exclusionPatterns: [],
   skipSameLanguage: true,
   autoDetectLanguage: true,
+  autoZhEn: false,
   editorInputAssistEnabled: true,
   selectionTrigger: "badge",
   defaultTranslationProvider: "chrome-built-in",
@@ -91,6 +93,9 @@ function validateSettings(data: unknown): Partial<TranslationSettings> {
   }
   if (typeof obj.autoDetectLanguage === "boolean") {
     result.autoDetectLanguage = obj.autoDetectLanguage;
+  }
+  if (typeof obj.autoZhEn === "boolean") {
+    result.autoZhEn = obj.autoZhEn;
   }
   if (typeof obj.editorInputAssistEnabled === "boolean") {
     result.editorInputAssistEnabled = obj.editorInputAssistEnabled;

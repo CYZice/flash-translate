@@ -18,6 +18,8 @@ export interface TranslationCardContent {
   model: string;
   sourceLanguage: string;
   targetLanguage: string;
+  autoZhEn?: boolean;
+  onTargetChange?: (target: string) => void;
   translate: (target: string, signal: AbortSignal) => Promise<string>;
   apply?: (translation: string, mode: "replace" | "insert") => void;
 }
@@ -107,8 +109,12 @@ export class TranslationCard {
     this.generation++;
     this.controller?.abort();
     this.controller = null;
+    const modeChanged =
+      Boolean(this.options?.autoZhEn) !== Boolean(content.autoZhEn);
     this.options = content;
-    this.target = oldRoot ? this.target : content.targetLanguage;
+    if (content.autoZhEn || !oldRoot || modeChanged) {
+      this.target = content.targetLanguage;
+    }
     this.actions = [];
     this.drag = null;
     const root = this.document.createElement("section");
@@ -138,6 +144,7 @@ export class TranslationCard {
     target.value = this.target;
     target.addEventListener("change", () => {
       this.target = target.value;
+      this.options?.onTargetChange?.(this.target);
       this.runTranslation();
     });
     header.append(target);

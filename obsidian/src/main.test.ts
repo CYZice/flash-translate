@@ -125,6 +125,40 @@ afterEach(() => {
 });
 
 describe("Obsidian floating selection integration", () => {
+  it("automatically reverses the target on new selections in a pinned card", async () => {
+    await plugin.updateSettings({
+      autoZhEn: true,
+      selectionTrigger: "immediate",
+    });
+    select(required(container.querySelector("p")));
+    await tick();
+    expect(document.querySelector("select")?.value).toBe("zh");
+    required(
+      document.querySelector<HTMLButtonElement>('[aria-label="Pin position"]')
+    ).click();
+    container.innerHTML = "<p>光学谐振腔中的 Hermite-Gaussian 模式</p>";
+    select(required(container.querySelector("p")));
+    await tick();
+    expect(document.querySelector("select")?.value).toBe("en");
+    const request = host.request.mock.calls.at(-1)?.[0] as unknown as {
+      body: string;
+    };
+    const payload = JSON.parse(
+      JSON.parse(request.body).messages.at(-1).content
+    );
+    expect(payload).toMatchObject({
+      sourceLanguage: "Chinese",
+      targetLanguage: "English",
+    });
+    const target = required(document.querySelector("select"));
+    target.value = "fr";
+    target.dispatchEvent(new Event("change"));
+    await tick();
+    expect(plugin.settings).toMatchObject({
+      autoZhEn: false,
+      targetLanguage: "fr",
+    });
+  });
   it("translates a reading/chat selection through the command without enabling note edits", async () => {
     select(required(container.querySelector("p")));
     expect(command(true)).toBe(true);

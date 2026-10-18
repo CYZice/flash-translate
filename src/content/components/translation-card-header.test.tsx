@@ -40,6 +40,7 @@ function render(termTranslation: HoveredTermTranslationState) {
     root.render(
       <TranslationCardHeader
         autoDetectEnabled={false}
+        autoZhEn={false}
         activeResultView="local"
         aiAvailable
         aiIsLoading={false}

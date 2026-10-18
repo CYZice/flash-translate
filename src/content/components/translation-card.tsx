@@ -19,6 +19,7 @@ interface TranslationCardProps {
   sourceLanguage: string;
   targetLanguage: string;
   autoDetectEnabled: boolean;
+  autoZhEn: boolean;
   detectedLanguage: string | null;
   isDetecting: boolean;
   isPinned: boolean;
@@ -35,6 +36,7 @@ export function TranslationCard({
   sourceLanguage,
   targetLanguage,
   autoDetectEnabled,
+  autoZhEn,
   detectedLanguage,
   isDetecting,
   isPinned,
@@ -160,6 +162,7 @@ export function TranslationCard({
             activeResultView === "ai" && currentTranslation.isLoading
           }
           autoDetectEnabled={autoDetectEnabled}
+          autoZhEn={autoZhEn}
           detectedLanguage={detectedLanguage}
           isDetecting={isDetecting}
           isDragging={layout.isDragging}

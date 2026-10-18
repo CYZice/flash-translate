@@ -67,8 +67,23 @@ export class TranslationSettingsTab extends PluginSettingTab {
       );
     new Setting(containerEl).setName("Languages").setHeading();
     new Setting(containerEl)
+      .setName("自动中英互译 / Auto Chinese ↔ English")
+      .setDesc(
+        "Chinese or mixed Chinese/English → English; English → Chinese. No language-detection model is downloaded."
+      )
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.autoZhEn)
+          .onChange(async (value) => {
+            await this.plugin.updateSettings({ autoZhEn: value });
+            this.display();
+          })
+      );
+    new Setting(containerEl)
       .setName("Source language")
+      .setDesc("Used when automatic Chinese ↔ English is off.")
       .addDropdown((dropdown) => {
+        dropdown.setDisabled(this.plugin.settings.autoZhEn);
         dropdown.addOption("auto", "Auto detect");
         for (const language of SUPPORTED_LANGUAGES) {
           dropdown.addOption(language.code, language.name);
@@ -76,19 +91,29 @@ export class TranslationSettingsTab extends PluginSettingTab {
         dropdown
           .setValue(this.plugin.settings.sourceLanguage)
           .onChange((value) =>
-            this.plugin.updateSettings({ sourceLanguage: value })
+            this.plugin.updateSettings({
+              sourceLanguage: value,
+              autoZhEn: false,
+            })
           );
       });
     new Setting(containerEl)
       .setName("Default target language")
+      .setDesc(
+        "Used when automatic Chinese ↔ English is off. Choosing a target in the card switches to manual translation."
+      )
       .addDropdown((dropdown) => {
+        dropdown.setDisabled(this.plugin.settings.autoZhEn);
         for (const language of SUPPORTED_LANGUAGES) {
           dropdown.addOption(language.code, language.name);
         }
         dropdown
           .setValue(this.plugin.settings.targetLanguage)
           .onChange((value) =>
-            this.plugin.updateSettings({ targetLanguage: value })
+            this.plugin.updateSettings({
+              targetLanguage: value,
+              autoZhEn: false,
+            })
           );
       });
     new Setting(containerEl)

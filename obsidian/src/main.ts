@@ -1,4 +1,5 @@
 import { type Editor, Notice, Plugin, requestUrl } from "obsidian";
+import { getEnglishChinesePair } from "../../src/shared/translation/bilingual";
 import { readActiveSelection } from "./editor-selection";
 import { captureSelection, planTranslationEdit } from "./selection";
 import { SelectionController } from "./selection-controller";
@@ -226,17 +227,26 @@ export default class FlashTranslatePlugin extends Plugin {
     } else {
       context = source.readContext(settings.contextSentenceCount);
     }
+    const languages = settings.autoZhEn
+      ? getEnglishChinesePair(text)
+      : settings;
     const input = {
       text,
       contextBefore: context.contextBefore,
       contextAfter: context.contextAfter,
-      sourceLanguage: settings.sourceLanguage,
+      sourceLanguage: languages.sourceLanguage,
     };
     return {
       text,
       model: settings.model,
-      sourceLanguage: settings.sourceLanguage,
-      targetLanguage: settings.targetLanguage,
+      sourceLanguage: languages.sourceLanguage,
+      targetLanguage: languages.targetLanguage,
+      autoZhEn: settings.autoZhEn,
+      onTargetChange: settings.autoZhEn
+        ? (targetLanguage) => {
+            this.updateSettings({ autoZhEn: false, targetLanguage });
+          }
+        : undefined,
       apply,
       translate: (targetLanguage, signal) =>
         translateNoteSelection(

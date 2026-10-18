@@ -1,14 +1,12 @@
 import { useEffect } from "react";
-import {
-  DEFAULT_SOURCE_LANGUAGE,
-  DEFAULT_TARGET_LANGUAGE,
-} from "@/shared/constants/languages";
+import { DEFAULT_SOURCE_LANGUAGE } from "@/shared/constants/languages";
 import { useLanguageDetectorAvailability } from "@/shared/hooks/use-language-detector-availability";
 import { useSettings } from "@/shared/hooks/use-settings";
 import { getPageLanguage, isUrlExcluded } from "@/shared/storage/settings";
 import { selectContentAppSettings } from "@/shared/storage/settings-selectors";
 import { DEFAULT_AI_CONTEXT_SENTENCE_COUNT } from "@/shared/utils/ai-context";
 import { evaluateSkipRules, type SkipResult } from "./skip-rules";
+import { resolveTranslationLanguages } from "./translation-languages";
 import { useLanguageDetection } from "./use-language-detection";
 import { type SelectionInfo, useTextSelection } from "./use-text-selection";
 
@@ -27,6 +25,7 @@ export interface TranslationFlowState {
   sourceLanguage: string;
   targetLanguage: string;
   autoDetectEnabled: boolean;
+  autoZhEn: boolean;
   detectedLanguage: string | null;
   isDetecting: boolean;
   isAiConfigured: boolean;
@@ -70,7 +69,9 @@ export function useTranslationFlow(): TranslationFlowState {
     settings?.selectionTrigger ?? "badge"
   );
 
-  const autoDetectSetting = settings?.autoDetectLanguage ?? false;
+  const autoZhEn = settings?.autoZhEn ?? false;
+  const autoDetectSetting =
+    !autoZhEn && (settings?.autoDetectLanguage ?? false);
   const { availability } = useLanguageDetectorAvailability({
     enabled: autoDetectSetting,
   });
@@ -99,7 +100,12 @@ export function useTranslationFlow(): TranslationFlowState {
   });
 
   // Compute derived state
-  const targetLanguage = settings?.targetLanguage ?? DEFAULT_TARGET_LANGUAGE;
+  const { sourceLanguage, targetLanguage } = resolveTranslationLanguages(
+    settings,
+    detectionText,
+    effectiveSourceLanguage,
+    autoDetectEnabled
+  );
   const skipSameLanguage = settings?.skipSameLanguage ?? true;
   const exclusionPatterns = settings?.exclusionPatterns ?? [];
   const isAiConfigured = Boolean(
@@ -107,13 +113,6 @@ export function useTranslationFlow(): TranslationFlowState {
   );
 
   const isExcluded = isUrlExcluded(getCurrentUrl(), exclusionPatterns);
-  // Determine source language before evaluating display skip rules so an
-  // explicitly configured same-language pair can be hidden before the card
-  // attempts an unsupported translation.
-  const sourceLanguage = autoDetectEnabled
-    ? effectiveSourceLanguage
-    : (settings?.sourceLanguage ?? DEFAULT_SOURCE_LANGUAGE);
-
   // Base display conditions
   const canDisplay =
     !isLoading && settings !== null && selection !== null && !isExcluded;
@@ -126,7 +125,7 @@ export function useTranslationFlow(): TranslationFlowState {
     autoDetectEnabled,
     detectedLanguage,
     confidence,
-    pageLanguage: autoDetectEnabled ? null : getPageLanguage(),
+    pageLanguage: autoDetectEnabled || autoZhEn ? null : getPageLanguage(),
     isDetecting,
     selectedText: selection?.text ?? "",
   });
@@ -158,6 +157,7 @@ export function useTranslationFlow(): TranslationFlowState {
     sourceLanguage,
     targetLanguage,
     autoDetectEnabled,
+    autoZhEn,
     detectedLanguage,
     isDetecting,
     isAiConfigured,

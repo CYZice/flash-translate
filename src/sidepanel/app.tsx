@@ -19,6 +19,7 @@ import {
 } from "@/shared/quick-translation";
 import { saveSettings } from "@/shared/storage/settings";
 import { selectContentAppSettings } from "@/shared/storage/settings-selectors";
+import { getEnglishChinesePair } from "@/shared/translation/bilingual";
 import { getMessage } from "@/shared/utils/i18n";
 
 export default function App() {
@@ -99,49 +100,60 @@ function QuickTranslationCard({
 }: QuickTranslationCardProps) {
   const [activeView, setActiveView] = useState<TranslationResultView>("local");
   const [sourceOverride, setSourceOverride] = useState<string | null>(null);
-  const autoDetectEnabled = settings.autoDetectLanguage;
+  const autoDetectEnabled = settings.autoDetectLanguage && !settings.autoZhEn;
   const detection = useLanguageDetection({
     text: request.text,
     enabled: autoDetectEnabled,
     fallbackLanguage: settings.sourceLanguage,
   });
+  const bilingualPair = settings.autoZhEn
+    ? getEnglishChinesePair(request.text)
+    : null;
+  const targetLanguage =
+    bilingualPair?.targetLanguage ?? settings.targetLanguage;
   const sourceLanguage =
+    bilingualPair?.sourceLanguage ??
     sourceOverride ??
     (autoDetectEnabled
       ? detection.effectiveSourceLanguage
       : settings.sourceLanguage);
   const localTranslation = useTranslator({
     sourceLanguage,
-    targetLanguage: settings.targetLanguage,
+    targetLanguage,
     provider: "chrome-built-in",
-    resetKey: `${request.requestId}\u0000${sourceLanguage}\u0000${settings.targetLanguage}`,
+    resetKey: `${request.requestId}\u0000${sourceLanguage}\u0000${targetLanguage}`,
   });
   const aiTranslation = useTranslator({
     sourceLanguage,
-    targetLanguage: settings.targetLanguage,
+    targetLanguage,
     provider: "custom-ai",
-    resetKey: `${request.requestId}\u0000${sourceLanguage}\u0000${settings.targetLanguage}`,
+    resetKey: `${request.requestId}\u0000${sourceLanguage}\u0000${targetLanguage}`,
   });
 
   useEffect(() => {
     if (!detection.isDetecting) {
-      localTranslation.translate(request.text);
+      if (activeView === "ai") {
+        aiTranslation.translate(request.text, {
+          contextBefore: "",
+          contextAfter: "",
+        });
+      } else {
+        localTranslation.translate(request.text);
+      }
     }
-  }, [detection.isDetecting, localTranslation.translate, request.text]);
+  }, [
+    activeView,
+    detection.isDetecting,
+    localTranslation.translate,
+    aiTranslation.translate,
+    request.text,
+  ]);
 
   const aiAvailable = Boolean(
     settings.aiBaseUrl.trim() && settings.aiModel.trim()
   );
   const currentTranslation =
     activeView === "ai" ? aiTranslation : localTranslation;
-
-  const startAiTranslation = () => {
-    setActiveView("ai");
-    aiTranslation.translate(request.text, {
-      contextBefore: "",
-      contextAfter: "",
-    });
-  };
 
   return (
     <main className="panel-root">
@@ -153,29 +165,31 @@ function QuickTranslationCard({
             if (autoDetectEnabled) {
               setSourceOverride(lang);
             } else {
-              saveSettings({ sourceLanguage: lang });
+              saveSettings({ sourceLanguage: lang, autoZhEn: false });
+              setSourceOverride(lang);
             }
           }}
-          onTargetChange={(lang) => saveSettings({ targetLanguage: lang })}
+          onTargetChange={(lang) => {
+            if (settings.autoZhEn) {
+              setSourceOverride(sourceLanguage);
+              saveSettings({
+                targetLanguage: lang,
+                sourceLanguage,
+                autoZhEn: false,
+              });
+            } else {
+              saveSettings({ targetLanguage: lang });
+            }
+          }}
           sourceLanguage={sourceLanguage}
-          targetLanguage={settings.targetLanguage}
+          targetLanguage={targetLanguage}
         />
         <div className="panel-actions">
           <TranslationResultSwitch
             activeView={activeView}
             aiAvailable={aiAvailable}
             aiIsLoading={aiTranslation.isLoading}
-            onViewChange={(view) => {
-              if (
-                view === "ai" &&
-                !aiTranslation.result &&
-                !aiTranslation.isLoading
-              ) {
-                startAiTranslation();
-                return;
-              }
-              setActiveView(view);
-            }}
+            onViewChange={setActiveView}
           />
           <Button
             aria-label={getMessage("content_openDetailedSettings")}
@@ -195,7 +209,7 @@ function QuickTranslationCard({
           isLoading={currentTranslation.isLoading || detection.isDetecting}
           result={currentTranslation.result}
           sourceLanguage={sourceLanguage}
-          targetLanguage={settings.targetLanguage}
+          targetLanguage={targetLanguage}
         />
         <CopyButton text={currentTranslation.result} />
       </section>

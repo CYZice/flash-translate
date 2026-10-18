@@ -2,6 +2,14 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_SETTINGS, normalizeSettings } from "./settings";
 
 describe("Obsidian settings boundary", () => {
+  it("validates automatic Chinese/English mode without changing manual defaults", () => {
+    expect(normalizeSettings({ autoZhEn: "true" }).autoZhEn).toBe(false);
+    expect(normalizeSettings({ autoZhEn: true })).toMatchObject({
+      autoZhEn: true,
+      sourceLanguage: "auto",
+      targetLanguage: "en",
+    });
+  });
   it("validates the automatic selection trigger", () => {
     expect(
       normalizeSettings({ selectionTrigger: "invalid" }).selectionTrigger
