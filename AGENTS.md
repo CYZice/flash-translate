@@ -14,6 +14,11 @@ settings through the extension popup.
 The extension requires Chrome 150 or later with the Translator API enabled in
 `chrome://flags`.
 
+An independent Obsidian plugin lives in `obsidian/`. It translates selected
+Markdown note text through a configured AI endpoint and previews explicit
+replace/insert actions. It requires Obsidian 1.11.4+ for secret storage; it does
+not use Chrome's built-in translation APIs.
+
 ## Commands
 
 ```bash
@@ -29,6 +34,11 @@ bun run test:watch    # Run Vitest in watch mode
 To test the extension manually, load `dist/` as an unpacked extension from
 `chrome://extensions/` with Developer mode enabled.
 
+For the Obsidian package, run `npm ci` and `npm run build` inside `obsidian/`.
+Its installable files are produced in `obsidian/dist/flash-translate/`.
+See `obsidian/README.md` for test-vault installation and usage. Never install or
+enable a development plugin in a user's real vault without authorization.
+
 Ultracite and Biome configuration is the source of truth for mechanically
 checkable style rules. Do not duplicate those rules in agent instructions.
 
@@ -43,6 +53,10 @@ checkable style rules. Do not duplicate those rules in agent instructions.
 - `src/background/index.ts` is the Manifest V3 service worker.
 - `src/manifest.ts` defines the extension manifest through
   `@crxjs/vite-plugin`.
+- `obsidian/src/main.ts` registers the Obsidian command and editor menu, owns
+  plugin lifecycle, and integrates editor operations, settings, and secrets.
+- `src/shared/translation/` contains browser-independent AI configuration,
+  request construction, and response parsing shared by both applications.
 
 ### Translation Flow
 
@@ -80,6 +94,9 @@ checkable style rules. Do not duplicate those rules in agent instructions.
   measured performance requirement remains.
 - Keep concerns separated: hooks coordinate state and effects, while adjacent
   modules hold pure rules that can be tested without browser mocks.
+- Obsidian note edits must verify the original note, document, and selection
+  before applying a translation. Never store raw API keys in vault settings;
+  use Obsidian's secret-storage API and persist only the secret reference.
 
 ## Testing
 
@@ -94,3 +111,5 @@ Prefer pure-function tests over mocks of React, the DOM, or Chrome APIs.
 - Run `bun run lint` and `bun run test` before committing code changes. Run
   `bun run build` when changing extension entry points, manifests, build
   configuration, or browser API integration.
+- The root Vitest suite also discovers `obsidian/src/*.test.ts`. Run the
+  Obsidian package's build when changing that integration or the shared AI core.

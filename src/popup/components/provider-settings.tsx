@@ -7,11 +7,8 @@ import {
   type AiTestConnectionResponse,
 } from "@/shared/constants/ai-translation";
 import { getAiApiKey, saveAiApiKey } from "@/shared/storage/ai-api-key";
-import {
-  type AiReasoningEffort,
-  getSettings,
-  saveSettings,
-} from "@/shared/storage/settings";
+import { getSettings, saveSettings } from "@/shared/storage/settings";
+import type { AiReasoningEffort } from "@/shared/translation/config";
 import {
   DEFAULT_AI_CONTEXT_SENTENCE_COUNT,
   getContextAroundSelection,

@@ -1,60 +1,63 @@
-# Privacy Policy for Flash Translate
+# Privacy for Flash Translate
 
-**Last Updated: December 20, 2025**
+Last updated: October 18, 2026
 
-## Overview
+## Translation depends on the provider you choose
 
-Flash Translate is committed to protecting your privacy. This extension uses Chrome's built-in Translator API to provide on-device translation without sending your data to external servers.
+The Chrome extension offers Chrome's built-in Translator API and a custom AI
+provider. Chrome's built-in provider processes translation text on-device.
+Browser-managed model downloads are separate from translation requests.
 
-## Data Collection and Usage
+When you use custom AI translation, the extension sends the selected text,
+configured neighboring-sentence context, language choices, prompt, and model ID
+to the endpoint you configure. An API key, when configured, authenticates that
+request. Testing a connection also contacts the configured provider.
 
-### Data We Access
+The Obsidian plugin uses your configured AI endpoint. It reads the selected note
+text and the configured context, and sends a request only when you invoke
+translation, retry it, or change the target language in an open preview. It does
+not use Chrome's built-in translation API.
 
-- **Selected Text**: When you select text on a webpage, the extension reads that text to provide translation. This text is processed locally on your device using Chrome's built-in Translator API.
-- **Active Tab**: The extension requires access to the current tab to detect text selection and display the translation popup.
+A local endpoint can keep processing on your computer. A remote endpoint receives
+the submitted content; its retention, access, and billing policies apply. Set
+context sentences to zero to exclude surrounding text from AI requests.
 
-### Data We Store
+## What is stored
 
-- **Language Preferences**: Your source and target language settings are stored in `chrome.storage.sync` to maintain your preferences across devices where you're signed into Chrome.
-- **Site Exclusion Settings**: URL patterns for sites where you've disabled translation are stored in `chrome.storage.sync` and synced across devices where you're signed into Chrome.
+### Chrome extension
 
-### Data We DO NOT Collect
+- Language, behavior, provider configuration, prompts, and site exclusions use
+  `chrome.storage.sync`, which can sync through your Chrome account.
+- The custom AI API key uses `chrome.storage.local`, not sync storage.
+- Quick-translation requests can hold selected text in browser session storage
+  so the side panel can display it. This is separate from persistent preferences.
 
-- We do NOT collect, transmit, or store any personal information
-- We do NOT use analytics or tracking services
-- We do NOT send your text or translations to external servers
-- We do NOT share any data with third parties
+### Obsidian plugin
 
-## How Translation Works
+- Provider configuration, language choices, prompt, and context preferences are
+  stored in the vault's plugin `data.json`. Vault backup/sync tools may copy it.
+- Only the API-key reference is stored in that file. The key itself is managed
+  through Obsidian's secret-storage API.
+- Translation previews remain in memory unless you explicitly copy or insert
+  them. The plugin does not save a translation history.
 
-Flash Translate relies on Chrome's built-in Translator API, which is designed to perform translation on-device without transmitting user text to external servers.
+## Access and control
 
-## Permissions Explained
+The Chrome extension needs storage and webpage access for selection translation,
+plus context-menu and side-panel permissions for quick translation. Custom
+provider requests use the host permission granted for that endpoint. Website
+exclusions can disable translation on specified pages.
 
-- **`activeTab`**: Required to read selected text on the current page and display the translation popup
-- **`storage`**: Required to save your language preferences and sync them across your Chrome browsers
+The Obsidian plugin uses the active Markdown editor and inserts text only after
+confirming an action. It checks that the original note and selection are still
+current before editing. Closing the preview stops further UI updates; a request
+already submitted to the provider may still complete there.
 
-## Data Retention
+No analytics or telemetry are implemented by this project. Text submitted to
+your chosen provider is subject to that provider's policies rather than a claim
+that all translation remains local.
 
-- Language preferences are stored indefinitely in Chrome's sync storage until you change them or uninstall the extension
-- No translation history or text content is retained after translation
-
-## Third-Party Services
-
-This extension does NOT use any third-party services, APIs, or analytics tools. All functionality is provided through Chrome's built-in APIs.
-
-## Changes to This Policy
-
-We may update this privacy policy from time to time. Any changes will be reflected in the "Last Updated" date above.
-
-## Contact
-
-If you have questions or concerns about this privacy policy, please open an issue on our GitHub repository:
+You can disable either integration, change the provider, remove its stored
+settings, and remove unused credentials through the relevant application's
+settings. For questions, use the repository's issue tracker:
 https://github.com/yoshikouki/flash-translate/issues
-
-## Your Rights
-
-You can:
-- Stop using the extension at any time by disabling or uninstalling it
-- Clear your stored preferences by resetting the extension settings
-- Review the source code at https://github.com/yoshikouki/flash-translate

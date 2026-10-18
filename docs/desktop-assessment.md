@@ -11,8 +11,8 @@ This assessment does not add a desktop application or produce an executable.
 
 - Language constants and text/context transformation rules.
 - Streaming execution and cancellation contracts.
-- The HTTP/SSE request logic in `src/background/openai-compatible.ts` after moving
-  its configuration types outside extension storage.
+- The HTTP/SSE request logic and browser-independent configuration types in
+  `src/shared/translation/`, now shared by Chrome and the Obsidian integration.
 - Presentational React controls and card content. DOM-specific anchoring and
   browser i18n calls need desktop adapters rather than wholesale reuse.
 

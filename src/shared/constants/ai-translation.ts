@@ -1,13 +1,10 @@
+import type { TranslationInput } from "../translation/config";
+
 export const AI_TRANSLATION_PORT_NAME = "flash-translate-ai-translation";
 export const AI_TEST_CONNECTION_MESSAGE = "flash-translate-ai-test-connection";
 
-export interface AiTranslationRequest {
+export interface AiTranslationRequest extends TranslationInput {
   type: "start";
-  text: string;
-  sourceLanguage: string;
-  targetLanguage: string;
-  contextBefore: string;
-  contextAfter: string;
 }
 
 export type AiTranslationPortMessage =

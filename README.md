@@ -2,7 +2,9 @@
 
 [![Demo Video](https://img.youtube.com/vi/KhFbv0te2Ck/maxresdefault.jpg)](https://www.youtube.com/watch?v=KhFbv0te2Ck)
 
-A Chrome extension for instant translation using the browser's built-in Translator API.
+A Chrome extension for instant translation using Chrome's built-in Translator API
+or your own AI provider. An [Obsidian plugin](obsidian/README.md) is also available
+for translating selected note text and inserting the result.
 
 ## Features
 
@@ -12,7 +14,7 @@ A Chrome extension for instant translation using the browser's built-in Translat
 - **Unlimited translations**: Translate long passages as often as you like
 - **Site exclusion**: Disable translation on specific websites
 - **Settings sync**: Your preferences sync automatically across devices
-- **Privacy-focused**: All translation happens on-device using Chrome's built-in AI - no data sent to external servers
+- **Translation providers**: Chrome's built-in translation runs on-device. Custom AI translation sends selected text and configured context to your chosen endpoint.
 
 ## Requirements
 
@@ -84,7 +86,9 @@ src/
 
 ## Privacy
 
-Flash Translate respects your privacy. All translation is performed locally on your device using Chrome's built-in Translator API. No text or personal data is sent to external servers. See [PRIVACY.md](PRIVACY.md) for details.
+Chrome's built-in provider translates on-device. The custom AI provider and the
+Obsidian plugin send selected text and configured context to your chosen endpoint.
+See [PRIVACY.md](PRIVACY.md) for storage and provider details.
 
 ## License
 

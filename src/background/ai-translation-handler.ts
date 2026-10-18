@@ -5,11 +5,11 @@ import {
 } from "@/shared/constants/ai-translation";
 import { getAiApiKey } from "@/shared/storage/ai-api-key";
 import { getSettings } from "@/shared/storage/settings";
-import { getAiHostPermissionPattern } from "@/shared/utils/ai-endpoint";
 import {
   streamOpenAiTranslation,
   testOpenAiConnection,
-} from "./openai-compatible";
+} from "@/shared/translation/openai-compatible";
+import { getAiHostPermissionPattern } from "@/shared/utils/ai-endpoint";
 
 async function assertHostPermission(baseUrl: string): Promise<void> {
   const originPattern = getAiHostPermissionPattern(baseUrl);

@@ -1,0 +1,9 @@
+{
+  "id": "flash-translate",
+  "name": "Flash Translate",
+  "version": "0.1.0",
+  "minAppVersion": "1.11.4",
+  "description": "Translate selected note text with your own AI model, preview it, and safely replace or insert the result.",
+  "author": "Flash Translate",
+  "isDesktopOnly": false
+}

@@ -1,0 +1,15 @@
+{
+  "name": "flash-translate-obsidian",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit && node build.mjs",
+    "dev": "node build.mjs --watch"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.1",
+    "obsidian": "1.14.4",
+    "typescript": "~7.0.2"
+  }
+}

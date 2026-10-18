@@ -7,6 +7,10 @@ import {
   normalizeAiContextSentenceCount,
 } from "@/shared/utils/ai-context";
 import { createPrefixedLogger } from "@/shared/utils/logger";
+import {
+  type AiReasoningEffort,
+  DEFAULT_AI_SYSTEM_PROMPT,
+} from "../translation/config";
 
 const log = createPrefixedLogger("settings");
 
@@ -16,12 +20,8 @@ export interface ExclusionPattern {
   enabled: boolean;
 }
 
-export type AiReasoningEffort = "low" | "high" | "max";
 export type SelectionTrigger = "immediate" | "badge";
 export type DefaultTranslationProvider = "chrome-built-in" | "custom-ai";
-
-export const DEFAULT_AI_SYSTEM_PROMPT =
-  "Translate the selected text into natural, accurate target-language text. Use the preceding and following sentences only to resolve context and terminology. Output only the translation.";
 
 export interface TranslationSettings {
   sourceLanguage: string;

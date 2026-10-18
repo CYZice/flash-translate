@@ -1,16 +1,12 @@
-import type { AiTranslationRequest } from "@/shared/constants/ai-translation";
-import { getLanguageEnglishName } from "@/shared/constants/languages";
-import type { AiReasoningEffort } from "@/shared/storage/settings";
-import {
-  buildChatCompletionsUrl,
-  buildModelsUrl,
-} from "@/shared/utils/ai-endpoint";
+import { getLanguageEnglishName } from "../constants/languages";
+import { buildChatCompletionsUrl, buildModelsUrl } from "../utils/ai-endpoint";
+import type { AiReasoningEffort, TranslationInput } from "./config";
 
 const GPT_5_MODEL_REGEX = /^gpt-5(?:[.-]|$)/i;
 const DEEPSEEK_MODEL_REGEX = /^deepseek(?:[.-]|$)/i;
 const TRAILING_CARRIAGE_RETURN_REGEX = /\r$/;
 
-interface OpenAiCompatibleConfig {
+export interface OpenAiCompatibleConfig {
   baseUrl: string;
   model: string;
   systemPrompt: string;
@@ -49,7 +45,7 @@ interface ChatCompletionChunk {
   error?: { message?: string };
 }
 
-function createHeaders(apiKey: string): HeadersInit {
+function createHeaders(apiKey: string): Record<string, string> {
   const headers: Record<string, string> = {
     Accept: "text/event-stream",
     "Content-Type": "application/json",
@@ -69,7 +65,7 @@ function validateConfig(config: OpenAiCompatibleConfig): void {
   }
 }
 
-function buildUserMessage(request: AiTranslationRequest): string {
+function buildUserMessage(request: TranslationInput): string {
   const sourceLanguage = getLanguageEnglishName(request.sourceLanguage);
   const targetLanguage = getLanguageEnglishName(request.targetLanguage);
   const payload = {
@@ -84,7 +80,7 @@ function buildUserMessage(request: AiTranslationRequest): string {
 }
 
 function buildMessages(
-  request: AiTranslationRequest,
+  request: TranslationInput,
   systemPrompt: string
 ): Array<{ role: "system" | "user"; content: string }> {
   const messages: Array<{ role: "system" | "user"; content: string }> = [];
@@ -162,27 +158,23 @@ export function parseOpenAiSseChunk(data: string): string | null {
 }
 
 export async function* streamOpenAiTranslation(
-  request: AiTranslationRequest,
+  request: TranslationInput,
   config: OpenAiCompatibleConfig,
   apiKey: string,
   signal: AbortSignal,
   fetchImpl: typeof fetch = fetch
 ): AsyncGenerator<string> {
-  validateConfig(config);
-  const response = await fetchImpl(buildChatCompletionsUrl(config.baseUrl), {
+  const httpRequest = buildTranslationHttpRequest(
+    request,
+    config,
+    apiKey,
+    true
+  );
+  const response = await fetchImpl(httpRequest.url, {
     method: "POST",
-    headers: createHeaders(apiKey),
+    headers: httpRequest.headers,
     signal,
-    body: JSON.stringify({
-      model: config.model.trim(),
-      messages: buildMessages(request, config.systemPrompt),
-      stream: true,
-      ...getTranslationRequestOptions(
-        config.model,
-        config.thinkingEnabled,
-        config.reasoningEffort
-      ),
-    }),
+    body: httpRequest.body,
   });
 
   if (!response.ok) {
@@ -220,4 +212,47 @@ export async function testOpenAiConnection(
   if (!response.ok) {
     throw new Error(await getErrorMessage(response));
   }
+}
+
+export function buildTranslationHttpRequest(
+  request: TranslationInput,
+  config: OpenAiCompatibleConfig,
+  apiKey: string,
+  stream: boolean
+): { url: string; headers: Record<string, string>; body: string } {
+  validateConfig(config);
+  const headers = createHeaders(apiKey);
+  headers.Accept = stream ? "text/event-stream" : "application/json";
+  return {
+    url: buildChatCompletionsUrl(config.baseUrl),
+    headers,
+    body: JSON.stringify({
+      model: config.model.trim(),
+      messages: buildMessages(request, config.systemPrompt),
+      stream,
+      ...getTranslationRequestOptions(
+        config.model,
+        config.thinkingEnabled,
+        config.reasoningEffort
+      ),
+    }),
+  };
+}
+
+export function parseOpenAiTranslationResponse(value: unknown): string {
+  if (typeof value !== "object" || value === null) {
+    throw new Error("AI returned an invalid translation response");
+  }
+  const response = value as {
+    choices?: Array<{ message?: { content?: unknown } }>;
+    error?: { message?: string };
+  };
+  if (response.error?.message) {
+    throw new Error(response.error.message);
+  }
+  const content = response.choices?.[0]?.message?.content;
+  if (typeof content !== "string" || !content.trim()) {
+    throw new Error("AI returned an empty translation");
+  }
+  return content;
 }

@@ -1,8 +1,66 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
+  buildTranslationHttpRequest,
   getTranslationRequestOptions,
   parseOpenAiSseChunk,
+  streamOpenAiTranslation,
 } from "./openai-compatible";
+
+describe("shared translation request", () => {
+  const input = {
+    text: "你好",
+    sourceLanguage: "zh",
+    targetLanguage: "en",
+    contextBefore: "之前。",
+    contextAfter: "之后。",
+  };
+  const config = {
+    baseUrl: "https://provider.example/v1",
+    model: "custom-model",
+    systemPrompt: "Translate accurately.",
+  };
+
+  it("shares the exact request format while allowing stream and JSON transports", () => {
+    const streaming = buildTranslationHttpRequest(
+      input,
+      config,
+      "test-key",
+      true
+    );
+    const json = buildTranslationHttpRequest(input, config, "test-key", false);
+    expect(streaming.url).toBe("https://provider.example/v1/chat/completions");
+    expect(streaming.headers.Accept).toBe("text/event-stream");
+    expect(json.headers.Accept).toBe("application/json");
+    expect(JSON.parse(streaming.body)).toMatchObject({
+      stream: true,
+      model: "custom-model",
+    });
+    expect(JSON.parse(json.body)).toMatchObject({ stream: false });
+    expect(JSON.parse(JSON.parse(json.body).messages[1].content)).toMatchObject(
+      { selectedText: "你好", contextBefore: "之前。", contextAfter: "之后。" }
+    );
+  });
+
+  it("preserves Chrome extension streaming after extracting the shared core", async () => {
+    const response = new Response(
+      'data: {"choices":[{"delta":{"content":"Hel"}}]}\r\n\r\ndata: {"choices":[{"delta":{"content":"lo"}}]}\n\ndata: [DONE]\n'
+    );
+    const fetchImpl = vi.fn().mockResolvedValue(response);
+    const signal = new AbortController().signal;
+    const parts: string[] = [];
+    for await (const part of streamOpenAiTranslation(
+      input,
+      config,
+      "",
+      signal,
+      fetchImpl
+    )) {
+      parts.push(part);
+    }
+    expect(parts.join("")).toBe("Hello");
+    expect(fetchImpl.mock.calls[0][1].signal).toBe(signal);
+  });
+});
 
 describe("parseOpenAiSseChunk", () => {
   it("reads streamed chat completion content", () => {

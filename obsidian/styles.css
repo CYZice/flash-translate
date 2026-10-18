@@ -1,0 +1,72 @@
+.flash-translate-modal {
+  width: min(580px, 92vw);
+}
+.flash-translate-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.flash-translate-model {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  overflow-wrap: anywhere;
+}
+.flash-translate-target {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-ui-small);
+}
+.flash-translate-source {
+  background: var(--background-secondary);
+  border-radius: var(--radius-m);
+  padding: 12px 14px;
+  margin-bottom: 18px;
+}
+.flash-translate-source summary {
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: var(--font-ui-small);
+}
+.flash-translate-source p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 150px;
+  overflow: auto;
+  margin: 10px 0 0;
+}
+.flash-translate-result-label {
+  display: block;
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-medium);
+}
+.flash-translate-result {
+  display: block;
+  width: 100%;
+  min-height: 160px;
+  max-height: 40vh;
+  margin-top: 8px;
+  padding: 12px;
+  resize: vertical;
+  font: inherit;
+  font-weight: var(--font-normal);
+  line-height: 1.6;
+}
+.flash-translate-status {
+  min-height: 2.5em;
+  margin: 12px 0;
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+}
+.flash-translate-status.is-error {
+  color: var(--text-error);
+}
+.flash-translate-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
