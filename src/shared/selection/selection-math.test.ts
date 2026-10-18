@@ -9,7 +9,7 @@ function math(markup: string): Element {
   return root.firstElementChild as Element;
 }
 
-describe("MathML serialization", () => {
+describe("shared MathML serialization", () => {
   it.each([
     ["<msup><mi>x</mi><mn>2</mn></msup>", "x^{2}"],
     ["<msub><mi>x</mi><mi>i</mi></msub>", "x_{i}"],

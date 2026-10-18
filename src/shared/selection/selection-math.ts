@@ -41,22 +41,28 @@ function serializeMath(node: Node, budget: MathBudget): string {
   if (node.nodeType === 3) {
     return readMathText(node, budget);
   }
-  if (!(node instanceof Element)) {
+  if (node.nodeType !== 1) {
     return "";
   }
-  const name = node.localName;
+  const element = node as Element;
+  const name = element.localName;
   if (name === "annotation" || name === "annotation-xml") {
     return "";
   }
   const parts: string[] = [];
-  const children = node.children.length > 0 ? node.children : node.childNodes;
+  const children =
+    element.children.length > 0 ? element.children : element.childNodes;
   for (const child of children) {
     if (budget.exceeded) {
       break;
     }
     parts.push(serializeMath(child, budget));
   }
-  return formatMath(name, parts, node.firstElementChild?.localName === "mrow");
+  return formatMath(
+    name,
+    parts,
+    element.firstElementChild?.localName === "mrow"
+  );
 }
 
 function formatMath(name: string, parts: string[], groupBase: boolean): string {

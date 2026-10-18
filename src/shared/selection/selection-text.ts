@@ -1,4 +1,4 @@
-import { getAdjacentContext } from "@/shared/utils/ai-context";
+import { getAdjacentContext } from "../utils/ai-context";
 import {
   getMathRoot,
   getMathText,

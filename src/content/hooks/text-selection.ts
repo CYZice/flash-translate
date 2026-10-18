@@ -2,14 +2,14 @@
 // These are extracted from useTextSelection hook for testability
 
 import {
-  DEFAULT_AI_CONTEXT_SENTENCE_COUNT,
-  normalizeAiContextSentenceCount,
-} from "@/shared/utils/ai-context";
-import {
   getRangeContext,
   getRangeText,
   normalizeSelectionText,
-} from "./selection-text";
+} from "@/shared/selection/selection-text";
+import {
+  DEFAULT_AI_CONTEXT_SENTENCE_COUNT,
+  normalizeAiContextSentenceCount,
+} from "@/shared/utils/ai-context";
 import type { TranslationContext } from "./translator-executor";
 
 interface RectLike {

@@ -1,4 +1,4 @@
-import { getRangeText } from "../hooks/selection-text";
+import { getRangeText } from "@/shared/selection/selection-text";
 import type { HoveredTerm, ViewportRect } from "./hovered-term";
 import {
   intlWordSegmentationStrategy,

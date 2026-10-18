@@ -34,7 +34,7 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-describe("selected text extraction", () => {
+describe("shared selected text extraction", () => {
   it("reads partial text across inline elements without copying or editing DOM", () => {
     const root = content("<p>Hello <b>beautiful</b> world.</p>");
     const paragraph = root.firstChild as HTMLElement;

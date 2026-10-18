@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useLatestRef } from "@/shared/hooks/use-latest-ref";
+import { MAX_SELECTION_CONTEXT_CHARACTERS } from "@/shared/selection/selection-text";
 import {
   DEFAULT_AI_CONTEXT_SENTENCE_COUNT,
   getContextAroundSelection,
 } from "@/shared/utils/ai-context";
-import { MAX_SELECTION_CONTEXT_CHARACTERS } from "./selection-text";
 import {
   cloneSelectionRanges,
   getRangesContext,
