@@ -121,6 +121,13 @@ export function useHoveredTermTranslation({
   const cacheRef = useRef(new TermTranslationCache());
 
   useEffect(() => {
+    if (!enabled) {
+      hoveredTermRef.current = null;
+      cacheRef.current.clear();
+      setState(IDLE_STATE);
+      return;
+    }
+    const releaseResource = translatorManager.retain();
     const clearPendingTranslation = () => {
       abortControllerRef.current?.abort();
       abortControllerRef.current = null;
@@ -223,6 +230,9 @@ export function useHoveredTermTranslation({
       window.removeEventListener("scroll", clearHoveredTerm, true);
       clearPendingTranslation();
       hoveredTermRef.current = null;
+      cacheRef.current.clear();
+      setState(IDLE_STATE);
+      releaseResource();
     };
   }, [enabled, selection, sourceLanguage, targetLanguage]);
 

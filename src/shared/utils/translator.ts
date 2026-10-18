@@ -34,11 +34,29 @@ export type TranslationAvailabilityStatus =
 
 class TranslatorManager {
   private instance: CachedTranslator | null = null;
+  private owners = 0;
+  private generation = 0;
+  private creationController: AbortController | null = null;
   private isCreating = false;
   private pendingRequests: Array<{
     resolve: (translator: Translator) => void;
     reject: (error: Error) => void;
   }> = [];
+
+  retain(): () => void {
+    this.owners += 1;
+    let released = false;
+    return () => {
+      if (released) {
+        return;
+      }
+      released = true;
+      this.owners -= 1;
+      if (this.owners === 0) {
+        this.destroy();
+      }
+    };
+  }
 
   async checkAvailability(
     sourceLanguage: string,
@@ -75,14 +93,7 @@ class TranslatorManager {
 
     // Destroy existing instance if different language pair
     if (this.instance) {
-      try {
-        this.instance.translator.destroy();
-      } catch (error) {
-        log.error("Failed to destroy translator instance:", error);
-      } finally {
-        // Ensure instance reference is cleared even if destroy() throws
-        this.instance = null;
-      }
+      this.destroyInstance();
     }
 
     // Queue request if already creating
@@ -93,6 +104,9 @@ class TranslatorManager {
     }
 
     this.isCreating = true;
+    const generation = this.generation;
+    const controller = new AbortController();
+    this.creationController = controller;
 
     try {
       if (typeof Translator === "undefined") {
@@ -104,6 +118,7 @@ class TranslatorManager {
         sourceLanguage,
         targetLanguage
       );
+      controller.signal.throwIfAborted();
 
       if (availability === "unsupported") {
         throw createUnsupportedError();
@@ -117,6 +132,7 @@ class TranslatorManager {
       const translator = await Translator.create({
         sourceLanguage,
         targetLanguage,
+        signal: controller.signal,
         monitor(m) {
           const handleProgress = (e: ProgressEvent) => {
             if (e.lengthComputable) {
@@ -131,6 +147,11 @@ class TranslatorManager {
           m.addEventListener("downloadprogress", handleProgress);
         },
       });
+
+      if (generation !== this.generation) {
+        translator.destroy();
+        throw new DOMException("Translation closed", "AbortError");
+      }
 
       this.instance = {
         translator,
@@ -149,13 +170,18 @@ class TranslatorManager {
       // Reject pending requests with properly typed error
       const normalizedError =
         error instanceof Error ? error : new Error(String(error));
-      for (const { reject } of this.pendingRequests) {
-        reject(normalizedError);
+      if (generation === this.generation) {
+        for (const { reject } of this.pendingRequests) {
+          reject(normalizedError);
+        }
+        this.pendingRequests = [];
       }
-      this.pendingRequests = [];
       throw normalizedError;
     } finally {
-      this.isCreating = false;
+      if (generation === this.generation) {
+        this.isCreating = false;
+        this.creationController = null;
+      }
     }
   }
 
@@ -166,6 +192,7 @@ class TranslatorManager {
     signal?: AbortSignal
   ): AsyncGenerator<string> {
     const translator = await this.getTranslator(sourceLanguage, targetLanguage);
+    signal?.throwIfAborted();
     const paragraphs = splitTextIntoParagraphs(text);
 
     if (paragraphs.length === 1) {
@@ -188,10 +215,23 @@ class TranslatorManager {
     signal?: AbortSignal
   ): Promise<string> {
     const translator = await this.getTranslator(sourceLanguage, targetLanguage);
+    signal?.throwIfAborted();
     return translator.translate(text, { signal });
   }
 
   destroy(): void {
+    this.generation += 1;
+    this.creationController?.abort();
+    this.creationController = null;
+    this.isCreating = false;
+    for (const { reject } of this.pendingRequests) {
+      reject(new DOMException("Translation closed", "AbortError"));
+    }
+    this.pendingRequests = [];
+    this.destroyInstance();
+  }
+
+  private destroyInstance(): void {
     if (this.instance) {
       try {
         this.instance.translator.destroy();

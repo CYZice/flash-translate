@@ -22,6 +22,10 @@ export class TermTranslationCache {
     this.#maxEntries = Math.max(1, maxEntries);
   }
 
+  clear(): void {
+    this.#entries.clear();
+  }
+
   get(key: TermTranslationCacheKey): string | null {
     const serializedKey = serializeKey(key);
     const value = this.#entries.get(serializedKey);

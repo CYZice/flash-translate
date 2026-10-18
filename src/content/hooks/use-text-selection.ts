@@ -227,7 +227,7 @@ export function useTextSelection(
     }
   };
 
-  // Dismiss card without clearing text selection
+  // Keep the browser's selection, but release our retained text and DOM ranges.
   const dismissCard = () => {
     if (selectionTimerRef.current !== null) {
       window.clearTimeout(selectionTimerRef.current);
@@ -235,6 +235,7 @@ export function useTextSelection(
     }
     setIsPinned(false);
     setIsVisible(false);
+    clearSelectionState(setSelection, lastSelectionTextRef);
   };
 
   const activateCard = () => {

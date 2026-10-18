@@ -15,6 +15,9 @@ for translating selected note text and inserting the result.
 - **Site exclusion**: Disable translation on specific websites
 - **Settings sync**: Your preferences sync automatically across devices
 - **Translation providers**: Chrome's built-in translation runs on-device. Custom AI translation sends selected text and configured context to your chosen endpoint.
+- **Session cleanup**: Closing a translation clears its retained text and results.
+  Local translation and language-detection sessions are destroyed once no active
+  feature needs them. Downloaded language files and settings are kept.
 
 ## Requirements
 

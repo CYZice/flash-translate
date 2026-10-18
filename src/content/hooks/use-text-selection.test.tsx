@@ -104,6 +104,10 @@ describe("selection display lifecycle", () => {
     act(() => vi.advanceTimersByTime(1500));
     expect(state.isVisible).toBe(false);
     expect(state.isPinned).toBe(false);
+    expect(state.selection).toBeNull();
+    expect(editor.value.slice(editor.selectionStart, editor.selectionEnd)).toBe(
+      "Selected text"
+    );
     select("New text");
     expect(state.isVisible).toBe(true);
   });

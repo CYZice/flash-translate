@@ -63,6 +63,7 @@ export async function executeTermTranslation({
     targetLanguage,
     signal
   );
+  signal.throwIfAborted();
   cache.set(cacheKey, translatedText);
   return createResult(
     hoveredTerm,

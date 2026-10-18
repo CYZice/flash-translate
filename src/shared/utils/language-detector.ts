@@ -16,11 +16,29 @@ const log = createPrefixedLogger("language-detector");
 
 class LanguageDetectorManager {
   private instance: LanguageDetector | null = null;
+  private owners = 0;
+  private generation = 0;
+  private creationController: AbortController | null = null;
   private isCreating = false;
   private pendingRequests: Array<{
     resolve: (detector: LanguageDetector) => void;
     reject: (error: Error) => void;
   }> = [];
+
+  retain(): () => void {
+    this.owners += 1;
+    let released = false;
+    return () => {
+      if (released) {
+        return;
+      }
+      released = true;
+      this.owners -= 1;
+      if (this.owners === 0) {
+        this.destroy();
+      }
+    };
+  }
 
   /**
    * Check if the Language Detector API is available
@@ -57,6 +75,9 @@ class LanguageDetectorManager {
     }
 
     this.isCreating = true;
+    const generation = this.generation;
+    const controller = new AbortController();
+    this.creationController = controller;
 
     try {
       if (typeof LanguageDetector === "undefined") {
@@ -65,6 +86,7 @@ class LanguageDetectorManager {
 
       // Check availability
       const availability = await this.checkAvailability();
+      controller.signal.throwIfAborted();
 
       if (availability === "unsupported") {
         throw createDetectorUnsupportedError();
@@ -76,6 +98,7 @@ class LanguageDetectorManager {
 
       // Create detector instance with download progress monitoring
       const detector = await LanguageDetector.create({
+        signal: controller.signal,
         monitor(m) {
           const handleProgress = (e: ProgressEvent) => {
             if (e.lengthComputable) {
@@ -91,6 +114,11 @@ class LanguageDetectorManager {
         },
       });
 
+      if (generation !== this.generation) {
+        detector.destroy();
+        throw new DOMException("Translation closed", "AbortError");
+      }
+
       this.instance = detector;
 
       // Resolve pending requests
@@ -104,13 +132,18 @@ class LanguageDetectorManager {
       // Reject pending requests with properly typed error
       const normalizedError =
         error instanceof Error ? error : new Error(String(error));
-      for (const { reject } of this.pendingRequests) {
-        reject(normalizedError);
+      if (generation === this.generation) {
+        for (const { reject } of this.pendingRequests) {
+          reject(normalizedError);
+        }
+        this.pendingRequests = [];
       }
-      this.pendingRequests = [];
       throw normalizedError;
     } finally {
-      this.isCreating = false;
+      if (generation === this.generation) {
+        this.isCreating = false;
+        this.creationController = null;
+      }
     }
   }
 
@@ -118,10 +151,15 @@ class LanguageDetectorManager {
    * Detect the language of the given text
    * Returns the best match with confidence score
    */
-  async detect(text: string): Promise<NormalizedLanguageDetectionResult> {
+  async detect(
+    text: string,
+    signal?: AbortSignal
+  ): Promise<NormalizedLanguageDetectionResult> {
     try {
       const detector = await this.getDetector();
-      const results = await detector.detect(text);
+      signal?.throwIfAborted();
+      const results = await detector.detect(text, { signal });
+      signal?.throwIfAborted();
       const best = selectBestLanguage(results);
 
       // Normalize to supported language code
@@ -146,6 +184,14 @@ class LanguageDetectorManager {
    * Destroy the cached detector instance and release resources
    */
   destroy(): void {
+    this.generation += 1;
+    this.creationController?.abort();
+    this.creationController = null;
+    this.isCreating = false;
+    for (const { reject } of this.pendingRequests) {
+      reject(new DOMException("Translation closed", "AbortError"));
+    }
+    this.pendingRequests = [];
     if (this.instance) {
       try {
         this.instance.destroy();

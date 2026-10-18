@@ -39,18 +39,21 @@ export function useTranslator({
   });
 
   const abortControllerRef = useRef<AbortController | null>(null);
+  const releaseResourceRef = useRef<(() => void) | null>(null);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: resetKey intentionally triggers cleanup
   useEffect(() => {
     abortControllerRef.current?.abort();
     abortControllerRef.current = null;
+    releaseResourceRef.current?.();
+    releaseResourceRef.current = null;
     setState((prev) => ({
       ...prev,
       result: "",
       isLoading: false,
       error: null,
     }));
-  }, [resetKey]);
+  }, [resetKey, provider, sourceLanguage, targetLanguage]);
 
   // Check availability when language changes
   useEffect(() => {
@@ -89,6 +92,9 @@ export function useTranslator({
       abortControllerRef.current?.abort();
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
+      if (provider === "chrome-built-in" && !releaseResourceRef.current) {
+        releaseResourceRef.current = translatorManager.retain();
+      }
 
       setState((prev) => ({
         ...prev,
@@ -114,7 +120,11 @@ export function useTranslator({
         options,
         translator,
         {
-          onChunk: (result) => setState((prev) => ({ ...prev, result })),
+          onChunk: (result) => {
+            if (!abortController.signal.aborted) {
+              setState((prev) => ({ ...prev, result }));
+            }
+          },
         }
       );
 
@@ -124,7 +134,10 @@ export function useTranslator({
       }
 
       // Handle aborted translation (new translation started)
-      if (executionResult.type === "aborted") {
+      if (
+        abortController.signal.aborted ||
+        executionResult.type === "aborted"
+      ) {
         return;
       }
 
@@ -151,6 +164,8 @@ export function useTranslator({
   const reset = useCallback(() => {
     abortControllerRef.current?.abort();
     abortControllerRef.current = null;
+    releaseResourceRef.current?.();
+    releaseResourceRef.current = null;
     setState((prev) => ({
       ...prev,
       result: "",
@@ -165,6 +180,8 @@ export function useTranslator({
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
+      releaseResourceRef.current?.();
+      releaseResourceRef.current = null;
     };
   }, []);
 

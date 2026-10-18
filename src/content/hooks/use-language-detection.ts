@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   type LanguageDetectionAvailability,
   languageDetectorManager,
@@ -49,9 +49,6 @@ export function useLanguageDetection({
     overriddenLanguage: null,
   });
 
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const lastDetectedTextRef = useRef<string | null>(null);
-
   // Check availability on mount
   useEffect(() => {
     const checkAvailability = async () => {
@@ -82,14 +79,8 @@ export function useLanguageDetection({
       return;
     }
 
-    // Skip if same text was already detected
-    if (lastDetectedTextRef.current === text) {
-      return;
-    }
-
-    // Cancel previous detection
-    abortControllerRef.current?.abort();
-    abortControllerRef.current = new AbortController();
+    const controller = new AbortController();
+    const releaseResource = languageDetectorManager.retain();
 
     const detectLanguage = async () => {
       setState((prev) => ({
@@ -99,14 +90,15 @@ export function useLanguageDetection({
       }));
 
       try {
-        const result = await languageDetectorManager.detect(text);
+        const result = await languageDetectorManager.detect(
+          text,
+          controller.signal
+        );
 
         // Check if aborted
-        if (abortControllerRef.current?.signal.aborted) {
+        if (controller.signal.aborted) {
           return;
         }
-
-        lastDetectedTextRef.current = text;
 
         setState((prev) => ({
           ...prev,
@@ -117,7 +109,7 @@ export function useLanguageDetection({
         }));
       } catch (error) {
         // Ignore abort errors
-        if (error instanceof Error && error.name === "AbortError") {
+        if (controller.signal.aborted) {
           return;
         }
 
@@ -132,14 +124,11 @@ export function useLanguageDetection({
     };
 
     detectLanguage();
-  }, [text, enabled]);
-
-  // Cleanup on unmount
-  useEffect(() => {
     return () => {
-      abortControllerRef.current?.abort();
+      controller.abort();
+      releaseResource();
     };
-  }, []);
+  }, [text, enabled]);
 
   const setOverriddenLanguage = (lang: string | null) => {
     setState((prev) => ({ ...prev, overriddenLanguage: lang }));

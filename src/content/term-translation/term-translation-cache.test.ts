@@ -8,6 +8,12 @@ const EN_TO_JA = {
 };
 
 describe("TermTranslationCache", () => {
+  it("discards all cached terms when the translation session closes", () => {
+    const cache = new TermTranslationCache();
+    cache.set(EN_TO_JA, "翻訳する");
+    cache.clear();
+    expect(cache.get(EN_TO_JA)).toBeNull();
+  });
   it("returns a completed translation for the same language pair and term", () => {
     const cache = new TermTranslationCache();
     cache.set(EN_TO_JA, "翻訳する");

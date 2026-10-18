@@ -54,6 +54,7 @@ export default function App() {
     targetLanguage,
     enabled:
       canDisplay &&
+      isVisible &&
       !skipResult.shouldSkip &&
       !isDetecting &&
       selection !== null,
