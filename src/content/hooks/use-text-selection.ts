@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLatestRef } from "@/shared/hooks/use-latest-ref";
 import { MAX_SELECTION_CONTEXT_CHARACTERS } from "@/shared/selection/selection-text";
+import { getTextControlFocusRect } from "@/shared/selection/text-control-geometry";
 import {
   DEFAULT_AI_CONTEXT_SENTENCE_COUNT,
   getContextAroundSelection,
@@ -46,7 +47,7 @@ function getControlSelection(sentenceCount: number): SelectionInfo | null {
   }
   return {
     text,
-    rect: element.getBoundingClientRect(),
+    rect: getTextControlFocusRect(element),
     ranges: [],
     readContext: () => {
       if (

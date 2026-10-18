@@ -1,6 +1,7 @@
 // Pure functions for text selection logic
 // These are extracted from useTextSelection hook for testability
 
+import { getSelectionFocusRect } from "@/shared/selection/selection-geometry";
 import {
   getRangeContext,
   getRangeText,
@@ -156,7 +157,7 @@ export function isValidRect<T extends RectLike>(
 }
 
 /**
- * Gets the bounding rectangle for a selection.
+ * Gets the selection's moving-end anchor, with a bounding rectangle fallback.
  * Returns null if the selection has no valid range or rect.
  */
 export function getSelectionRect(
@@ -168,6 +169,10 @@ export function getSelectionRect(
   }
 
   try {
+    const focusRect = getSelectionFocusRect(selection);
+    if (focusRect) {
+      return focusRect;
+    }
     const range = selection.getRangeAt(0);
     const rect = range.getBoundingClientRect();
     if (isValidRect(rect)) {

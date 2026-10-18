@@ -1,3 +1,4 @@
+import { measureTextControlOffset } from "@/shared/selection/text-control-geometry";
 import {
   buildContentTextModel,
   domPositionToTextOffset,
@@ -17,91 +18,6 @@ function rectLike(rect: DOMRect): RectLike {
     x: rect.x,
     y: rect.y,
   };
-}
-
-const mirrorByDocument = new WeakMap<Document, HTMLDivElement>();
-
-function getMirror(document: Document): HTMLDivElement {
-  const existing = mirrorByDocument.get(document);
-  if (existing?.isConnected) {
-    return existing;
-  }
-
-  const mirror = document.createElement("div");
-  mirror.setAttribute("aria-hidden", "true");
-  Object.assign(mirror.style, {
-    position: "absolute",
-    left: "-100000px",
-    top: "0",
-    visibility: "hidden",
-    pointerEvents: "none",
-    whiteSpace: "pre-wrap",
-  });
-  document.body.appendChild(mirror);
-  mirrorByDocument.set(document, mirror);
-  return mirror;
-}
-
-function readNativeTextOffsetRect(
-  editor: HTMLInputElement | HTMLTextAreaElement,
-  textOffset: number
-): RectLike | null {
-  let mirror: HTMLDivElement | null = null;
-  try {
-    mirror = getMirror(editor.ownerDocument);
-    const styles = getComputedStyle(editor);
-    const properties = [
-      "boxSizing",
-      "fontFamily",
-      "fontSize",
-      "fontStyle",
-      "fontWeight",
-      "letterSpacing",
-      "lineHeight",
-      "paddingBottom",
-      "paddingLeft",
-      "paddingRight",
-      "paddingTop",
-      "textAlign",
-      "textIndent",
-      "textTransform",
-      "wordSpacing",
-      "borderBottomWidth",
-      "borderLeftWidth",
-      "borderRightWidth",
-      "borderTopWidth",
-    ] as const;
-    for (const property of properties) {
-      mirror.style[property] = styles[property];
-    }
-    mirror.style.width = `${editor.clientWidth}px`;
-    mirror.style.whiteSpace =
-      editor instanceof HTMLTextAreaElement ? "pre-wrap" : "pre";
-    mirror.style.overflowWrap =
-      editor instanceof HTMLTextAreaElement ? "break-word" : "normal";
-    mirror.textContent = "";
-
-    const before = editor.value.slice(0, textOffset);
-    const marker = editor.ownerDocument.createElement("span");
-    marker.textContent = "\u200b";
-    mirror.append(editor.ownerDocument.createTextNode(before), marker);
-
-    const mirrorRect = mirror.getBoundingClientRect();
-    const editorRect = editor.getBoundingClientRect();
-    const markerRect = marker.getBoundingClientRect();
-    return rectLike(
-      new DOMRect(
-        editorRect.left + markerRect.left - mirrorRect.left - editor.scrollLeft,
-        editorRect.top + markerRect.top - mirrorRect.top - editor.scrollTop,
-        1,
-        markerRect.height || Number.parseFloat(styles.lineHeight) || 16
-      )
-    );
-  } catch {
-    return null;
-  } finally {
-    mirror?.replaceChildren();
-  }
 }
 
 function readRangeRect(range: Range): RectLike | null {
@@ -197,7 +113,7 @@ export function measureEditorTextOffset(
     editor instanceof HTMLInputElement ||
     editor instanceof HTMLTextAreaElement
   ) {
-    return readNativeTextOffsetRect(editor, textOffset);
+    return measureTextControlOffset(editor, textOffset);
   }
   return readContentEditableTextOffsetRect(editor, textOffset);
 }

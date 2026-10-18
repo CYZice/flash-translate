@@ -1,9 +1,11 @@
 import type { Editor } from "obsidian";
+import { getSelectionFocusRect } from "../../src/shared/selection/selection-geometry";
 import {
   getRangeContext,
   getRangeText,
   MAX_SELECTION_CONTEXT_CHARACTERS,
 } from "../../src/shared/selection/selection-text";
+import { getTextControlFocusRect } from "../../src/shared/selection/text-control-geometry";
 import { getContextAroundSelection } from "../../src/shared/utils/ai-context";
 import type { SelectionRect } from "./floating-position";
 
@@ -60,7 +62,7 @@ function controlSelection(
   return {
     document,
     text,
-    rect: control.getBoundingClientRect(),
+    rect: getTextControlFocusRect(control),
     readContext: (sentences) => {
       if (
         !(sentences && control.isConnected) ||
@@ -163,7 +165,8 @@ export function readWorkspaceSelection(
   }
   const selection = document.getSelection();
   const first = selection?.rangeCount ? selection.getRangeAt(0) : null;
-  const rect = first?.getBoundingClientRect();
+  const rect =
+    getSelectionFocusRect(selection) ?? first?.getBoundingClientRect();
   const focused = document.activeElement;
   const fallback =
     focused && contains(focused) ? focused.getBoundingClientRect() : null;

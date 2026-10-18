@@ -80,18 +80,14 @@ export class TranslationCard {
     parent: HTMLElement,
     label: string,
     action: () => void,
-    icon?: string
+    icon: string
   ): HTMLButtonElement {
     const button = this.document.createElement("button");
     button.type = "button";
     button.title = label;
     button.setAttribute("aria-label", label);
-    if (icon) {
-      button.className = "flash-translate-icon";
-      setIcon(button, icon);
-    } else {
-      button.textContent = label;
-    }
+    button.className = "flash-translate-icon";
+    setIcon(button, icon);
     button.addEventListener("click", action);
     parent.append(button);
     return button;
@@ -220,7 +216,12 @@ export class TranslationCard {
     this.statusEl.setAttribute("role", "status");
     this.statusEl.title = content.model;
     footer.append(this.statusEl);
-    this.retry = this.button(footer, "Retry", () => this.runTranslation());
+    this.retry = this.button(
+      footer,
+      "Retry",
+      () => this.runTranslation(),
+      "rotate-ccw"
+    );
     const copy = this.button(
       footer,
       "Copy translation",
@@ -233,12 +234,22 @@ export class TranslationCard {
       const edits = this.document.createElement("div");
       edits.className = "flash-translate-edits";
       this.actions.push(
-        this.button(edits, "Insert below", () => this.apply("insert"))
+        this.button(
+          edits,
+          "Insert below",
+          () => this.apply("insert"),
+          "arrow-down-to-line"
+        )
       );
       this.actions.push(
-        this.button(edits, "Replace selection", () => this.apply("replace"))
+        this.button(
+          edits,
+          "Replace selection",
+          () => this.apply("replace"),
+          "replace"
+        )
       );
-      root.append(edits);
+      footer.append(edits);
     }
     if (oldRoot) {
       oldRoot.replaceWith(root);

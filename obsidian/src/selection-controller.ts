@@ -1,5 +1,5 @@
 import { setIcon } from "obsidian";
-import { positionNearSelection } from "./floating-position";
+import { positionSelectionBadge } from "../../src/shared/selection/selection-geometry";
 import { isTranslationUI, type SelectedSource } from "./workspace-selection";
 
 const SELECTION_KEYS = /^(Arrow|Home$|End$|Shift$)/;
@@ -174,7 +174,7 @@ export class SelectionController {
     this.document.body.append(badge);
     const win = this.document.defaultView;
     if (win) {
-      const point = positionNearSelection(
+      const point = positionSelectionBadge(
         source.rect,
         badge.getBoundingClientRect(),
         { width: win.innerWidth, height: win.innerHeight }

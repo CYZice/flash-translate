@@ -11,9 +11,11 @@
 .flash-translate-badge {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  padding: 6px;
+  width: 28px;
+  height: 28px;
+  min-width: 0;
+  min-height: 0;
+  padding: 5px;
   border-radius: 8px;
   color: var(--interactive-accent);
   cursor: pointer;
@@ -35,8 +37,8 @@
 .flash-translate-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 6px;
+  padding: 6px 8px;
   border-bottom: 1px solid var(--background-modifier-border);
   cursor: move;
   touch-action: none;
@@ -48,7 +50,11 @@
   font-weight: 600;
 }
 .flash-translate-header select {
-  width: 64px;
+  width: 52px;
+  height: 26px;
+  min-height: 0;
+  padding: 0 4px;
+  font: inherit;
   border: 0;
   box-shadow: none;
   background-color: transparent;
@@ -61,13 +67,25 @@
   display: grid;
   place-items: center;
   padding: 5px;
-  width: 28px;
-  height: 28px;
+  box-sizing: border-box;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  min-width: 0;
+  min-height: 0;
+  line-height: 1;
   color: var(--text-muted);
   background: transparent;
   box-shadow: none;
   border: 0;
   cursor: pointer;
+}
+.flash-translate-card button.flash-translate-icon[hidden] {
+  display: none;
+}
+.flash-translate-card button.flash-translate-icon:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 .flash-translate-card button.flash-translate-icon:hover,
 .flash-translate-card button[aria-pressed="true"] {
@@ -76,8 +94,8 @@
 }
 .flash-translate-card svg,
 .flash-translate-badge svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 .flash-translate-card textarea.flash-translate-result {
   flex: 1;
@@ -97,8 +115,8 @@
 .flash-translate-footer {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 12px 10px;
+  gap: 4px;
+  padding: 4px 8px 8px;
 }
 .flash-translate-status {
   flex: 1;
@@ -113,8 +131,5 @@
 }
 .flash-translate-edits {
   display: flex;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 0 12px 12px;
+  gap: 4px;
 }

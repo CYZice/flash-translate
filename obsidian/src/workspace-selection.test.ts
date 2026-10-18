@@ -40,6 +40,10 @@ beforeEach(() => {
     value: () => rect,
     configurable: true,
   });
+  Object.defineProperty(Range.prototype, "getClientRects", {
+    value: () => [],
+    configurable: true,
+  });
 });
 afterEach(() => {
   document.getSelection()?.removeAllRanges();
@@ -196,6 +200,15 @@ describe("generic workspace selections", () => {
     const frame = document.createElement("iframe");
     document.body.append(frame);
     const other = required(frame.contentDocument);
+    const prototype = Object.getPrototypeOf(other.createRange());
+    Object.defineProperty(prototype, "getClientRects", {
+      value: () => [],
+      configurable: true,
+    });
+    Object.defineProperty(prototype, "getBoundingClientRect", {
+      value: () => rect,
+      configurable: true,
+    });
     other.body.innerHTML =
       "<p>Value <mjx-container><math><mfrac><mi>a</mi><mi>b</mi></mfrac></math></mjx-container></p>";
     const range = other.createRange();

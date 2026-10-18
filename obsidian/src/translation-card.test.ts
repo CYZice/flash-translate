@@ -50,6 +50,24 @@ afterEach(() => {
 });
 
 describe("non-modal translation card", () => {
+  it("renders note actions as labelled icons in the same compact footer", async () => {
+    preview({ apply: vi.fn() });
+    await Promise.resolve();
+    const footer = document.querySelector(".flash-translate-footer");
+    for (const label of [
+      "Retry",
+      "Copy translation",
+      "Insert below",
+      "Replace selection",
+    ]) {
+      const action = button(label);
+      expect(action.classList.contains("flash-translate-icon")).toBe(true);
+      expect(action.textContent).toBe("");
+      expect(action.title).toBe(label);
+      expect(footer?.contains(action)).toBe(true);
+    }
+    expect(button("Retry").hidden).toBe(true);
+  });
   it("has no modal, settings, or edit actions for rendered output", async () => {
     preview();
     await Promise.resolve();

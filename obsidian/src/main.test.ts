@@ -80,6 +80,10 @@ beforeEach(async () => {
     }),
     configurable: true,
   });
+  Object.defineProperty(Range.prototype, "getClientRects", {
+    value: () => [],
+    configurable: true,
+  });
   container = document.createElement("div");
   container.innerHTML = "<p>Hello world.</p>";
   document.body.append(container);
