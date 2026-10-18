@@ -1,5 +1,15 @@
 const LOCALE_SEPARATOR = /[-_]/;
 const en = {
+  usage: "Usage on this installation",
+  usageDescription:
+    "Local cumulative counters only. Tokens include provider-reported usage; missing usage is not estimated. Local translation has no token report.",
+  completedTranslations: "Completed translations",
+  aiRequests: "AI requests",
+  missingUsage: "AI requests without reported usage",
+  inputTokens: "Reported input tokens",
+  outputTokens: "Reported output tokens",
+  totalTokens: "Reported total tokens",
+  usageError: "Could not read usage statistics",
   languages: "Languages",
   behavior: "Translation behavior",
   advanced: "Advanced settings",
@@ -50,6 +60,16 @@ const en = {
 type SettingsCopy = typeof en;
 
 const zh: SettingsCopy = {
+  usage: "本机累计用量",
+  usageDescription:
+    "只保存累计数字。Token 仅累计接口已报告的数据，缺失用量不估算；内置翻译不提供 token 用量。",
+  completedTranslations: "完成翻译",
+  aiRequests: "AI 请求",
+  missingUsage: "未报告用量的 AI 请求",
+  inputTokens: "已报告输入 token",
+  outputTokens: "已报告输出 token",
+  totalTokens: "已报告总 token",
+  usageError: "无法读取用量统计",
   languages: "语言",
   behavior: "翻译行为",
   advanced: "高级设置",
@@ -93,6 +113,16 @@ const zh: SettingsCopy = {
 };
 
 const ja: SettingsCopy = {
+  usage: "この環境の累計使用量",
+  usageDescription:
+    "累計数値のみを保存します。トークンは API の報告値のみを集計し、不明な使用量は推計しません。内蔵翻訳のトークンは取得できません。",
+  completedTranslations: "完了した翻訳",
+  aiRequests: "AI リクエスト",
+  missingUsage: "使用量が不明な AI リクエスト",
+  inputTokens: "報告済み入力トークン",
+  outputTokens: "報告済み出力トークン",
+  totalTokens: "報告済み合計トークン",
+  usageError: "使用量を読み込めませんでした",
   languages: "言語",
   behavior: "翻訳の動作",
   advanced: "詳細設定",

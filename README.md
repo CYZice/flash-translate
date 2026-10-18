@@ -52,6 +52,29 @@ on-demand download panel and does not change your translation languages.
 Obsidian keeps its command-only option and secret storage. Settings are stored
 separately in each host; they are not synchronized between Chrome and Obsidian.
 
+### Usage statistics
+
+Open **Usage on this installation** in either settings page for completed
+translations, AI request attempts, reported input/output/total tokens, and the
+number of AI requests without reported usage. Counters start with this build;
+previous translations are not reconstructed. Native completions include input
+assistance and word-hover translations. Model checks/downloads and connection
+tests do not count. Failed or cancelled AI attempts count as requests, but not
+completed translations.
+
+Token counts come from the API's Chat Completions `usage` fields, not text-length
+estimates. Cached/reasoning detail counts are not added again. Interrupted
+streams may lack final usage. The official OpenAI endpoint is asked to include
+[streaming usage](https://developers.openai.com/api/reference/resources/chat).
+Custom compatible endpoints retain their existing request format; if they do
+not include `usage`, their token usage remains unknown. Local translation does
+not expose tokens. The displayed token sum covers reported requests only.
+
+Only numeric aggregates are stored: Chrome uses local storage; Obsidian uses its
+plugin data alongside settings. No translation history is added. An already-sent
+Obsidian request can finish after its card closes; eventual reported tokens are
+counted without restoring the closed UI.
+
 ## Requirements
 
 - **Chrome 150+** (Translator API and element-scoped View Transition support)

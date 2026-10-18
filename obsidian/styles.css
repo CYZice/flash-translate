@@ -133,3 +133,21 @@
   display: flex;
   gap: 4px;
 }
+.flash-translate-usage {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+  font-size: var(--font-ui-small);
+}
+.flash-translate-usage > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.flash-translate-usage dt {
+  color: var(--text-muted);
+}
+.flash-translate-usage dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}

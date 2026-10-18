@@ -44,16 +44,16 @@ describe("Obsidian request concurrency", () => {
     expect(await active).toBe("AbortError");
     expect(http).toHaveBeenCalledTimes(1);
     // Logical cancellation must not release a still-running native transport slot.
-    calls[0].resolve({ status: 200, text: "obsolete" });
+    calls[0].resolve({ status: 200, body: "obsolete" });
     await Promise.resolve();
     expect(http).toHaveBeenCalledTimes(2);
     expect(calls[1].input.body).toBe("latest");
-    calls[1].resolve({ status: 200, text: "Latest translation" });
+    calls[1].resolve({ status: 200, body: "Latest translation" });
     expect(await Promise.all(waiting)).toEqual([
       "AbortError",
       "AbortError",
       "AbortError",
-      { status: 200, text: "Latest translation" },
+      { status: 200, body: "Latest translation" },
     ]);
   });
 
@@ -66,7 +66,7 @@ describe("Obsidian request concurrency", () => {
     ).rejects.toMatchObject({ name: "AbortError" });
     controller.abort();
     await waiting;
-    calls[0].resolve({ status: 200, text: "First" });
+    calls[0].resolve({ status: 200, body: "First" });
     await active;
     expect(http).toHaveBeenCalledTimes(1);
   });
@@ -91,7 +91,7 @@ describe("Obsidian request concurrency", () => {
     await expect(queue.request(input("after unload"))).rejects.toMatchObject({
       name: "AbortError",
     });
-    calls[0].resolve({ status: 200, text: "Late" });
+    calls[0].resolve({ status: 200, body: "Late" });
     await Promise.resolve();
     expect(http).toHaveBeenCalledTimes(1);
   });
@@ -108,8 +108,8 @@ describe("Obsidian request concurrency", () => {
     calls[0].reject(new Error("Late network failure"));
     await Promise.resolve();
     expect(http).toHaveBeenCalledTimes(2);
-    calls[1].resolve({ status: 200, text: "Next" });
-    expect(await next).toEqual({ status: 200, text: "Next" });
+    calls[1].resolve({ status: 200, body: "Next" });
+    expect(await next).toEqual({ status: 200, body: "Next" });
   });
 
   it("rejects an already-cancelled task without opening a connection", async () => {

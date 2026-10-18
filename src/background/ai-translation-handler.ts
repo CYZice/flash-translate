@@ -9,7 +9,13 @@ import {
   streamOpenAiTranslation,
   testOpenAiConnection,
 } from "@/shared/translation/openai-compatible";
+import { AiUsageTracker } from "@/shared/translation/usage";
 import { getAiHostPermissionPattern } from "@/shared/utils/ai-endpoint";
+import { recordUsage } from "./usage-store";
+
+function logUsageFailure(): void {
+  console.warn("[flash-translate] Could not save AI usage statistics.");
+}
 
 async function assertHostPermission(baseUrl: string): Promise<void> {
   const originPattern = getAiHostPermissionPattern(baseUrl);
@@ -68,12 +74,17 @@ export function registerAiTranslationPortHandler(): void {
       abortController = controller;
 
       const run = async () => {
+        const usage = new AiUsageTracker((event) =>
+          recordUsage(event).catch(logUsageFailure)
+        );
+        let completed = false;
         try {
           const [settings, apiKey] = await Promise.all([
             getSettings(),
             getAiApiKey(),
           ]);
           await assertHostPermission(settings.aiBaseUrl);
+          controller.signal.throwIfAborted();
 
           const request = message;
 
@@ -88,18 +99,22 @@ export function registerAiTranslationPortHandler(): void {
               reasoningEffort: settings.aiReasoningEffort,
             },
             apiKey,
-            controller.signal
+            controller.signal,
+            fetch,
+            usage
           )) {
             accumulated += delta;
             safePostMessage({ type: "chunk", result: accumulated });
           }
 
           safePostMessage({ type: "done" });
+          completed = Boolean(accumulated.trim()) && !controller.signal.aborted;
         } catch (error) {
           if (!isAbortError(error)) {
             safePostMessage({ type: "error", message: getErrorMessage(error) });
           }
         } finally {
+          await usage.finish(completed);
           if (abortController === controller) {
             abortController = null;
           }

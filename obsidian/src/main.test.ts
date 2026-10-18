@@ -7,7 +7,7 @@ import FlashTranslatePlugin from "./main";
 const host = vi.hoisted(() => ({
   request: vi.fn(async () => ({
     status: 200,
-    text: JSON.stringify({ choices: [{ message: { content: "Bonjour" } }] }),
+    json: { choices: [{ message: { content: "Bonjour" } }] },
   })),
   notice: vi.fn(),
 }));
@@ -129,6 +129,27 @@ afterEach(() => {
 });
 
 describe("Obsidian floating selection integration", () => {
+  it("keeps aggregate usage and settings together without storing translation history", async () => {
+    const update = plugin.updateSettings({ contextSentenceCount: 0 });
+    select(required(container.querySelector("p")));
+    command();
+    await tick();
+    await update;
+    await Reflect.get(plugin, "persistence");
+    expect(plugin.usage).toMatchObject({
+      completedTranslations: 1,
+      aiRequests: 1,
+      reportedRequests: 0,
+    });
+    const saved = vi.mocked(plugin.saveData).mock.calls.at(-1)?.[0];
+    expect(saved).toMatchObject({
+      contextSentenceCount: 0,
+      model: "test",
+      usage: plugin.usage,
+    });
+    expect(JSON.stringify(saved)).not.toContain("Hello world.");
+    expect(JSON.stringify(saved)).not.toContain("Bonjour");
+  });
   it("automatically reverses the target on new selections in a pinned card", async () => {
     await plugin.updateSettings({
       autoZhEn: true,

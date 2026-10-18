@@ -33,6 +33,9 @@ context sentences to zero to exclude surrounding text from AI requests.
 - Language, behavior, provider configuration, prompts, and site exclusions use
   `chrome.storage.sync`, which can sync through your Chrome account.
 - The custom AI API key uses `chrome.storage.local`, not sync storage.
+- Aggregate translation completions, AI request attempts, and provider-reported
+  token counters also use `chrome.storage.local`. They contain no translation
+  text, prompts, URLs, model IDs, or per-request history.
 - Quick-translation requests can hold selected text in browser session storage
   so the side panel can display it. This is separate from persistent preferences.
 
@@ -42,6 +45,9 @@ context sentences to zero to exclude surrounding text from AI requests.
   stored in the vault's plugin `data.json`. Vault backup/sync tools may copy it.
 - Only the API-key reference is stored in that file. The key itself is managed
   through Obsidian's secret-storage API.
+- Numeric aggregate translation/request/token counters are stored in the same
+  `data.json`. They contain no translation text or per-request history; vault
+  backup/sync tools may copy these counters.
 - Translation previews remain in memory unless you explicitly copy or insert
   them. The plugin does not save a translation history.
 

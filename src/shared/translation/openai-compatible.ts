@@ -1,6 +1,7 @@
 import { getLanguageEnglishName } from "../constants/languages";
 import { buildChatCompletionsUrl, buildModelsUrl } from "../utils/ai-endpoint";
 import type { AiReasoningEffort, TranslationInput } from "./config";
+import { readTokenUsage, type TokenUsage } from "./usage";
 
 const GPT_5_MODEL_REGEX = /^gpt-5(?:[.-]|$)/i;
 const DEEPSEEK_MODEL_REGEX = /^deepseek(?:[.-]|$)/i;
@@ -135,7 +136,10 @@ async function* readSseData(
   }
 }
 
-export function parseOpenAiSseChunk(data: string): string | null {
+export function parseOpenAiSseChunk(
+  data: string,
+  onUsage?: (usage: TokenUsage) => void
+): string | null {
   if (!data || data === "[DONE]") {
     return null;
   }
@@ -149,6 +153,10 @@ export function parseOpenAiSseChunk(data: string): string | null {
     });
   }
 
+  const usage = readTokenUsage(chunk);
+  if (usage) {
+    onUsage?.(usage);
+  }
   if (chunk.error?.message) {
     throw new Error(chunk.error.message);
   }
@@ -162,14 +170,23 @@ export async function* streamOpenAiTranslation(
   config: OpenAiCompatibleConfig,
   apiKey: string,
   signal: AbortSignal,
-  fetchImpl: typeof fetch = fetch
+  fetchImpl: typeof fetch = fetch,
+  observer: {
+    onRequest?: () => void;
+    onUsage?: (usage: TokenUsage) => void;
+  } = {}
 ): AsyncGenerator<string> {
   const httpRequest = buildTranslationHttpRequest(
     request,
     config,
     apiKey,
-    true
+    true,
+    // The official endpoint supports this option. Do not impose it on custom
+    // compatible endpoints; consume their usage when supplied, otherwise unknown.
+    new URL(config.baseUrl).origin === "https://api.openai.com"
   );
+  signal.throwIfAborted();
+  observer.onRequest?.();
   const response = await fetchImpl(httpRequest.url, {
     method: "POST",
     headers: httpRequest.headers,
@@ -188,7 +205,7 @@ export async function* streamOpenAiTranslation(
     if (data === "[DONE]") {
       return;
     }
-    const delta = parseOpenAiSseChunk(data);
+    const delta = parseOpenAiSseChunk(data, observer.onUsage);
     if (delta) {
       yield delta;
     }
@@ -218,7 +235,8 @@ export function buildTranslationHttpRequest(
   request: TranslationInput,
   config: OpenAiCompatibleConfig,
   apiKey: string,
-  stream: boolean
+  stream: boolean,
+  includeUsage = false
 ): { url: string; headers: Record<string, string>; body: string } {
   validateConfig(config);
   const headers = createHeaders(apiKey);
@@ -230,6 +248,9 @@ export function buildTranslationHttpRequest(
       model: config.model.trim(),
       messages: buildMessages(request, config.systemPrompt),
       stream,
+      ...(stream && includeUsage
+        ? { stream_options: { include_usage: true } }
+        : {}),
       ...getTranslationRequestOptions(
         config.model,
         config.thinkingEnabled,

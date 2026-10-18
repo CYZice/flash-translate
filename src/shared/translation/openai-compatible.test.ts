@@ -60,6 +60,75 @@ describe("shared translation request", () => {
     expect(parts.join("")).toBe("Hello");
     expect(fetchImpl.mock.calls[0][1].signal).toBe(signal);
   });
+
+  it("reads final usage-only chunks and requests usage only on the known official endpoint", async () => {
+    const usage = vi.fn();
+    const onRequest = vi.fn();
+    const fetchImpl = vi
+      .fn()
+      .mockImplementation(() =>
+        Promise.resolve(
+          new Response(
+            'data: {"choices":[{"delta":{"content":"Hello"},"finish_reason":"stop"}]}\n\ndata: {"choices":[],"usage":{"prompt_tokens":10,"completion_tokens":2,"total_tokens":12}}\n\ndata: [DONE]\n'
+          )
+        )
+      );
+    for await (const _ of streamOpenAiTranslation(
+      input,
+      { ...config, baseUrl: "https://api.openai.com/v1" },
+      "",
+      new AbortController().signal,
+      fetchImpl,
+      { onRequest, onUsage: usage }
+    )) {
+      /* consume */
+    }
+    expect(usage).toHaveBeenCalledWith({
+      inputTokens: 10,
+      outputTokens: 2,
+      totalTokens: 12,
+    });
+    expect(onRequest).toHaveBeenCalledOnce();
+    expect(JSON.parse(fetchImpl.mock.calls[0][1].body).stream_options).toEqual({
+      include_usage: true,
+    });
+    for await (const _ of streamOpenAiTranslation(
+      input,
+      config,
+      "",
+      new AbortController().signal,
+      fetchImpl,
+      { onUsage: usage }
+    )) {
+      /* consume */
+    }
+    expect(JSON.parse(fetchImpl.mock.calls[1][1].body)).not.toHaveProperty(
+      "stream_options"
+    );
+  });
+
+  it("does not count a request cancelled before HTTP starts", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const fetchImpl = vi.fn();
+    const onRequest = vi.fn();
+    await expect(
+      (async () => {
+        for await (const _ of streamOpenAiTranslation(
+          input,
+          config,
+          "",
+          controller.signal,
+          fetchImpl,
+          { onRequest }
+        )) {
+          /* consume */
+        }
+      })()
+    ).rejects.toMatchObject({ name: "AbortError" });
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(onRequest).not.toHaveBeenCalled();
+  });
 });
 
 describe("parseOpenAiSseChunk", () => {

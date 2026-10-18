@@ -7,12 +7,14 @@ import {
 import { SUPPORTED_LANGUAGES } from "../../src/shared/constants/languages";
 import type { AiReasoningEffort } from "../../src/shared/translation/config";
 import { getTranslationSettingsCopy } from "../../src/shared/translation/settings-copy";
+import { getUsageRows } from "../../src/shared/translation/usage-presentation";
 import type FlashTranslatePlugin from "./main";
 
 type Copy = ReturnType<typeof getTranslationSettingsCopy>;
 
 export class TranslationSettingsTab extends PluginSettingTab {
   private readonly plugin: FlashTranslatePlugin;
+  private usageEl: HTMLElement | null = null;
 
   constructor(plugin: FlashTranslatePlugin) {
     super(plugin.app, plugin);
@@ -25,6 +27,34 @@ export class TranslationSettingsTab extends PluginSettingTab {
     this.languages(copy);
     this.behavior(copy);
     this.service(copy);
+    this.usageEl = this.containerEl.createEl("details");
+    this.refreshUsage();
+  }
+
+  hide(): void {
+    this.usageEl = null;
+  }
+
+  refreshUsage(): void {
+    const el = this.usageEl;
+    if (!el?.isConnected) {
+      return;
+    }
+    const copy = getTranslationSettingsCopy(getLanguage());
+    el.empty();
+    el.createEl("summary", {
+      text: `${copy.usage} · ${copy.completedTranslations} ${this.plugin.usage.completedTranslations.toLocaleString()}`,
+    });
+    el.createEl("p", {
+      text: copy.usageDescription,
+      cls: "setting-item-description",
+    });
+    const list = el.createEl("dl", { cls: "flash-translate-usage" });
+    for (const row of getUsageRows(this.plugin.usage, copy)) {
+      const item = list.createEl("div");
+      item.createEl("dt", { text: row.label });
+      item.createEl("dd", { text: row.value });
+    }
   }
 
   private languages(copy: Copy): void {

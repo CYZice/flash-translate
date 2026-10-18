@@ -15,7 +15,7 @@ export interface TranslationHttpRequest {
 
 export interface TranslationHttpResponse {
   status: number;
-  text: string;
+  body: unknown;
 }
 
 export type TranslationHttpClient = (
@@ -42,13 +42,5 @@ export async function translateNoteSelection(
       `Translation request failed (HTTP ${response.status}). Check your endpoint, model, and API key.`
     );
   }
-  let body: unknown;
-  try {
-    body = JSON.parse(response.text);
-  } catch (cause) {
-    throw new Error("The translation endpoint returned invalid JSON.", {
-      cause,
-    });
-  }
-  return parseOpenAiTranslationResponse(body);
+  return parseOpenAiTranslationResponse(response.body);
 }

@@ -1,5 +1,6 @@
 // Using official @types/dom-chromium-ai types
 
+import { reportLocalTranslation } from "../storage/usage";
 import { createPrefixedLogger } from "./logger";
 import {
   readStreamAccumulated,
@@ -164,16 +165,20 @@ class TranslatorManager {
     signal?.throwIfAborted();
     const paragraphs = splitTextIntoParagraphs(text);
 
-    if (paragraphs.length === 1) {
-      // Single paragraph - stream normally
-      yield* readStreamAccumulated(
-        translator.translateStreaming(text, { signal })
-      );
-    } else {
-      // Multiple paragraphs - translate each and join with line breaks
-      yield* streamMultipleParagraphs(paragraphs, (paragraph) =>
-        translator.translateStreaming(paragraph, { signal })
-      );
+    const stream =
+      paragraphs.length === 1
+        ? readStreamAccumulated(translator.translateStreaming(text, { signal }))
+        : streamMultipleParagraphs(paragraphs, (paragraph) =>
+            translator.translateStreaming(paragraph, { signal })
+          );
+    let hasContent = false;
+    for await (const chunk of stream) {
+      hasContent ||= Boolean(chunk.trim());
+      yield chunk;
+    }
+    signal?.throwIfAborted();
+    if (hasContent) {
+      reportLocalTranslation();
     }
   }
 
@@ -185,7 +190,12 @@ class TranslatorManager {
   ): Promise<string> {
     const translator = await this.getTranslator(sourceLanguage, targetLanguage);
     signal?.throwIfAborted();
-    return translator.translate(text, { signal });
+    const result = await translator.translate(text, { signal });
+    signal?.throwIfAborted();
+    if (result.trim()) {
+      reportLocalTranslation();
+    }
+    return result;
   }
 
   destroy(): void {

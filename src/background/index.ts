@@ -1,4 +1,5 @@
 import { isAiTestConnectionMessage } from "@/shared/constants/ai-translation";
+import { LOCAL_TRANSLATION_COMPLETED } from "@/shared/storage/usage";
 import { createPrefixedLogger } from "@/shared/utils/logger";
 import {
   handleAiTestConnection,
@@ -6,6 +7,7 @@ import {
 } from "./ai-translation-handler";
 import { registerQuickTranslationHandler } from "./quick-translation";
 import { handleRuntimeMessage } from "./runtime-message-handler";
+import { recordUsage } from "./usage-store";
 
 const log = createPrefixedLogger("Background");
 
@@ -33,3 +35,17 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
 registerAiTranslationPortHandler();
 registerQuickTranslationHandler();
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (
+    sender.id !== chrome.runtime.id ||
+    message?.type !== LOCAL_TRANSLATION_COMPLETED
+  ) {
+    return false;
+  }
+  recordUsage({ type: "completed" }).then(
+    () => sendResponse({ ok: true }),
+    () => sendResponse({ ok: false })
+  );
+  return true;
+});

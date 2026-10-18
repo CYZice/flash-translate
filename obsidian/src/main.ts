@@ -1,5 +1,12 @@
 import { type Editor, Notice, Plugin, requestUrl } from "obsidian";
 import { getEnglishChinesePair } from "../../src/shared/translation/bilingual";
+import {
+  applyUsageEvent,
+  EMPTY_USAGE,
+  normalizeUsage,
+  type TranslationUsage,
+  type UsageEvent,
+} from "../../src/shared/translation/usage";
 import { readActiveSelection } from "./editor-selection";
 import { captureSelection, planTranslationEdit } from "./selection";
 import { SelectionController } from "./selection-controller";
@@ -15,6 +22,7 @@ import {
 } from "./translation-card";
 import { TranslationRequestQueue } from "./translation-request-queue";
 import { translateNoteSelection } from "./translation-service";
+import { UsageTransport } from "./usage-transport";
 import {
   readWorkspaceSelection,
   type SelectedSource,
@@ -22,14 +30,29 @@ import {
 
 export default class FlashTranslatePlugin extends Plugin {
   settings: ObsidianTranslationSettings = { ...DEFAULT_SETTINGS };
+  usage: TranslationUsage = { ...EMPTY_USAGE };
+  private settingsTab: TranslationSettingsTab | null = null;
+  private persistence: Promise<void> = Promise.resolve();
   private card: TranslationCard | null = null;
   private readonly controllers = new Map<Document, SelectionController>();
-  private readonly requests = new TranslationRequestQueue(requestUrl);
+  private readonly transport = new UsageTransport(requestUrl, (event) =>
+    this.recordUsage(event)
+  );
+  private readonly requests = new TranslationRequestQueue(
+    this.transport.request
+  );
   private unloaded = false;
 
   async onload(): Promise<void> {
-    this.settings = normalizeSettings(await this.loadData());
-    this.addSettingTab(new TranslationSettingsTab(this));
+    const data: unknown = await this.loadData();
+    this.settings = normalizeSettings(data);
+    this.usage = normalizeUsage(
+      typeof data === "object" && data !== null
+        ? (data as Record<string, unknown>).usage
+        : undefined
+    );
+    this.settingsTab = new TranslationSettingsTab(this);
+    this.addSettingTab(this.settingsTab);
     this.addCommand({
       id: "translate-selection",
       name: "Translate selection",
@@ -143,7 +166,26 @@ export default class FlashTranslatePlugin extends Plugin {
     for (const controller of this.controllers.values()) {
       controller.reset();
     }
-    await this.saveData(this.settings);
+    await this.persist();
+  }
+
+  private persist(): Promise<void> {
+    const snapshot = { ...this.settings, usage: { ...this.usage } };
+    const work = this.persistence
+      .catch(() => undefined)
+      .then(() => this.saveData(snapshot));
+    this.persistence = work;
+    return work;
+  }
+
+  private recordUsage(event: UsageEvent): void {
+    this.usage = applyUsageEvent(this.usage, event);
+    if (!this.unloaded) {
+      this.settingsTab?.refreshUsage();
+    }
+    this.persist().catch(() =>
+      console.warn("[flash-translate] Could not save usage statistics.")
+    );
   }
 
   private translateEditor(editor: Editor, path: string, text: string): void {
@@ -248,14 +290,18 @@ export default class FlashTranslatePlugin extends Plugin {
           }
         : undefined,
       apply,
-      translate: (targetLanguage, signal) =>
-        translateNoteSelection(
+      translate: async (targetLanguage, signal) => {
+        const result = await translateNoteSelection(
           { ...input, targetLanguage },
           settings,
           apiKey ?? "",
           this.requests.request,
           signal
-        ),
+        );
+        signal.throwIfAborted();
+        this.recordUsage({ type: "completed" });
+        return result;
+      },
     };
   }
 
@@ -301,6 +347,8 @@ export default class FlashTranslatePlugin extends Plugin {
 
   onunload(): void {
     this.unloaded = true;
+    this.transport.dispose();
+    this.settingsTab = null;
     this.card?.close();
     for (const controller of this.controllers.values()) {
       controller.dispose();

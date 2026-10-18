@@ -19,7 +19,7 @@ describe("Obsidian translation transport", () => {
   it("sends the same supported thinking options as the browser", async () => {
     const request = vi.fn().mockResolvedValue({
       status: 200,
-      text: '{"choices":[{"message":{"content":"Hello"}}]}',
+      body: { choices: [{ message: { content: "Hello" } }] },
     });
     await translateNoteSelection(
       input,
@@ -40,7 +40,7 @@ describe("Obsidian translation transport", () => {
   it("uses the shared model request and returns a translation", async () => {
     const request = vi.fn().mockResolvedValue({
       status: 200,
-      text: JSON.stringify({ choices: [{ message: { content: "Hello" } }] }),
+      body: { choices: [{ message: { content: "Hello" } }] },
     });
     expect(
       await translateNoteSelection(input, settings, "test-key", request)
@@ -64,7 +64,7 @@ describe("Obsidian translation transport", () => {
   it("allows local providers without an API key", async () => {
     const request = vi.fn().mockResolvedValue({
       status: 200,
-      text: '{"choices":[{"message":{"content":"Hello"}}]}',
+      body: { choices: [{ message: { content: "Hello" } }] },
     });
     await translateNoteSelection(input, settings, "", request);
     expect(request.mock.calls[0][0].headers).not.toHaveProperty(
@@ -75,23 +75,22 @@ describe("Obsidian translation transport", () => {
   it("reports HTTP errors without displaying the raw response", async () => {
     const request = vi.fn().mockResolvedValue({
       status: 401,
-      text: "sensitive provider diagnostics",
+      body: null,
     });
     await expect(
       translateNoteSelection(input, settings, "", request)
     ).rejects.toThrow("HTTP 401");
   });
 
-  it.each([
-    "not json",
-    '{"choices":[]}',
-    '{"choices":[{"message":{"content":""}}]}',
-  ])("rejects invalid or empty output", async (text) => {
-    const request = vi.fn().mockResolvedValue({ status: 200, text });
-    await expect(
-      translateNoteSelection(input, settings, "", request)
-    ).rejects.toThrow();
-  });
+  it.each([null, { choices: [] }, { choices: [{ message: { content: "" } }] }])(
+    "rejects invalid or empty output",
+    async (body) => {
+      const request = vi.fn().mockResolvedValue({ status: 200, body });
+      await expect(
+        translateNoteSelection(input, settings, "", request)
+      ).rejects.toThrow();
+    }
+  );
 
   it("does not make a request with an invalid endpoint or missing model", async () => {
     const request = vi.fn();

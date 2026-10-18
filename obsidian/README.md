@@ -118,10 +118,21 @@ request actually ends, rather than pretending a UI timeout cancelled the network
 operation. This preserves the API's cross-origin support without creating
 overlapping obsolete requests.
 
-Only settings and an API-key reference are saved in the vault's plugin
-`data.json`; the key itself is managed by Obsidian's secret storage. Translation
-text is not saved as plugin history. Your provider determines server-side
-retention and billing. There is no telemetry in this plugin.
+Settings, an API-key reference, and numeric usage counters are saved in the
+vault's plugin `data.json`; the key itself is managed by Obsidian's secret storage.
+**Usage on this installation** shows completed translations, actual AI request
+attempts, reported input/output/total tokens, and requests with missing usage.
+Pending requests cancelled before sending do not count. Already-sent requests
+still report tokens when they finish after closing the card; they do not count
+as completed UI translations. Unloading detaches statistics callbacks to release
+the old plugin instance and prevent late requests from overwriting a reloaded
+instance's data; unreported usage then stays unknown. Missing usage is not treated
+as zero or estimated, and reasoning/cache detail counts are not added twice.
+Counters start with this build, are separate from Chrome, and can be copied by
+vault backup/sync tools along with the rest of `data.json`.
+
+Translation text is not saved as plugin history. Your provider determines
+server-side retention and billing. There is no telemetry in this plugin.
 
 ## Development
 

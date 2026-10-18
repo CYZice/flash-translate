@@ -3,6 +3,7 @@ import { LanguageSettings } from "./components/language-settings";
 import { PopupHeader } from "./components/popup-header";
 import { ProviderSettings } from "./components/provider-settings";
 import { TranslationBehaviorSettings } from "./components/translation-behavior-settings";
+import { UsageStatistics } from "./components/usage-statistics";
 
 export default function App() {
   return (
@@ -17,6 +18,9 @@ export default function App() {
         </section>
         <section className="bg-white">
           <ProviderSettings />
+        </section>
+        <section className="bg-white">
+          <UsageStatistics />
         </section>
       </div>
       <Footer />
