@@ -47,11 +47,78 @@ describe("note selection", () => {
       "insert"
     );
     expect(edit).toEqual({
-      from: end,
-      to: end,
+      from: document.length,
+      to: document.length,
       text: "\n\nEnglish translation",
     });
   });
+
+  it.each([
+    {
+      original: "Hello world.",
+      selected: "Hello",
+      expected: "Hello world.\n\nBonjour",
+    },
+    {
+      original: "Hello world.\n\nNext paragraph.",
+      selected: "Hello",
+      expected: "Hello world.\n\nBonjour\n\nNext paragraph.",
+    },
+    {
+      original: "Hello world.\nThis is the same paragraph.\n\nNext paragraph.",
+      selected: "Hello",
+      expected:
+        "Hello world.\nThis is the same paragraph.\n\nBonjour\n\nNext paragraph.",
+    },
+    {
+      original: "Hello world.\n\nNext paragraph.",
+      selected: "Hello world.\n\n",
+      expected: "Hello world.\n\nBonjour\n\nNext paragraph.",
+    },
+    {
+      original: "First paragraph.\n\nHello world.\n\nNext paragraph.",
+      selected: "paragraph.\n\nHello",
+      expected:
+        "First paragraph.\n\nHello world.\n\nBonjour\n\nNext paragraph.",
+    },
+    {
+      original: "Hello world.\n \t\nNext paragraph.",
+      selected: "Hello",
+      expected: "Hello world.\n\nBonjour\n \t\nNext paragraph.",
+    },
+    {
+      original: "Hello world.\n",
+      selected: "Hello",
+      expected: "Hello world.\n\nBonjour",
+    },
+    {
+      original: "Hello world.\r\n\r\nNext paragraph.",
+      selected: "Hello",
+      expected: "Hello world.\r\n\r\nBonjour\r\n\r\nNext paragraph.",
+    },
+  ])(
+    "inserts after the intact paragraph: $original",
+    ({ original, selected, expected }) => {
+      const selectionStart = original.indexOf(selected);
+      const selection = captureSelection(
+        original,
+        "Example.md",
+        selectionStart,
+        selectionStart + selected.length,
+        0
+      );
+      const edit = planTranslationEdit(
+        selection,
+        selection,
+        "Bonjour",
+        "insert"
+      );
+      expect(edit.from).toBe(edit.to);
+      expect(
+        original.slice(0, edit.from) + edit.text + original.slice(edit.to)
+      ).toBe(expected);
+    }
+  );
 
   it.each([
     { ...current, path: "Other.md" },

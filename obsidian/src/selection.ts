@@ -1,5 +1,7 @@
 import { getContextAroundSelection } from "../../src/shared/utils/ai-context";
 
+const PARAGRAPH_BREAK = /\r?\n[\t ]*\r?\n/;
+
 export interface NoteSelection {
   path: string;
   document: string;
@@ -60,7 +62,22 @@ export function planTranslationEdit(
   if (!translation.trim()) {
     throw new Error("There is no translation to insert.");
   }
-  return mode === "replace"
-    ? { from: snapshot.start, to: snapshot.end, text: translation }
-    : { from: snapshot.end, to: snapshot.end, text: `\n\n${translation}` };
+  if (mode === "replace") {
+    return { from: snapshot.start, to: snapshot.end, text: translation };
+  }
+
+  // Trailing selection whitespace must not move insertion into the next paragraph.
+  const selectedTextEnd = snapshot.start + snapshot.text.trimEnd().length;
+  const paragraphBreak = snapshot.document
+    .slice(selectedTextEnd)
+    .search(PARAGRAPH_BREAK);
+  const from =
+    paragraphBreak < 0
+      ? snapshot.document.length
+      : selectedTextEnd + paragraphBreak;
+  const newline = snapshot.document.includes("\r\n") ? "\r\n" : "\n";
+  const separation = snapshot.document.slice(0, from).endsWith(newline)
+    ? newline
+    : newline + newline;
+  return { from, to: from, text: separation + translation };
 }

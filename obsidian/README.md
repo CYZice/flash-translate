@@ -54,6 +54,8 @@ Assign a keyboard shortcut to **Flash Translate: Translate selection** under
 ## Your note stays under your control
 
 - Nothing is replaced automatically. You can edit the output before accepting.
+- **Insert below** places the translation after the paragraph containing the
+  selection's last text, preserving the original paragraph and its following text.
 - Replacement and insertion check the original note, full document text, and
   selected range. If any changed, the result remains available to copy, but the
   plugin refuses the stale edit.
