@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   isPointInsideSelectionRanges,
   resolveHoveredTermAtPoint,
@@ -37,6 +37,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.restoreAllMocks();
   Object.defineProperty(document, "caretPositionFromPoint", {
     configurable: true,
     value: originalCaretPositionFromPoint,
@@ -96,6 +97,7 @@ describe("resolveHoveredTermAtPoint", () => {
   });
 
   it("records the hovered word offset inside the plain selection text", () => {
+    const style = vi.spyOn(window, "getComputedStyle");
     const textNode = document.createTextNode("hello world");
     document.body.append(textNode);
     setCaret(textNode, 8);
@@ -110,6 +112,7 @@ describe("resolveHoveredTermAtPoint", () => {
         sourceLanguage: "en",
       })?.termOffset
     ).toBe(6);
+    expect(style).not.toHaveBeenCalled();
   });
 
   it("rejects a caret whose word rectangle is not under the pointer", () => {
@@ -127,6 +130,27 @@ describe("resolveHoveredTermAtPoint", () => {
         sourceLanguage: "en",
       })
     ).toBeNull();
+  });
+
+  it("keeps repeated-word offsets aligned after formula normalization", () => {
+    const paragraph = document.createElement("p");
+    paragraph.innerHTML =
+      'world <span class="katex"><span class="katex-mathml"><math><annotation encoding="application/x-tex">x=1</annotation></math></span><span class="katex-html" aria-hidden="true">x=1</span></span> world';
+    document.body.append(paragraph);
+    const text = paragraph.lastChild as Text;
+    setCaret(text, 3);
+    const range = document.createRange();
+    range.selectNodeContents(paragraph);
+    expect(
+      resolveHoveredTermAtPoint({
+        document,
+        x: 30,
+        y: 28,
+        selectionRanges: [range],
+        contextText: "world x=1 world",
+        sourceLanguage: "en",
+      })?.termOffset
+    ).toBe(10);
   });
 });
 

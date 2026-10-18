@@ -1,3 +1,4 @@
+import { getRangeText } from "../hooks/selection-text";
 import type { HoveredTerm, ViewportRect } from "./hovered-term";
 import {
   intlWordSegmentationStrategy,
@@ -103,13 +104,25 @@ function getSegmentOffsetInSelection(
         selectionRange.comparePoint(node, startOffset) === 0 &&
         selectionRange.comparePoint(node, endOffset) === 0;
       if (!containsSegment) {
-        precedingTextLength += selectionRange.toString().length;
+        const text = getRangeText(selectionRange);
+        if (text) {
+          precedingTextLength += text.length + 1;
+        }
         continue;
       }
 
       const prefixRange = selectionRange.cloneRange();
-      prefixRange.setEnd(node, startOffset);
-      const offset = precedingTextLength + prefixRange.toString().length;
+      prefixRange.setEnd(node, endOffset);
+      // Keep ordinary pointer moves on the native fast path. Only normalize DOM
+      // when hidden content, whitespace, or formula layers changed the text.
+      const plainPrefix = prefixRange.toString();
+      if (contextText.startsWith(plainPrefix, precedingTextLength)) {
+        return precedingTextLength + plainPrefix.length - segmentText.length;
+      }
+      const offset =
+        precedingTextLength +
+        getRangeText(prefixRange).length -
+        segmentText.length;
       if (
         contextText.slice(offset, offset + segmentText.length) === segmentText
       ) {
