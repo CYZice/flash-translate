@@ -1,10 +1,5 @@
-import {
-  type Editor,
-  MarkdownView,
-  Notice,
-  Plugin,
-  requestUrl,
-} from "obsidian";
+import { type Editor, Notice, Plugin, requestUrl } from "obsidian";
+import { readActiveSelection } from "./editor-selection";
 import { captureSelection, planTranslationEdit } from "./selection";
 import {
   DEFAULT_SETTINGS,
@@ -96,20 +91,9 @@ export default class FlashTranslatePlugin extends Plugin {
             requestUrl
           ),
         apply: (translation, mode) => {
-          const current = this.app.workspace.getActiveViewOfType(MarkdownView);
-          if (!current?.file || current.editor !== editor) {
-            throw new Error(
-              "The active note changed. Return to the original note and translate again."
-            );
-          }
           const edit = planTranslationEdit(
             snapshot,
-            {
-              path: current.file.path,
-              document: editor.getValue(),
-              start: editor.posToOffset(editor.getCursor("from")),
-              end: editor.posToOffset(editor.getCursor("to")),
-            },
+            readActiveSelection(editor, this.app.workspace.activeEditor),
             translation,
             mode
           );

@@ -4,6 +4,8 @@ Select text in an editable Markdown note, run **Flash Translate: Translate
 selection** from the command palette, then review and edit the translation.
 Choose **Replace selection**, **Insert below**, or **Copy**. The editor context
 menu also has a **Translate selection** action.
+File-backed embedded Markdown editors, including Canvas note editors, use the
+same preview and edit actions.
 
 ## Install the first development build
 
@@ -56,7 +58,7 @@ Assign a keyboard shortcut to **Flash Translate: Translate selection** under
 - Nothing is replaced automatically. You can edit the output before accepting.
 - **Insert below** places the translation after the paragraph containing the
   selection's last text, preserving the original paragraph and its following text.
-- Replacement and insertion check the original note, full document text, and
+- Replacement and insertion check the original editor, note, full document text, and
   selected range. If any changed, the result remains available to copy, but the
   plugin refuses the stale edit.
 - Edits use Obsidian's editor API and participate in its normal undo history.
