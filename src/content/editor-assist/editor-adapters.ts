@@ -46,8 +46,9 @@ function readNativeTextOffsetRect(
   editor: HTMLInputElement | HTMLTextAreaElement,
   textOffset: number
 ): RectLike | null {
+  let mirror: HTMLDivElement | null = null;
   try {
-    const mirror = getMirror(editor.ownerDocument);
+    mirror = getMirror(editor.ownerDocument);
     const styles = getComputedStyle(editor);
     const properties = [
       "boxSizing",
@@ -98,6 +99,8 @@ function readNativeTextOffsetRect(
     );
   } catch {
     return null;
+  } finally {
+    mirror?.replaceChildren();
   }
 }
 

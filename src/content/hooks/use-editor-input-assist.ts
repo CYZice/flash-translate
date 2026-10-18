@@ -105,6 +105,7 @@ export function useEditorInputAssist(
       setAssist(null);
       setAnchorRect(null);
       snapshotRef.current = null;
+      sessionRef.current = null;
       anchorTrackerRef.current.stop();
       translation.reset();
     };
@@ -181,12 +182,14 @@ export function useEditorInputAssist(
           !current.editor.isConnected
         ) {
           logDiagnostic("stale-revision", snapshot);
+          clearAssist();
           return;
         }
 
         const slice = resolveCjkSlice(current.text, current.caretOffset);
         if (!slice) {
           logDiagnostic("no-cjk-content", current);
+          clearAssist();
           return;
         }
 
@@ -196,6 +199,7 @@ export function useEditorInputAssist(
         );
         if (!sliceAnchorRect) {
           logDiagnostic("slice-anchor-unmappable", current);
+          clearAssist();
           return;
         }
 
@@ -244,11 +248,19 @@ export function useEditorInputAssist(
     };
     const onInput = (event: Event) => schedule(event);
     const onFocusOut = () => clearAssist();
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        clearAssist();
+      }
+    };
 
     document.addEventListener("input", onInput, true);
     document.addEventListener("compositionstart", onCompositionStart, true);
     document.addEventListener("compositionend", onCompositionEnd, true);
     document.addEventListener("focusout", onFocusOut, true);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("blur", clearAssist);
+    window.addEventListener("pagehide", clearAssist);
     return () => {
       document.removeEventListener("input", onInput, true);
       document.removeEventListener(
@@ -258,6 +270,9 @@ export function useEditorInputAssist(
       );
       document.removeEventListener("compositionend", onCompositionEnd, true);
       document.removeEventListener("focusout", onFocusOut, true);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("blur", clearAssist);
+      window.removeEventListener("pagehide", clearAssist);
       clearAssist();
     };
   }, [enabled, translation.reset, translation.translate]);
@@ -268,6 +283,7 @@ export function useEditorInputAssist(
     setAssist(null);
     setAnchorRect(null);
     snapshotRef.current = null;
+    sessionRef.current = null;
     anchorTrackerRef.current.stop();
     translation.reset();
   }, [sourceLanguage, targetLanguage, translation.reset]);
