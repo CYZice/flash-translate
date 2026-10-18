@@ -34,6 +34,24 @@ inserting results in editable notes.
   Local translation and language-detection sessions are destroyed once no active
   feature needs them. Downloaded language files and settings are kept.
 
+## Settings in Chrome and Obsidian
+
+Both hosts use **Languages → Translation behavior → AI translation**, with the
+same labels and Chinese/English direction rule. Turn on **Automatic Chinese ↔
+English** for English selections → Chinese and selections containing Chinese →
+English. The saved manual languages are inactive until this mode is turned off.
+In Chrome, language detection and page-language skipping are also inactive in
+this mode; their saved preferences are restored when you turn it off.
+
+AI endpoint, key, model, and context range stay together. System prompt, deep
+thinking, and reasoning effort are under **Advanced settings**; thinking options
+are applied only to supported models. Chrome additionally keeps language
+detection, same-language skipping, input assistance, and site exclusions under
+advanced behavior settings. **Chrome built-in language packs** is a separate,
+on-demand download panel and does not change your translation languages.
+Obsidian keeps its command-only option and secret storage. Settings are stored
+separately in each host; they are not synchronized between Chrome and Obsidian.
+
 ## Requirements
 
 - **Chrome 150+** (Translator API and element-scoped View Transition support)

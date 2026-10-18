@@ -1,4 +1,3 @@
-import { ExclusionSettings } from "./components/exclusion-settings";
 import { Footer } from "./components/footer";
 import { LanguageSettings } from "./components/language-settings";
 import { PopupHeader } from "./components/popup-header";
@@ -14,13 +13,10 @@ export default function App() {
           <LanguageSettings />
         </section>
         <section className="bg-white">
-          <ProviderSettings />
-        </section>
-        <section className="bg-white">
           <TranslationBehaviorSettings />
         </section>
         <section className="bg-white">
-          <ExclusionSettings />
+          <ProviderSettings />
         </section>
       </div>
       <Footer />

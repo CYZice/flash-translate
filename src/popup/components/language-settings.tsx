@@ -1,124 +1,67 @@
-import { useEffect, useState } from "react";
 import { ToggleSwitch } from "@/shared/components/toggle-switch";
-import {
-  DEFAULT_SOURCE_LANGUAGE,
-  DEFAULT_TARGET_LANGUAGE,
-  SUPPORTED_LANGUAGES,
-} from "@/shared/constants/languages";
+import { SUPPORTED_LANGUAGES } from "@/shared/constants/languages";
 import { useSettings } from "@/shared/hooks/use-settings";
 import { saveSettings } from "@/shared/storage/settings";
 import { selectLanguageSettings } from "@/shared/storage/settings-selectors";
-import { getMessage } from "@/shared/utils/i18n";
-import {
-  checkAllPairsToTarget,
-  type LanguagePairStatus,
-} from "@/shared/utils/translator";
-import { SourceLanguageChips } from "./source-language-chips";
-import { TargetLanguageChips } from "./target-language-chips";
+import { getPopupSettingsCopy } from "../utils/settings-copy";
 
 export function LanguageSettings() {
-  const [initialSettings, isLoading] = useSettings(selectLanguageSettings, {
-    subscribe: false,
-  });
-
-  const [sourceLanguage, setSourceLanguage] = useState<string>(
-    DEFAULT_SOURCE_LANGUAGE
-  );
-  const [targetLanguage, setTargetLanguage] = useState<string>(
-    DEFAULT_TARGET_LANGUAGE
-  );
-  const [pairs, setPairs] = useState<LanguagePairStatus[]>([]);
-  const [autoZhEn, setAutoZhEn] = useState(false);
-  const [isLoadingPairs, setIsLoadingPairs] = useState(false);
-
-  // Apply initial settings when loaded
-  useEffect(() => {
-    if (initialSettings) {
-      setSourceLanguage(initialSettings.sourceLanguage);
-      setTargetLanguage(initialSettings.targetLanguage);
-      setAutoZhEn(initialSettings.autoZhEn);
-    }
-  }, [initialSettings]);
-
-  // Load pairs when target language changes
-  useEffect(() => {
-    if (autoZhEn) {
-      setPairs([]);
-      setIsLoadingPairs(false);
-      return;
-    }
-    const loadPairs = async () => {
-      setIsLoadingPairs(true);
-      const sourceCodes = SUPPORTED_LANGUAGES.map((l) => l.code);
-      const statuses = await checkAllPairsToTarget(targetLanguage, sourceCodes);
-      setPairs(statuses);
-      setIsLoadingPairs(false);
-    };
-    loadPairs();
-  }, [targetLanguage, autoZhEn]);
-
-  const handleSourceLanguageChange = async (code: string) => {
-    setSourceLanguage(code);
-    setAutoZhEn(false);
-    await saveSettings({ sourceLanguage: code, autoZhEn: false });
-  };
-
-  const handleTargetLanguageChange = async (code: string) => {
-    setTargetLanguage(code);
-    setAutoZhEn(false);
-    await saveSettings({ targetLanguage: code, autoZhEn: false });
-  };
-
-  if (isLoading) {
+  const copy = getPopupSettingsCopy();
+  const [settings] = useSettings(selectLanguageSettings);
+  if (!settings) {
     return null;
   }
-
   return (
-    <div>
-      <div className="px-4 pt-3 pb-1">
-        <h2 className="m-0 font-semibold text-gray-900 text-xs">
-          {getMessage("popup_section_languages")}
-        </h2>
-      </div>
-      <div className="flex items-center justify-between gap-3 px-4 py-3">
+    <div className="px-4 py-3">
+      <h2 className="m-0 font-semibold text-gray-900 text-xs">
+        {copy.languages}
+      </h2>
+      <div className="flex items-center justify-between gap-3 py-3">
         <div>
           <label className="text-gray-700 text-sm" htmlFor="auto-zh-en">
-            自动中英互译
+            {copy.autoZhEn}
           </label>
           <p className="m-0 mt-1 text-gray-500 text-xs">
-            含中文译英文，英文译中文。无需语言检测模型。
+            {copy.autoZhEnDescription}
           </p>
         </div>
         <ToggleSwitch
           id="auto-zh-en"
-          ariaLabel="自动中英互译"
-          checked={autoZhEn}
+          ariaLabel={copy.autoZhEn}
+          checked={settings.autoZhEn}
           onChange={() => {
-            const enabled = !autoZhEn;
-            setAutoZhEn(enabled);
-            saveSettings({ autoZhEn: enabled });
+            saveSettings({ autoZhEn: !settings.autoZhEn });
           }}
         />
       </div>
-      {autoZhEn ? (
-        <div className="px-4 pb-3 text-blue-700 text-xs">
-          EN ⇄ 中文 · 关闭后可手动指定语言
-        </div>
+      {settings.autoZhEn ? (
+        <p className="m-0 text-blue-700 text-xs">{copy.automaticLanguages}</p>
       ) : (
-        <>
-          <TargetLanguageChips
-            onChangeTargetLanguage={handleTargetLanguageChange}
-            targetLanguage={targetLanguage}
-          />
-          <SourceLanguageChips
-            isLoading={isLoadingPairs}
-            onPairsChange={setPairs}
-            onSourceLanguageChange={handleSourceLanguageChange}
-            pairs={pairs}
-            sourceLanguage={sourceLanguage}
-            targetLanguage={targetLanguage}
-          />
-        </>
+        <div className="grid grid-cols-2 gap-3">
+          {(["sourceLanguage", "targetLanguage"] as const).map((field) => (
+            <label
+              className="text-gray-600 text-xs"
+              key={field}
+              htmlFor={field}
+            >
+              {field === "sourceLanguage" ? copy.source : copy.target}
+              <select
+                className="mt-1.5 h-9 w-full rounded border border-gray-200 bg-white px-2 text-gray-800 text-sm"
+                id={field}
+                value={settings[field]}
+                onChange={(event) => {
+                  saveSettings({ [field]: event.target.value });
+                }}
+              >
+                {SUPPORTED_LANGUAGES.map((language) => (
+                  <option key={language.code} value={language.code}>
+                    {language.nativeName}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ))}
+        </div>
       )}
     </div>
   );

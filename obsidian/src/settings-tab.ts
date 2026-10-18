@@ -1,6 +1,15 @@
-import { PluginSettingTab, SecretComponent, Setting } from "obsidian";
+import {
+  getLanguage,
+  PluginSettingTab,
+  SecretComponent,
+  Setting,
+} from "obsidian";
 import { SUPPORTED_LANGUAGES } from "../../src/shared/constants/languages";
+import type { AiReasoningEffort } from "../../src/shared/translation/config";
+import { getTranslationSettingsCopy } from "../../src/shared/translation/settings-copy";
 import type FlashTranslatePlugin from "./main";
+
+type Copy = ReturnType<typeof getTranslationSettingsCopy>;
 
 export class TranslationSettingsTab extends PluginSettingTab {
   private readonly plugin: FlashTranslatePlugin;
@@ -11,66 +20,19 @@ export class TranslationSettingsTab extends PluginSettingTab {
   }
 
   display(): void {
-    const { containerEl } = this;
-    containerEl.empty();
-    new Setting(containerEl)
-      .setName("Selection translation")
-      .setDesc(
-        "Works in note editors, reading views, and selectable plugin output. A pinned card updates in place on each new selection."
-      )
-      .addDropdown((dropdown) =>
-        dropdown
-          .addOptions({
-            badge: "Show translation button",
-            immediate: "Translate immediately",
-            off: "Command only",
-          })
-          .setValue(this.plugin.settings.selectionTrigger)
-          .onChange((value) =>
-            this.plugin.updateSettings({
-              selectionTrigger: value as "badge" | "immediate" | "off",
-            })
-          )
-      );
-    new Setting(containerEl).setName("Translation service").setHeading();
-    new Setting(containerEl)
-      .setName("Base URL")
-      .setDesc(
-        "Your compatible API base URL, including /v1 when required. Selected text and nearby context are sent only when you request translation."
-      )
-      .addText((text) =>
-        text
-          .setPlaceholder("https://your-provider.example/v1")
-          .setValue(this.plugin.settings.baseUrl)
-          .onChange((value) => this.plugin.updateSettings({ baseUrl: value }))
-      );
-    new Setting(containerEl)
-      .setName("Model")
-      .setDesc(
-        "Use the exact model ID provided by your service or local model server."
-      )
-      .addText((text) =>
-        text
-          .setPlaceholder("Model ID")
-          .setValue(this.plugin.settings.model)
-          .onChange((value) => this.plugin.updateSettings({ model: value }))
-      );
-    const secret = new Setting(containerEl)
-      .setName("API key")
-      .setDesc(
-        "Choose or create a secret in Obsidian. Only its reference is saved in plugin settings. Leave empty for a local service without authentication."
-      );
-    new SecretComponent(this.app, secret.controlEl)
-      .setValue(this.plugin.settings.apiKeySecret)
-      .onChange((value) =>
-        this.plugin.updateSettings({ apiKeySecret: value ?? "" })
-      );
-    new Setting(containerEl).setName("Languages").setHeading();
-    new Setting(containerEl)
-      .setName("自动中英互译 / Auto Chinese ↔ English")
-      .setDesc(
-        "Chinese or mixed Chinese/English → English; English → Chinese. No language-detection model is downloaded."
-      )
+    const copy = getTranslationSettingsCopy(getLanguage());
+    this.containerEl.empty();
+    this.languages(copy);
+    this.behavior(copy);
+    this.service(copy);
+  }
+
+  private languages(copy: Copy): void {
+    const el = this.containerEl;
+    new Setting(el).setName(copy.languages).setHeading();
+    new Setting(el)
+      .setName(copy.autoZhEn)
+      .setDesc(copy.autoZhEnDescription)
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.autoZhEn)
@@ -79,48 +41,86 @@ export class TranslationSettingsTab extends PluginSettingTab {
             this.display();
           })
       );
-    new Setting(containerEl)
-      .setName("Source language")
-      .setDesc("Used when automatic Chinese ↔ English is off.")
-      .addDropdown((dropdown) => {
-        dropdown.setDisabled(this.plugin.settings.autoZhEn);
-        dropdown.addOption("auto", "Auto detect");
-        for (const language of SUPPORTED_LANGUAGES) {
-          dropdown.addOption(language.code, language.name);
-        }
+    if (this.plugin.settings.autoZhEn) {
+      el.createEl("p", {
+        text: copy.automaticLanguages,
+        cls: "setting-item-description",
+      });
+      return;
+    }
+    for (const field of ["sourceLanguage", "targetLanguage"] as const) {
+      new Setting(el)
+        .setName(field === "sourceLanguage" ? copy.source : copy.target)
+        .addDropdown((dropdown) => {
+          if (field === "sourceLanguage") {
+            dropdown.addOption("auto", copy.autoSource);
+          }
+          for (const language of SUPPORTED_LANGUAGES) {
+            dropdown.addOption(language.code, language.nativeName);
+          }
+          dropdown
+            .setValue(this.plugin.settings[field])
+            .onChange((value) =>
+              this.plugin.updateSettings({ [field]: value })
+            );
+        });
+    }
+  }
+
+  private behavior(copy: Copy): void {
+    const el = this.containerEl;
+    new Setting(el).setName(copy.behavior).setHeading();
+    new Setting(el)
+      .setName(copy.trigger)
+      .setDesc(copy.triggerDescription)
+      .addDropdown((dropdown) =>
         dropdown
-          .setValue(this.plugin.settings.sourceLanguage)
+          .addOptions({
+            badge: copy.badge,
+            immediate: copy.immediate,
+            off: copy.commandOnly,
+          })
+          .setValue(this.plugin.settings.selectionTrigger)
           .onChange((value) =>
             this.plugin.updateSettings({
-              sourceLanguage: value,
-              autoZhEn: false,
+              selectionTrigger: value as "badge" | "immediate" | "off",
             })
-          );
-      });
-    new Setting(containerEl)
-      .setName("Default target language")
-      .setDesc(
-        "Used when automatic Chinese ↔ English is off. Choosing a target in the card switches to manual translation."
-      )
-      .addDropdown((dropdown) => {
-        dropdown.setDisabled(this.plugin.settings.autoZhEn);
-        for (const language of SUPPORTED_LANGUAGES) {
-          dropdown.addOption(language.code, language.name);
-        }
-        dropdown
-          .setValue(this.plugin.settings.targetLanguage)
-          .onChange((value) =>
-            this.plugin.updateSettings({
-              targetLanguage: value,
-              autoZhEn: false,
-            })
-          );
-      });
-    new Setting(containerEl)
-      .setName("Context sentences")
-      .setDesc(
-        "Nearby sentences sent with the selection to clarify terminology. Set to 0 to send only selected text."
-      )
+          )
+      );
+  }
+
+  private service(copy: Copy): void {
+    const el = this.containerEl;
+    new Setting(el).setName(copy.ai).setHeading();
+    new Setting(el)
+      .setName(copy.baseUrl)
+      .setDesc(copy.baseUrlDescription)
+      .addText((text) =>
+        text
+          .setPlaceholder("https://your-provider.example/v1")
+          .setValue(this.plugin.settings.baseUrl)
+          .onChange((value) => this.plugin.updateSettings({ baseUrl: value }))
+      );
+    const secret = new Setting(el)
+      .setName(copy.apiKey)
+      .setDesc(copy.secretDescription);
+    new SecretComponent(this.app, secret.controlEl)
+      .setValue(this.plugin.settings.apiKeySecret)
+      .onChange((value) =>
+        this.plugin.updateSettings({ apiKeySecret: value ?? "" })
+      );
+    new Setting(el)
+      .setName(copy.model)
+      .setDesc(copy.modelDescription)
+      .addText((text) =>
+        text
+          .setPlaceholder("Model ID")
+          .setValue(this.plugin.settings.model)
+          .onChange((value) => this.plugin.updateSettings({ model: value }))
+      );
+    new Setting(el)
+      .setName(copy.contextRange)
+      .setDesc(copy.contextDescription)
       .addDropdown((dropdown) =>
         dropdown
           .addOptions({ "0": "0", "1": "1", "2": "2", "3": "3" })
@@ -129,8 +129,14 @@ export class TranslationSettingsTab extends PluginSettingTab {
             this.plugin.updateSettings({ contextSentenceCount: Number(value) })
           )
       );
-    new Setting(containerEl)
-      .setName("Translation prompt")
+    const advanced = el.createEl("details");
+    advanced.createEl("summary", { text: copy.advanced });
+    this.advanced(advanced, copy);
+  }
+
+  private advanced(el: HTMLElement, copy: Copy): void {
+    new Setting(el)
+      .setName(copy.systemPrompt)
       .addTextArea((text) =>
         text
           .setValue(this.plugin.settings.systemPrompt)
@@ -138,5 +144,30 @@ export class TranslationSettingsTab extends PluginSettingTab {
             this.plugin.updateSettings({ systemPrompt: value })
           )
       );
+    new Setting(el).setName(copy.thinking).addToggle((toggle) =>
+      toggle
+        .setValue(this.plugin.settings.thinkingEnabled)
+        .onChange(async (value) => {
+          await this.plugin.updateSettings({ thinkingEnabled: value });
+          effort.setDisabled(!value);
+        })
+    );
+    const effort = new Setting(el)
+      .setName(copy.reasoningEffort)
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOptions({
+            low: copy.effortLow,
+            high: copy.effortHigh,
+            max: copy.effortMax,
+          })
+          .setValue(this.plugin.settings.reasoningEffort)
+          .onChange((value) =>
+            this.plugin.updateSettings({
+              reasoningEffort: value as AiReasoningEffort,
+            })
+          )
+      );
+    effort.setDisabled(!this.plugin.settings.thinkingEnabled);
   }
 }

@@ -75,3 +75,12 @@ export const selectLanguageSettings: SettingsSelector<LanguageSettingsData> = (
   targetLanguage: s.targetLanguage,
   autoZhEn: s.autoZhEn,
 });
+
+export const selectTranslationBehaviorSettings = (s: TranslationSettings) => ({
+  autoZhEn: s.autoZhEn,
+  autoDetectLanguage: s.autoDetectLanguage,
+  skipSameLanguage: s.skipSameLanguage,
+  editorInputAssistEnabled: s.editorInputAssistEnabled,
+  selectionTrigger: s.selectionTrigger ?? "badge",
+  defaultTranslationProvider: s.defaultTranslationProvider ?? "chrome-built-in",
+});

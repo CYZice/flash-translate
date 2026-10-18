@@ -1,5 +1,8 @@
 import { SUPPORTED_LANGUAGES } from "../../src/shared/constants/languages";
-import { DEFAULT_AI_SYSTEM_PROMPT } from "../../src/shared/translation/config";
+import {
+  type AiReasoningEffort,
+  DEFAULT_AI_SYSTEM_PROMPT,
+} from "../../src/shared/translation/config";
 import { normalizeAiContextSentenceCount } from "../../src/shared/utils/ai-context";
 
 export interface ObsidianTranslationSettings {
@@ -12,6 +15,8 @@ export interface ObsidianTranslationSettings {
   contextSentenceCount: number;
   selectionTrigger: "badge" | "immediate" | "off";
   autoZhEn: boolean;
+  thinkingEnabled: boolean;
+  reasoningEffort: AiReasoningEffort;
 }
 
 export const DEFAULT_SETTINGS: ObsidianTranslationSettings = {
@@ -24,6 +29,8 @@ export const DEFAULT_SETTINGS: ObsidianTranslationSettings = {
   contextSentenceCount: 1,
   selectionTrigger: "badge",
   autoZhEn: false,
+  thinkingEnabled: false,
+  reasoningEffort: "high",
 };
 
 const LANGUAGE_CODES = new Set(
@@ -36,6 +43,16 @@ export function normalizeSettings(value: unknown): ObsidianTranslationSettings {
     return settings;
   }
   const data = value as Record<string, unknown>;
+  if (typeof data.thinkingEnabled === "boolean") {
+    settings.thinkingEnabled = data.thinkingEnabled;
+  }
+  if (
+    data.reasoningEffort === "low" ||
+    data.reasoningEffort === "high" ||
+    data.reasoningEffort === "max"
+  ) {
+    settings.reasoningEffort = data.reasoningEffort;
+  }
   if (typeof data.autoZhEn === "boolean") {
     settings.autoZhEn = data.autoZhEn;
   }

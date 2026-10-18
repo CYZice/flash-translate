@@ -1,70 +1,68 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ToggleSwitch } from "@/shared/components/toggle-switch";
 import { useLanguageDetectorAvailability } from "@/shared/hooks/use-language-detector-availability";
-import { getSettings, saveSettings } from "@/shared/storage/settings";
+import { useSettings } from "@/shared/hooks/use-settings";
+import { saveSettings } from "@/shared/storage/settings";
+import { selectTranslationBehaviorSettings } from "@/shared/storage/settings-selectors";
 import { getMessage } from "@/shared/utils/i18n";
+import { getPopupSettingsCopy } from "../utils/settings-copy";
+import { ExclusionSettings } from "./exclusion-settings";
+import { NativeModelSettings } from "./native-model-settings";
 
 const CHROME_FLAGS_URL = "chrome://flags/#language-detection-api";
 
+function skipDescription(autoZhEn: boolean, autoDetect: boolean): string {
+  if (autoZhEn) {
+    return getPopupSettingsCopy().automaticSkipNote;
+  }
+  return getMessage(
+    autoDetect
+      ? "popup_behavior_skipSameLanguageAutoDetectNote"
+      : "popup_behavior_skipSameLanguageDesc"
+  );
+}
+
 export function TranslationBehaviorSettings() {
-  const [skipSameLanguage, setSkipSameLanguage] = useState(true);
-  const [autoDetectLanguage, setAutoDetectLanguage] = useState(true);
-  const [editorInputAssistEnabled, setEditorInputAssistEnabled] =
-    useState(false);
-  const [selectionTrigger, setSelectionTrigger] = useState<
-    "immediate" | "badge"
-  >("badge");
-  const [defaultTranslationProvider, setDefaultTranslationProvider] = useState<
-    "chrome-built-in" | "custom-ai"
-  >("chrome-built-in");
+  const copy = getPopupSettingsCopy();
+  const [settings] = useSettings(selectTranslationBehaviorSettings);
+  const autoZhEn = settings?.autoZhEn ?? false;
+  const skipSameLanguage = settings?.skipSameLanguage ?? true;
+  const autoDetectLanguage = settings?.autoDetectLanguage ?? true;
+  const editorInputAssistEnabled = settings?.editorInputAssistEnabled ?? false;
+  const selectionTrigger = settings?.selectionTrigger ?? "badge";
+  const defaultTranslationProvider =
+    settings?.defaultTranslationProvider ?? "chrome-built-in";
   const [isCopied, setIsCopied] = useState(false);
   const {
     availability: detectorAvailability,
     isChecking: isCheckingAvailability,
-  } = useLanguageDetectorAvailability();
-
-  useEffect(() => {
-    const initialize = async () => {
-      const settings = await getSettings();
-      setSkipSameLanguage(settings.skipSameLanguage);
-      setAutoDetectLanguage(settings.autoDetectLanguage);
-      setEditorInputAssistEnabled(settings.editorInputAssistEnabled);
-      setSelectionTrigger(settings.selectionTrigger ?? "badge");
-      setDefaultTranslationProvider(
-        settings.defaultTranslationProvider ?? "chrome-built-in"
-      );
-    };
-    initialize();
-  }, []);
+  } = useLanguageDetectorAvailability({
+    enabled: settings !== null && !autoZhEn,
+  });
 
   const handleSkipSameLanguageToggle = async () => {
     const newValue = !skipSameLanguage;
-    setSkipSameLanguage(newValue);
     await saveSettings({ skipSameLanguage: newValue });
   };
 
   const handleSelectionTriggerChange = async (value: "immediate" | "badge") => {
-    setSelectionTrigger(value);
     await saveSettings({ selectionTrigger: value });
   };
 
   const handleAutoDetectToggle = async () => {
     const newValue = !autoDetectLanguage;
-    setAutoDetectLanguage(newValue);
     await saveSettings({ autoDetectLanguage: newValue });
   };
 
   const handleDefaultProviderChange = async (
     value: "chrome-built-in" | "custom-ai"
   ) => {
-    setDefaultTranslationProvider(value);
     await saveSettings({ defaultTranslationProvider: value });
   };
 
   const handleEditorInputAssistToggle = async () => {
     const newValue = !editorInputAssistEnabled;
-    setEditorInputAssistEnabled(newValue);
     await saveSettings({ editorInputAssistEnabled: newValue });
   };
 
@@ -77,47 +75,31 @@ export function TranslationBehaviorSettings() {
   const isDetectorUnavailable =
     detectorAvailability === "unavailable" ||
     detectorAvailability === "unsupported";
-  const autoDetectEnabled = autoDetectLanguage && !isDetectorUnavailable;
-  const effectiveSkipSameLanguage = autoDetectEnabled ? true : skipSameLanguage;
+  const autoDetectEnabled =
+    !autoZhEn && autoDetectLanguage && !isDetectorUnavailable;
+  const effectiveSkipSameLanguage =
+    !autoZhEn && (autoDetectEnabled || skipSameLanguage);
+  const detectionDisabled = !settings || autoZhEn || isDetectorUnavailable;
+  const skipDisabled = !settings || autoZhEn || autoDetectEnabled;
 
   return (
     <div>
       <div className="px-4 pt-3 pb-1">
         <h2 className="m-0 font-semibold text-gray-900 text-xs">
-          {getMessage("popup_section_behavior")}
+          {copy.behavior}
         </h2>
       </div>
       <div className="divide-y divide-gray-100 px-4">
-        <div className="flex items-center justify-between py-3">
-          <div className="flex-1 pr-3">
-            <span
-              className={cn(
-                "text-sm",
-                isDetectorUnavailable ? "text-gray-400" : "text-gray-700"
-              )}
-            >
-              {getMessage("popup_behavior_autoDetectLanguage")}
-            </span>
-            <AutoDetectDescription
-              isCopied={isCopied}
-              isDetectorUnavailable={isDetectorUnavailable}
-              isLoading={isCheckingAvailability}
-              onCopyFlagsUrl={handleCopyFlagsUrl}
-            />
-          </div>
-          <ToggleSwitch
-            checked={autoDetectEnabled}
-            disabled={isDetectorUnavailable}
-            onChange={handleAutoDetectToggle}
-          />
-        </div>
         <div className="py-3">
-          <span className="text-gray-700 text-sm">选中文本后的翻译方式</span>
+          <span className="text-gray-700 text-sm">{copy.trigger}</span>
+          <p className="mt-0.5 text-gray-400 text-xs">
+            {copy.triggerDescription}
+          </p>
           <div className="mt-2 flex gap-2">
             {(
               [
-                ["badge", "点击右下角图标"],
-                ["immediate", "立即显示"],
+                ["badge", copy.badge],
+                ["immediate", copy.immediate],
               ] as const
             ).map(([value, label]) => (
               <button
@@ -166,42 +148,80 @@ export function TranslationBehaviorSettings() {
             </p>
           )}
         </div>
-        <div className="flex items-center justify-between py-3">
-          <div className="flex-1 pr-3">
-            <span
-              className={cn(
-                "text-sm",
-                autoDetectEnabled ? "text-gray-400" : "text-gray-700"
+        <details className="py-3">
+          <summary className="cursor-pointer text-gray-600 text-xs">
+            {copy.advanced}
+          </summary>
+          <div className="flex items-center justify-between py-3">
+            <div className="flex-1 pr-3">
+              <span
+                className={cn(
+                  "text-sm",
+                  detectionDisabled ? "text-gray-400" : "text-gray-700"
+                )}
+              >
+                {getMessage("popup_behavior_autoDetectLanguage")}
+              </span>
+              {autoZhEn ? (
+                <p className="mt-0.5 text-gray-400 text-xs">
+                  {copy.automaticDetectionNote}
+                </p>
+              ) : (
+                <AutoDetectDescription
+                  isCopied={isCopied}
+                  isDetectorUnavailable={isDetectorUnavailable}
+                  isLoading={isCheckingAvailability}
+                  onCopyFlagsUrl={handleCopyFlagsUrl}
+                />
               )}
-            >
-              {getMessage("popup_behavior_skipSameLanguage")}
-            </span>
-            <p className="mt-0.5 text-gray-400 text-xs">
-              {autoDetectEnabled
-                ? getMessage("popup_behavior_skipSameLanguageAutoDetectNote")
-                : getMessage("popup_behavior_skipSameLanguageDesc")}
-            </p>
+            </div>
+            <ToggleSwitch
+              checked={autoDetectEnabled}
+              ariaLabel={getMessage("popup_behavior_autoDetectLanguage")}
+              disabled={detectionDisabled}
+              onChange={handleAutoDetectToggle}
+            />
           </div>
-          <ToggleSwitch
-            checked={effectiveSkipSameLanguage}
-            disabled={autoDetectEnabled}
-            onChange={handleSkipSameLanguageToggle}
-          />
-        </div>
-        <div className="flex items-center justify-between py-3">
-          <div className="flex-1 pr-3">
-            <span className="text-gray-700 text-sm">
-              {getMessage("popup_behavior_editorInputAssist")}
-            </span>
-            <p className="mt-0.5 text-gray-400 text-xs">
-              {getMessage("popup_behavior_editorInputAssistDesc")}
-            </p>
+          <div className="flex items-center justify-between py-3">
+            <div className="flex-1 pr-3">
+              <span
+                className={cn(
+                  "text-sm",
+                  skipDisabled ? "text-gray-400" : "text-gray-700"
+                )}
+              >
+                {getMessage("popup_behavior_skipSameLanguage")}
+              </span>
+              <p className="mt-0.5 text-gray-400 text-xs">
+                {skipDescription(autoZhEn, autoDetectEnabled)}
+              </p>
+            </div>
+            <ToggleSwitch
+              checked={effectiveSkipSameLanguage}
+              ariaLabel={getMessage("popup_behavior_skipSameLanguage")}
+              disabled={skipDisabled}
+              onChange={handleSkipSameLanguageToggle}
+            />
           </div>
-          <ToggleSwitch
-            checked={editorInputAssistEnabled}
-            onChange={handleEditorInputAssistToggle}
-          />
-        </div>
+          <div className="flex items-center justify-between py-3">
+            <div className="flex-1 pr-3">
+              <span className="text-gray-700 text-sm">
+                {getMessage("popup_behavior_editorInputAssist")}
+              </span>
+              <p className="mt-0.5 text-gray-400 text-xs">
+                {getMessage("popup_behavior_editorInputAssistDesc")}
+              </p>
+            </div>
+            <ToggleSwitch
+              checked={editorInputAssistEnabled}
+              onChange={handleEditorInputAssistToggle}
+            />
+          </div>
+          <ExclusionSettings />
+        </details>
+        {defaultTranslationProvider === "chrome-built-in" && (
+          <NativeModelSettings />
+        )}
       </div>
     </div>
   );

@@ -18,6 +18,8 @@ import {
 import { getAiHostPermissionPattern } from "@/shared/utils/ai-endpoint";
 import { getMessage } from "@/shared/utils/i18n";
 
+import { getPopupSettingsCopy } from "../utils/settings-copy";
+
 type Status =
   | { type: "idle" }
   | { type: "working"; message: string }
@@ -80,6 +82,7 @@ export function ContextPreview({ sentenceCount }: { sentenceCount: number }) {
 }
 
 export function ProviderSettings() {
+  const copy = getPopupSettingsCopy();
   const [baseUrl, setBaseUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [model, setModel] = useState("");
@@ -191,10 +194,10 @@ export function ProviderSettings() {
         />
         <span className="min-w-0 flex-1">
           <span className="block font-semibold text-gray-900 text-xs">
-            {getMessage("popup_ai_title")}
+            {copy.ai}
           </span>
           <span className="mt-0.5 block text-gray-400 text-xs leading-4">
-            {getMessage("popup_ai_description")}
+            {copy.aiDescription}
           </span>
         </span>
         <ChevronDown
@@ -206,7 +209,7 @@ export function ProviderSettings() {
 
       <div className="space-y-3 border-gray-100 border-t px-4 pt-3 pb-4">
         <label className="block text-gray-600 text-xs" htmlFor="ai-base-url">
-          {getMessage("popup_ai_baseUrl")}
+          {copy.baseUrl}
           <input
             autoCapitalize="off"
             autoComplete="off"
@@ -221,14 +224,14 @@ export function ProviderSettings() {
         </label>
 
         <label className="block text-gray-600 text-xs" htmlFor="ai-api-key">
-          {getMessage("popup_ai_apiKey")}
+          {copy.apiKey}
           <input
             autoCapitalize="off"
             autoComplete="off"
             className={inputClassName}
             id="ai-api-key"
             onChange={(event) => setApiKey(event.target.value)}
-            placeholder={getMessage("popup_ai_apiKeyPlaceholder")}
+            placeholder={copy.apiKeyPlaceholder}
             spellCheck={false}
             type="password"
             value={apiKey}
@@ -236,7 +239,7 @@ export function ProviderSettings() {
         </label>
 
         <label className="block text-gray-600 text-xs" htmlFor="ai-model">
-          {getMessage("popup_ai_model")}
+          {copy.model}
           <input
             autoCapitalize="off"
             autoComplete="off"
@@ -250,19 +253,6 @@ export function ProviderSettings() {
           />
         </label>
 
-        <label
-          className="block text-gray-600 text-xs"
-          htmlFor="ai-system-prompt"
-        >
-          {getMessage("popup_ai_systemPrompt")}
-          <textarea
-            className={`${inputClassName} min-h-20 resize-y`}
-            id="ai-system-prompt"
-            onChange={(event) => setSystemPrompt(event.target.value)}
-            value={systemPrompt}
-          />
-        </label>
-
         <div className="space-y-2 border-gray-100 border-t pt-3">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -270,10 +260,10 @@ export function ProviderSettings() {
                 className="font-medium text-gray-700 text-xs"
                 htmlFor="ai-context-sentence-count"
               >
-                {getMessage("popup_ai_contextRange")}
+                {copy.contextRange}
               </label>
               <p className="m-0 mt-0.5 text-gray-400 text-xs">
-                {getMessage("popup_ai_contextRangeDesc")}
+                {copy.contextDescription}
               </p>
             </div>
             <select
@@ -307,43 +297,63 @@ export function ProviderSettings() {
           </div>
         </div>
 
-        <div className="grid grid-cols-[1fr_8rem] items-end gap-3 border-gray-100 border-t pt-3">
-          <div className="flex min-h-9 items-center justify-between gap-3">
+        <details className="border-gray-100 border-t pt-3">
+          <summary className="cursor-pointer text-gray-600 text-xs">
+            {copy.advanced}
+          </summary>
+          <div className="space-y-3 pt-3">
             <label
-              className="text-gray-700 text-xs"
-              htmlFor="ai-thinking-enabled"
+              className="block text-gray-600 text-xs"
+              htmlFor="ai-system-prompt"
             >
-              {getMessage("popup_ai_thinkingEnabled")}
+              {copy.systemPrompt}
+              <textarea
+                className={`${inputClassName} min-h-20 resize-y`}
+                id="ai-system-prompt"
+                onChange={(event) => setSystemPrompt(event.target.value)}
+                value={systemPrompt}
+              />
             </label>
-            <ToggleSwitch
-              checked={thinkingEnabled}
-              id="ai-thinking-enabled"
-              onChange={() => setThinkingEnabled((enabled) => !enabled)}
-            />
+
+            <div className="grid grid-cols-[1fr_8rem] items-end gap-3 border-gray-100 border-t pt-3">
+              <div className="flex min-h-9 items-center justify-between gap-3">
+                <label
+                  className="text-gray-700 text-xs"
+                  htmlFor="ai-thinking-enabled"
+                >
+                  {copy.thinking}
+                </label>
+                <ToggleSwitch
+                  checked={thinkingEnabled}
+                  id="ai-thinking-enabled"
+                  onChange={() => setThinkingEnabled((enabled) => !enabled)}
+                />
+              </div>
+              <label
+                className="block text-gray-600 text-xs"
+                htmlFor="ai-reasoning-effort"
+              >
+                {copy.reasoningEffort}
+                <select
+                  className={cn(
+                    inputClassName,
+                    "disabled:bg-gray-50 disabled:text-gray-400"
+                  )}
+                  disabled={!thinkingEnabled}
+                  id="ai-reasoning-effort"
+                  onChange={(event) =>
+                    setReasoningEffort(event.target.value as AiReasoningEffort)
+                  }
+                  value={reasoningEffort}
+                >
+                  <option value="low">{copy.effortLow}</option>
+                  <option value="high">{copy.effortHigh}</option>
+                  <option value="max">{copy.effortMax}</option>
+                </select>
+              </label>
+            </div>
           </div>
-          <label
-            className="block text-gray-600 text-xs"
-            htmlFor="ai-reasoning-effort"
-          >
-            {getMessage("popup_ai_reasoningEffort")}
-            <select
-              className={cn(
-                inputClassName,
-                "disabled:bg-gray-50 disabled:text-gray-400"
-              )}
-              disabled={!thinkingEnabled}
-              id="ai-reasoning-effort"
-              onChange={(event) =>
-                setReasoningEffort(event.target.value as AiReasoningEffort)
-              }
-              value={reasoningEffort}
-            >
-              <option value="low">{getMessage("popup_ai_effortLow")}</option>
-              <option value="high">{getMessage("popup_ai_effortHigh")}</option>
-              <option value="max">{getMessage("popup_ai_effortMax")}</option>
-            </select>
-          </label>
-        </div>
+        </details>
 
         <div className="flex gap-2 pt-1">
           <button

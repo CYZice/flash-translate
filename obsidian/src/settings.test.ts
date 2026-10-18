@@ -2,6 +2,14 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_SETTINGS, normalizeSettings } from "./settings";
 
 describe("Obsidian settings boundary", () => {
+  it("validates thinking controls shared with the browser", () => {
+    expect(
+      normalizeSettings({ thinkingEnabled: "true", reasoningEffort: "medium" })
+    ).toMatchObject({ thinkingEnabled: false, reasoningEffort: "high" });
+    expect(
+      normalizeSettings({ thinkingEnabled: true, reasoningEffort: "max" })
+    ).toMatchObject({ thinkingEnabled: true, reasoningEffort: "max" });
+  });
   it("validates automatic Chinese/English mode without changing manual defaults", () => {
     expect(normalizeSettings({ autoZhEn: "true" }).autoZhEn).toBe(false);
     expect(normalizeSettings({ autoZhEn: true })).toMatchObject({

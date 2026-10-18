@@ -53,24 +53,32 @@ Start in a test vault before using the plugin in your main vault.
 
 Open **Settings → Flash Translate**:
 
-1. Set **Base URL** to the API base, including `/v1` if your provider needs it.
+1. Set **API base URL** to the API base, including `/v1` if your provider needs it.
    A full `/chat/completions` URL is also accepted.
 2. Enter the exact **Model** ID.
 3. Choose or create an **API key** through Obsidian's secret selector. Leave
    it empty for a local server that does not require authentication.
 4. Choose the source and default target languages. With **Source language → Auto
    detect**, the selected model detects the source. You can change the target in the card.
-5. Optionally change the prompt and context sentence count. Use **0** to send
-   only selected text.
+5. Choose **Context range** (0–3 sentences per side). Use **0** to send only
+   selected text. **System prompt**, **Deep thinking**, and **Reasoning effort**
+   are under **Advanced settings**, as in the browser extension. Thinking controls
+   affect supported models only.
 
-Enable **自动中英互译 / Auto Chinese ↔ English** to choose both languages
+Enable **Automatic Chinese ↔ English** to choose both languages
 automatically: English → Chinese; Chinese (including mixed technical text) →
 English. The header shows the actual pair and a pinned card changes direction
 on each new selection. Choosing a target language in the card leaves this mode.
 This Chinese/English mode uses a local character rule, not a downloaded detector
 or an extra AI request. For other languages, turn it off and choose languages.
+The manual language selectors are hidden while this mode is on; turning it off
+restores their saved values. Common settings follow the same language and
+behavior rules as the browser extension. Chrome-only detection, page skipping,
+and model downloads are not shown here. Changes save automatically in Obsidian;
+the browser AI connection form uses **Save** or **Test connection**. Preferences
+are stored separately and do not synchronize between the two applications.
 
-**Selection translation** chooses between a small button (default), immediate
+**After selecting text** chooses between a small button (default), immediate
 translation, and command-only operation. The button alone makes no network
 request and reads no optional context. A pinned card updates immediately on new
 selections in either automatic mode. Command-only mode stays manual even if pinned.

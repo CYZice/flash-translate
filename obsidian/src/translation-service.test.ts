@@ -16,6 +16,27 @@ const settings = {
 };
 
 describe("Obsidian translation transport", () => {
+  it("sends the same supported thinking options as the browser", async () => {
+    const request = vi.fn().mockResolvedValue({
+      status: 200,
+      text: '{"choices":[{"message":{"content":"Hello"}}]}',
+    });
+    await translateNoteSelection(
+      input,
+      {
+        ...settings,
+        model: "deepseek-chat",
+        thinkingEnabled: true,
+        reasoningEffort: "max",
+      },
+      "",
+      request
+    );
+    expect(JSON.parse(request.mock.calls[0][0].body)).toMatchObject({
+      thinking: { type: "enabled" },
+      reasoning_effort: "max",
+    });
+  });
   it("uses the shared model request and returns a translation", async () => {
     const request = vi.fn().mockResolvedValue({
       status: 200,
