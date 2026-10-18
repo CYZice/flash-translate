@@ -63,6 +63,7 @@ export function SourceLanguageChips({
     }
 
     startDownload(sourceLang, targetLanguage);
+    const release = translatorManager.retain(sourceLang, targetLanguage);
 
     try {
       await translatorManager.getTranslator(sourceLang, targetLanguage);
@@ -80,6 +81,8 @@ export function SourceLanguageChips({
         errorTimeoutsRef.current.delete(pairKey);
       }, 5000);
       errorTimeoutsRef.current.set(pairKey, timeoutId);
+    } finally {
+      release();
     }
   };
 

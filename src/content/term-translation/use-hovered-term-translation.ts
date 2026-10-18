@@ -127,7 +127,10 @@ export function useHoveredTermTranslation({
       setState(IDLE_STATE);
       return;
     }
-    const releaseResource = translatorManager.retain();
+    const releaseResource = translatorManager.retain(
+      sourceLanguage,
+      targetLanguage
+    );
     const clearPendingTranslation = () => {
       abortControllerRef.current?.abort();
       abortControllerRef.current = null;

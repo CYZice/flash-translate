@@ -66,7 +66,9 @@ checkable style rules. Do not duplicate those rules in agent instructions.
 3. `TranslationCard` renders the in-page translation interface and delegates
    translation state to `useTranslator`.
 4. `TranslatorManager` in `src/shared/utils/translator.ts` owns Translator API
-   availability checks, model creation, language-pair reuse, and streaming.
+   availability checks, model creation, per-language-pair leases, and streaming.
+   Translation consumers retain their specific pair while active and release it
+   on reset/close; one pair must not destroy another pair's active session.
 
 ### Shared State
 

@@ -93,7 +93,10 @@ export function useTranslator({
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
       if (provider === "chrome-built-in" && !releaseResourceRef.current) {
-        releaseResourceRef.current = translatorManager.retain();
+        releaseResourceRef.current = translatorManager.retain(
+          sourceLanguage,
+          targetLanguage
+        );
       }
 
       setState((prev) => ({

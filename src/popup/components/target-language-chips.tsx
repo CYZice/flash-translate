@@ -100,6 +100,7 @@ export function TargetLanguageChips({
     }
 
     startDownload(sourceToCheck, targetLang);
+    const release = translatorManager.retain(sourceToCheck, targetLang);
 
     try {
       await translatorManager.getTranslator(sourceToCheck, targetLang);
@@ -126,6 +127,8 @@ export function TargetLanguageChips({
         errorTimeoutsRef.current.delete(pairKey);
       }, 5000);
       errorTimeoutsRef.current.set(pairKey, timeoutId);
+    } finally {
+      release();
     }
   };
 

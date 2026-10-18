@@ -14,15 +14,15 @@ import {
   createUnavailabilityError,
   createUnsupportedError,
   filterSourceLanguages,
-  isSameLanguagePair,
   mapAvailabilityStatus,
   splitTextIntoParagraphs,
 } from "./translator-utils";
 
-interface CachedTranslator {
-  translator: Translator;
-  sourceLanguage: string;
-  targetLanguage: string;
+interface TranslatorSession {
+  translator: Translator | null;
+  creation: Promise<Translator> | null;
+  controller: AbortController | null;
+  owners: number;
 }
 
 // Our internal availability status (maps from Availability type)
@@ -33,27 +33,21 @@ export type TranslationAvailabilityStatus =
   | "unsupported";
 
 class TranslatorManager {
-  private instance: CachedTranslator | null = null;
-  private owners = 0;
-  private generation = 0;
-  private creationController: AbortController | null = null;
-  private isCreating = false;
-  private pendingRequests: Array<{
-    resolve: (translator: Translator) => void;
-    reject: (error: Error) => void;
-  }> = [];
+  private readonly sessions = new Map<string, TranslatorSession>();
 
-  retain(): () => void {
-    this.owners += 1;
+  retain(sourceLanguage: string, targetLanguage: string): () => void {
+    const key = this.pairKey(sourceLanguage, targetLanguage);
+    const session = this.getSession(key);
+    session.owners += 1;
     let released = false;
     return () => {
       if (released) {
         return;
       }
       released = true;
-      this.owners -= 1;
-      if (this.owners === 0) {
-        this.destroy();
+      session.owners -= 1;
+      if (session.owners === 0) {
+        this.destroySession(key, session);
       }
     };
   }
@@ -79,110 +73,85 @@ class TranslatorManager {
     }
   }
 
-  async getTranslator(
+  getTranslator(
     sourceLanguage: string,
     targetLanguage: string
   ): Promise<Translator> {
-    // Reuse existing instance if same language pair
-    if (
-      this.instance &&
-      isSameLanguagePair(this.instance, sourceLanguage, targetLanguage)
-    ) {
-      return this.instance.translator;
+    const key = this.pairKey(sourceLanguage, targetLanguage);
+    const session = this.getSession(key);
+    if (session.translator) {
+      return Promise.resolve(session.translator);
     }
-
-    // Destroy existing instance if different language pair
-    if (this.instance) {
-      this.destroyInstance();
-    }
-
-    // Queue request if already creating
-    if (this.isCreating) {
-      return new Promise((resolve, reject) => {
-        this.pendingRequests.push({ resolve, reject });
-      });
-    }
-
-    this.isCreating = true;
-    const generation = this.generation;
-    const controller = new AbortController();
-    this.creationController = controller;
-
-    try {
-      if (typeof Translator === "undefined") {
-        throw createNotAvailableError();
-      }
-
-      // Check availability
-      const availability = await this.checkAvailability(
-        sourceLanguage,
-        targetLanguage
-      );
-      controller.signal.throwIfAborted();
-
-      if (availability === "unsupported") {
-        throw createUnsupportedError();
-      }
-
-      if (availability === "unavailable") {
-        throw createUnavailabilityError(sourceLanguage, targetLanguage);
-      }
-
-      // Create translator instance with download progress monitoring
-      const translator = await Translator.create({
+    if (!session.creation) {
+      const controller = new AbortController();
+      session.controller = controller;
+      session.creation = this.createTranslator(
         sourceLanguage,
         targetLanguage,
-        signal: controller.signal,
-        monitor(m) {
-          const handleProgress = (e: ProgressEvent) => {
-            if (e.lengthComputable) {
-              const progress = (e.loaded / e.total) * 100;
-              log.log(`Model download: ${progress.toFixed(1)}%`);
-            }
-            // Remove listener when download is complete
-            if (e.loaded === e.total) {
-              m.removeEventListener("downloadprogress", handleProgress);
-            }
-          };
-          m.addEventListener("downloadprogress", handleProgress);
-        },
+        key,
+        session,
+        controller.signal
+      ).finally(() => {
+        session.creation = null;
+        session.controller = null;
       });
-
-      if (generation !== this.generation) {
-        translator.destroy();
-        throw new DOMException("Translation closed", "AbortError");
-      }
-
-      this.instance = {
-        translator,
-        sourceLanguage,
-        targetLanguage,
-      };
-
-      // Resolve pending requests
-      for (const { resolve } of this.pendingRequests) {
-        resolve(translator);
-      }
-      this.pendingRequests = [];
-
-      return translator;
-    } catch (error) {
-      // Reject pending requests with properly typed error
-      const normalizedError =
-        error instanceof Error ? error : new Error(String(error));
-      if (generation === this.generation) {
-        for (const { reject } of this.pendingRequests) {
-          reject(normalizedError);
-        }
-        this.pendingRequests = [];
-      }
-      throw normalizedError;
-    } finally {
-      if (generation === this.generation) {
-        this.isCreating = false;
-        this.creationController = null;
-      }
     }
+    return session.creation;
+  }
+
+  private async createTranslator(
+    sourceLanguage: string,
+    targetLanguage: string,
+    key: string,
+    session: TranslatorSession,
+    signal: AbortSignal
+  ): Promise<Translator> {
+    if (typeof Translator === "undefined") {
+      throw createNotAvailableError();
+    }
+
+    // Check availability
+    const availability = await this.checkAvailability(
+      sourceLanguage,
+      targetLanguage
+    );
+    signal.throwIfAborted();
+
+    if (availability === "unsupported") {
+      throw createUnsupportedError();
+    }
+
+    if (availability === "unavailable") {
+      throw createUnavailabilityError(sourceLanguage, targetLanguage);
+    }
+
+    // Create translator instance with download progress monitoring
+    const translator = await Translator.create({
+      sourceLanguage,
+      targetLanguage,
+      signal,
+      monitor(m) {
+        const handleProgress = (e: ProgressEvent) => {
+          if (e.lengthComputable) {
+            const progress = (e.loaded / e.total) * 100;
+            log.log(`Model download: ${progress.toFixed(1)}%`);
+          }
+          // Remove listener when download is complete
+          if (e.loaded === e.total) {
+            m.removeEventListener("downloadprogress", handleProgress);
+          }
+        };
+        m.addEventListener("downloadprogress", handleProgress);
+      },
+    });
+
+    if (signal.aborted || this.sessions.get(key) !== session) {
+      translator.destroy();
+      throw new DOMException("Translation closed", "AbortError");
+    }
+
+    session.translator = translator;
+    return translator;
   }
 
   async *translateStreaming(
@@ -220,25 +189,44 @@ class TranslatorManager {
   }
 
   destroy(): void {
-    this.generation += 1;
-    this.creationController?.abort();
-    this.creationController = null;
-    this.isCreating = false;
-    for (const { reject } of this.pendingRequests) {
-      reject(new DOMException("Translation closed", "AbortError"));
+    for (const [key, session] of this.sessions) {
+      this.destroySession(key, session);
     }
-    this.pendingRequests = [];
-    this.destroyInstance();
   }
 
-  private destroyInstance(): void {
-    if (this.instance) {
+  private pairKey(sourceLanguage: string, targetLanguage: string): string {
+    return `${sourceLanguage}\u0000${targetLanguage}`;
+  }
+
+  private getSession(key: string): TranslatorSession {
+    let session = this.sessions.get(key);
+    if (!session) {
+      session = {
+        translator: null,
+        creation: null,
+        controller: null,
+        owners: 0,
+      };
+      this.sessions.set(key, session);
+    }
+    return session;
+  }
+
+  private destroySession(key: string, session: TranslatorSession): void {
+    if (this.sessions.get(key) !== session) {
+      return;
+    }
+    this.sessions.delete(key);
+    session.controller?.abort();
+    session.controller = null;
+    session.creation = null;
+    if (session.translator) {
       try {
-        this.instance.translator.destroy();
+        session.translator.destroy();
       } catch (error) {
         log.error("Failed to destroy translator instance:", error);
       } finally {
-        this.instance = null;
+        session.translator = null;
       }
     }
   }
