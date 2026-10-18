@@ -15,6 +15,14 @@ for translating selected note text and inserting the result.
 - **Site exclusion**: Disable translation on specific websites
 - **Settings sync**: Your preferences sync automatically across devices
 - **Translation providers**: Chrome's built-in translation runs on-device. Custom AI translation sends selected text and configured context to your chosen endpoint.
+- **Selection extraction**: Reads selected text without cloning page DOM. KaTeX
+  and MathJax formulas use their available TeX source or common MathML structures
+  instead of duplicated rendering layers. Image-only formulas require OCR and
+  are not extracted.
+- **On-demand AI context**: Context is read only when using AI, not for the
+  selection badge or Chrome's built-in translation. Each side reads up to the
+  configured sentence count within 8,192 characters and a bounded DOM scan.
+  These bounds apply to optional context, not the selected text.
 - **Session cleanup**: Closing a translation clears its retained text and results.
   Local translation and language-detection sessions are destroyed once no active
   feature needs them. Downloaded language files and settings are kept.

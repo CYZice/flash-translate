@@ -4,9 +4,10 @@ import {
   DEFAULT_AI_CONTEXT_SENTENCE_COUNT,
   getContextAroundSelection,
 } from "@/shared/utils/ai-context";
+import { MAX_SELECTION_CONTEXT_CHARACTERS } from "./selection-text";
 import {
   cloneSelectionRanges,
-  getSelectionContext,
+  getRangesContext,
   getSelectionRect,
   getSelectionText,
   getValidSelectionText,
@@ -21,15 +22,7 @@ export type { SelectionInfo } from "./text-selection";
 const SELECTION_DELAY_MS = 10;
 const HOST_ID = "flash-translate-root";
 
-interface SelectionDetails {
-  text: string;
-  rect: DOMRect;
-  ranges: readonly Range[];
-  contextBefore: string;
-  contextAfter: string;
-}
-
-function getControlSelection(sentenceCount: number): SelectionDetails | null {
+function getControlSelection(sentenceCount: number): SelectionInfo | null {
   const element = document.activeElement;
   if (
     !(
@@ -51,16 +44,27 @@ function getControlSelection(sentenceCount: number): SelectionDetails | null {
   if (!text) {
     return null;
   }
-  const context = getContextAroundSelection(
-    element.value.slice(0, start),
-    element.value.slice(end),
-    sentenceCount
-  );
   return {
     text,
     rect: element.getBoundingClientRect(),
     ranges: [],
-    ...context,
+    readContext: () => {
+      if (
+        sentenceCount === 0 ||
+        !element.isConnected ||
+        element.value.slice(start, end).trim() !== text
+      ) {
+        return { contextBefore: "", contextAfter: "" };
+      }
+      return getContextAroundSelection(
+        element.value.slice(
+          Math.max(0, start - MAX_SELECTION_CONTEXT_CHARACTERS),
+          start
+        ),
+        element.value.slice(end, end + MAX_SELECTION_CONTEXT_CHARACTERS),
+        sentenceCount
+      );
+    },
   };
 }
 
@@ -69,7 +73,7 @@ function buildSelectionInfo(
   rawText: string | undefined | null,
   fallbackRect: DOMRect,
   sentenceCount: number
-): SelectionDetails | null {
+): SelectionInfo | null {
   const validText = getValidSelectionText(rawText);
   if (!validText) {
     return null;
@@ -80,17 +84,13 @@ function buildSelectionInfo(
     return null;
   }
 
-  const { contextBefore, contextAfter } = getSelectionContext(
-    selection,
-    sentenceCount
-  );
+  const ranges = cloneSelectionRanges(selection);
 
   return {
     text: validText,
     rect,
-    ranges: cloneSelectionRanges(selection),
-    contextBefore,
-    contextAfter,
+    ranges,
+    readContext: () => getRangesContext(ranges, sentenceCount),
   };
 }
 
@@ -126,13 +126,20 @@ export function useTextSelection(
   const pendingClearRef = useRef(false);
   const selectionTextAtPointerDownRef = useRef<string | null>(null);
   const selectionTimerRef = useRef<number | null>(null);
+  const isSelectingRef = useRef(false);
 
   const scheduleCardDisplay = () => {
     setIsVisible(pinnedRef.current || selectionTrigger === "immediate");
   };
 
   const handleMouseUp = (event: Event) => {
+    if (event.type === "mouseup") {
+      isSelectingRef.current = false;
+    }
     if (isClickInsideShadowHost(event.composedPath(), HOST_ID)) {
+      return;
+    }
+    if (isSelectingRef.current) {
       return;
     }
     // Delay to ensure selection is complete
@@ -215,6 +222,11 @@ export function useTextSelection(
       return;
     }
     pendingClearRef.current = true;
+    isSelectingRef.current = true;
+    if (selectionTimerRef.current !== null) {
+      window.clearTimeout(selectionTimerRef.current);
+      selectionTimerRef.current = null;
+    }
     selectionTextAtPointerDownRef.current =
       getControlSelection(sentenceCount)?.text ??
       getSelectionText(window.getSelection());
@@ -234,6 +246,9 @@ export function useTextSelection(
       selectionTimerRef.current = null;
     }
     setIsPinned(false);
+    isSelectingRef.current = false;
+    pendingClearRef.current = false;
+    selectionTextAtPointerDownRef.current = null;
     setIsVisible(false);
     clearSelectionState(setSelection, lastSelectionTextRef);
   };
@@ -250,6 +265,7 @@ export function useTextSelection(
       selectionTimerRef.current = null;
     }
     setIsPinned(false);
+    isSelectingRef.current = false;
     pendingClearRef.current = false;
     selectionTextAtPointerDownRef.current = null;
     clearSelectionState(setSelection, lastSelectionTextRef);

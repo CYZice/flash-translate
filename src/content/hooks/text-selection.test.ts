@@ -93,9 +93,9 @@ describe("getSelectionContext", () => {
 });
 
 describe("getSelectionText", () => {
-  it("removes duplicate assistive LaTeX content from a rendered selection", () => {
+  it("reads the TeX source once instead of the duplicate formula layers", () => {
     const paragraph = document.createElement("p");
-    paragraph.innerHTML = `few <span class="katex"><span class="katex-mathml"><math><annotation encoding="application/x-tex">duplicate source</annotation></math></span><span class="katex-html">transverse modes</span></span> to high spatial coherence`;
+    paragraph.innerHTML = `Consider <span class="katex"><span class="katex-mathml"><math><annotation encoding="application/x-tex">f(t)=1</annotation></math></span><span class="katex-html" aria-hidden="true">f(t)=1</span></span> for all t.`;
     document.body.append(paragraph);
     const range = document.createRange();
     range.selectNodeContents(paragraph);
@@ -103,17 +103,15 @@ describe("getSelectionText", () => {
     selection?.removeAllRanges();
     selection?.addRange(range);
 
-    expect(getSelectionText(selection)).toBe(
-      "few transverse modes to high spatial coherence"
-    );
+    expect(getSelectionText(selection)).toBe("Consider f(t)=1 for all t.");
 
     selection?.removeAllRanges();
     paragraph.remove();
   });
 
-  it("ignores hidden and SVG math layers while keeping visible text", () => {
+  it("keeps visually present aria-hidden text and skips truly hidden content", () => {
     const paragraph = document.createElement("p");
-    paragraph.innerHTML = `before <mjx-container><svg><text>duplicate</text></svg></mjx-container><span aria-hidden="true">hidden</span>after`;
+    paragraph.innerHTML = `before <span aria-hidden="true">visible </span><span hidden>hidden</span>after`;
     document.body.append(paragraph);
     const range = document.createRange();
     range.selectNodeContents(paragraph);
@@ -121,7 +119,7 @@ describe("getSelectionText", () => {
     selection?.removeAllRanges();
     selection?.addRange(range);
 
-    expect(getSelectionText(selection)).toBe("before after");
+    expect(getSelectionText(selection)).toBe("before visible after");
 
     selection?.removeAllRanges();
     paragraph.remove();

@@ -67,18 +67,12 @@ export function TranslationCard({
 
   useEffect(() => {
     if (selection.text && !isDetecting) {
-      currentTranslation.translate(selection.text, {
-        contextBefore: selection.contextBefore,
-        contextAfter: selection.contextAfter,
-      });
+      currentTranslation.translate(
+        selection.text,
+        activeResultView === "ai" ? selection.readContext() : undefined
+      );
     }
-  }, [
-    selection.text,
-    selection.contextBefore,
-    selection.contextAfter,
-    isDetecting,
-    currentTranslation.translate,
-  ]);
+  }, [selection, activeResultView, isDetecting, currentTranslation.translate]);
 
   const handleResultViewChange = (view: TranslationResultView) => {
     setResultView({ key: viewResetKey, view });

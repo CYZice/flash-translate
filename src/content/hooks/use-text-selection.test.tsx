@@ -57,8 +57,92 @@ afterEach(() => {
   act(() => root.unmount());
   host.remove();
   editor.remove();
+  window.getSelection()?.removeAllRanges();
+  vi.restoreAllMocks();
   vi.useRealTimers();
   vi.unstubAllGlobals();
+});
+
+describe("on-demand context and selection events", () => {
+  it("does not read textarea context until explicitly requested", async () => {
+    const contextRules = await import("@/shared/utils/ai-context");
+    const context = vi.spyOn(contextRules, "getContextAroundSelection");
+    render("badge");
+    select("Before. Selected. After.");
+    act(() => {
+      editor.setSelectionRange(8, 17);
+      document.dispatchEvent(new Event("selectionchange"));
+    });
+    settleSelection();
+    expect(context).not.toHaveBeenCalled();
+    expect(state.selection?.text).toBe("Selected.");
+    expect(state.selection?.readContext()).toEqual({
+      contextBefore: "Before.",
+      contextAfter: "After.",
+    });
+    expect(context).toHaveBeenCalledTimes(1);
+    editor.value = "Changed document.";
+    expect(state.selection?.readContext()).toEqual({
+      contextBefore: "",
+      contextAfter: "",
+    });
+  });
+
+  it("reads context from the saved DOM range, not a later browser selection", async () => {
+    const selectionRules = await import("./text-selection");
+    render("badge");
+    const paragraph = document.createElement("p");
+    paragraph.textContent = "Before. Selected. After.";
+    document.body.append(paragraph);
+    const text = paragraph.firstChild as Text;
+    const range = document.createRange();
+    range.setStart(text, 8);
+    range.setEnd(text, 17);
+    const selection = window.getSelection();
+    selection?.addRange(range);
+    const context = vi.spyOn(selectionRules, "getRangesContext");
+    act(() =>
+      paragraph.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }))
+    );
+    settleSelection();
+    expect(state.selection?.text).toBe("Selected.");
+    expect(context).not.toHaveBeenCalled();
+    selection?.removeAllRanges();
+    expect(state.selection?.readContext()).toEqual({
+      contextBefore: "Before.",
+      contextAfter: "After.",
+    });
+    paragraph.remove();
+    expect(state.selection?.readContext()).toEqual({
+      contextBefore: "",
+      contextAfter: "",
+    });
+  });
+
+  it("waits for mouseup during dragging, but supports keyboard selection changes", () => {
+    render("immediate");
+    act(() => {
+      editor.focus();
+      editor.value = "First second";
+      editor.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+      editor.setSelectionRange(0, 3);
+      document.dispatchEvent(new Event("selectionchange"));
+    });
+    settleSelection();
+    expect(state.selection).toBeNull();
+    act(() => {
+      editor.setSelectionRange(0, 5);
+      editor.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+    });
+    settleSelection();
+    expect(state.selection?.text).toBe("First");
+    act(() => {
+      editor.setSelectionRange(6, 12);
+      document.dispatchEvent(new Event("selectionchange"));
+    });
+    settleSelection();
+    expect(state.selection?.text).toBe("second");
+  });
 });
 
 describe("selection display lifecycle", () => {

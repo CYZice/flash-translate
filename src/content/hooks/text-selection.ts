@@ -3,8 +3,14 @@
 
 import {
   DEFAULT_AI_CONTEXT_SENTENCE_COUNT,
-  getAdjacentContext,
+  normalizeAiContextSentenceCount,
 } from "@/shared/utils/ai-context";
+import {
+  getRangeContext,
+  getRangeText,
+  normalizeSelectionText,
+} from "./selection-text";
+import type { TranslationContext } from "./translator-executor";
 
 interface RectLike {
   width: number;
@@ -15,8 +21,7 @@ export interface SelectionInfo {
   text: string;
   rect: DOMRect;
   ranges: readonly Range[];
-  contextBefore: string;
-  contextAfter: string;
+  readContext: () => TranslationContext;
 }
 
 const CONTEXT_CONTAINER_SELECTOR =
@@ -28,41 +33,6 @@ function getContextContainer(node: Node): Element | null {
       ? (node as Element)
       : node.parentElement;
   return element?.closest(CONTEXT_CONTAINER_SELECTOR) ?? element;
-}
-
-const NON_VISIBLE_SELECTION_SELECTOR = [
-  "script",
-  "style",
-  "noscript",
-  "annotation[encoding='application/x-tex']",
-  "mjx-assistive-mml",
-  ".katex-mathml",
-  "[aria-hidden='true']",
-  "[hidden]",
-  "mjx-container svg",
-  ".katex svg",
-].join(",");
-
-function normalizeSelectionText(text: string): string {
-  return text
-    .replace(/[\u200b-\u200d\ufeff]/g, "")
-    .replace(/\u00a0/g, " ")
-    .replace(/\r\n?/g, "\n")
-    .replace(/[\t\f\v ]+/g, " ")
-    .replace(/ *\n */g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
-function getRangeText(range: Range): string {
-  const container = document.createElement("div");
-  container.append(range.cloneContents());
-  for (const element of container.querySelectorAll(
-    NON_VISIBLE_SELECTION_SELECTOR
-  )) {
-    element.remove();
-  }
-  return normalizeSelectionText(container.textContent ?? "");
 }
 
 export function getSelectionText(selection: Selection | null): string | null {
@@ -83,7 +53,7 @@ export function getSelectionText(selection: Selection | null): string | null {
   }
 
   const normalized = normalizeSelectionText(parts.join("\n"));
-  return getValidSelectionText(normalized || selection.toString());
+  return getValidSelectionText(normalized);
 }
 
 function getTextBeforeRange(range: Range, sentenceCount: number): string {
@@ -96,11 +66,7 @@ function getTextBeforeRange(range: Range, sentenceCount: number): string {
     const contextRange = document.createRange();
     contextRange.selectNodeContents(container);
     contextRange.setEnd(range.startContainer, range.startOffset);
-    return getAdjacentContext(
-      getRangeText(contextRange),
-      "before",
-      sentenceCount
-    );
+    return getRangeContext(contextRange, "before", sentenceCount);
   } catch {
     return "";
   }
@@ -116,11 +82,7 @@ function getTextAfterRange(range: Range, sentenceCount: number): string {
     const contextRange = document.createRange();
     contextRange.selectNodeContents(container);
     contextRange.setStart(range.endContainer, range.endOffset);
-    return getAdjacentContext(
-      getRangeText(contextRange),
-      "after",
-      sentenceCount
-    );
+    return getRangeContext(contextRange, "after", sentenceCount);
   } catch {
     return "";
   }
@@ -137,16 +99,31 @@ export function getSelectionContext(
     return { contextBefore: "", contextAfter: "" };
   }
 
-  try {
-    const firstRange = selection.getRangeAt(0);
-    const lastRange = selection.getRangeAt(selection.rangeCount - 1);
-    return {
-      contextBefore: getTextBeforeRange(firstRange, sentenceCount),
-      contextAfter: getTextAfterRange(lastRange, sentenceCount),
-    };
-  } catch {
+  return getRangesContext(cloneSelectionRanges(selection), sentenceCount);
+}
+
+export function getRangesContext(
+  ranges: readonly Range[],
+  sentenceCount: number
+): TranslationContext {
+  const count = normalizeAiContextSentenceCount(sentenceCount);
+  const firstRange = ranges[0];
+  const lastRange = ranges.at(-1);
+  if (!(firstRange && lastRange) || count === 0) {
     return { contextBefore: "", contextAfter: "" };
   }
+  if (
+    !(
+      firstRange.startContainer.isConnected &&
+      lastRange.endContainer.isConnected
+    )
+  ) {
+    return { contextBefore: "", contextAfter: "" };
+  }
+  return {
+    contextBefore: getTextBeforeRange(firstRange, count),
+    contextAfter: getTextAfterRange(lastRange, count),
+  };
 }
 
 /**
