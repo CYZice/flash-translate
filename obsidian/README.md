@@ -24,6 +24,17 @@ same guarded edit actions. Reading views and other plugin output offer copy, not
 note edits. You can also run **Flash Translate: Translate selection** from the
 command palette or use the editor's **Translate selection** context-menu action.
 
+## Install a release
+
+Requires Obsidian **1.11.4+** for its secret-storage API.
+
+Download `flash-translate-obsidian-v0.3.0.zip` from
+[Releases](https://github.com/CYZice/flash-translate/releases/latest). Extract its
+`flash-translate` folder into `<your-test-vault>/.obsidian/plugins/`. Alternatively,
+download the release's `main.js`, `manifest.json`, and `styles.css` into that folder.
+Enable community plugins and **Flash Translate**, then configure your model below.
+Start in a test vault before using the plugin in your main vault.
+
 ## Install the development build
 
 Requires Obsidian **1.11.4+** for its secret-storage API.

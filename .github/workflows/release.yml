@@ -31,6 +31,10 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Install Obsidian plugin dependencies
+        working-directory: obsidian
+        run: npm ci
+
       - name: Determine version
         id: version
         run: |
@@ -79,6 +83,17 @@ jobs:
             exit 1
           fi
 
+      - name: Determine Obsidian version
+        id: obsidian
+        run: |
+          VERSION=$(jq -r .version obsidian/manifest.json)
+          PKG_VERSION=$(jq -r .version obsidian/package.json)
+          if [ "$VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::Obsidian manifest version ($VERSION) does not match package.json version ($PKG_VERSION)"
+            exit 1
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Check if tag exists
         id: tag_check
         run: |
@@ -98,14 +113,17 @@ jobs:
       - name: Build
         run: bun run build
 
-      - name: Create ZIP
+      - name: Build Obsidian plugin
+        run: npm --prefix obsidian run build
+
+      - name: Create ZIPs
         run: |
-          cd dist
-          zip -r ../flash-translate-${{ steps.version.outputs.tag_name }}.zip .
+          (cd dist && zip -r ../flash-translate-${{ steps.version.outputs.tag_name }}.zip .)
+          (cd obsidian/dist && zip -r ../../flash-translate-obsidian-v${{ steps.obsidian.outputs.version }}.zip flash-translate)
 
       - name: Calculate checksum
         run: |
-          sha256sum flash-translate-${{ steps.version.outputs.tag_name }}.zip > checksums.txt
+          sha256sum flash-translate-${{ steps.version.outputs.tag_name }}.zip flash-translate-obsidian-v${{ steps.obsidian.outputs.version }}.zip obsidian/dist/flash-translate/{main.js,manifest.json,styles.css} > checksums.txt
           cat checksums.txt
 
       - name: Generate release notes
@@ -117,7 +135,12 @@ jobs:
           else
             COMMITS=$(git log --oneline HEAD~10..HEAD)
           fi
-          echo "## Changes" > release-notes.md
+          echo "## Downloads" > release-notes.md
+          echo "" >> release-notes.md
+          echo '- **Chrome ${{ steps.version.outputs.version }}**: Download `flash-translate-${{ steps.version.outputs.tag_name }}.zip`, extract it, and choose **Load unpacked** in `chrome://extensions/` with Developer mode enabled. Requires Chrome 150+ with the Translator API enabled.' >> release-notes.md
+          echo '- **Obsidian ${{ steps.obsidian.outputs.version }}**: Download `flash-translate-obsidian-v${{ steps.obsidian.outputs.version }}.zip` and extract its `flash-translate` folder into `<vault>/.obsidian/plugins/`. Alternatively, copy the attached `main.js`, `manifest.json`, and `styles.css` into that folder. Requires Obsidian 1.11.4+ and your own Chat Completions endpoint/model. Enable the plugin in Community plugins; try a test vault first.' >> release-notes.md
+          echo "" >> release-notes.md
+          echo "## Changes" >> release-notes.md
           echo "" >> release-notes.md
           echo "$COMMITS" | while read -r line; do
             echo "- $line" >> release-notes.md
@@ -139,7 +162,13 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.version.outputs.tag_name }}
+          target_commitish: ${{ github.sha }}
           body_path: release-notes.md
+          fail_on_unmatched_files: true
           files: |
             flash-translate-${{ steps.version.outputs.tag_name }}.zip
+            flash-translate-obsidian-v${{ steps.obsidian.outputs.version }}.zip
+            obsidian/dist/flash-translate/main.js
+            obsidian/dist/flash-translate/manifest.json
+            obsidian/dist/flash-translate/styles.css
             checksums.txt

@@ -1,7 +1,7 @@
 {
   "id": "flash-translate",
   "name": "Flash Translate",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "minAppVersion": "1.11.4",
   "description": "Translate workspace selections in a draggable, pinnable card with your own AI model; safely replace or insert in note editors.",
   "author": "Flash Translate",

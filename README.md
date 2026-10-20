@@ -90,6 +90,13 @@ counted without restoring the closed UI.
 
 [**Install Flash Translate**](https://chromewebstore.google.com/detail/gibfhkdnpbinchfllkhaihmghbbollfd)
 
+### Install a GitHub release
+
+Download the browser ZIP from [Releases](https://github.com/CYZice/flash-translate/releases/latest),
+extract it, and load the extracted folder through **Load unpacked** in
+`chrome://extensions/` with Developer mode enabled. The release also includes the
+[Obsidian plugin](obsidian/README.md#install-a-release).
+
 ### Manual Installation (Development)
 
 1. Run `bun run dev` or `bun run build`
