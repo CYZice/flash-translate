@@ -30,7 +30,7 @@ command palette or use the editor's **Translate selection** context-menu action.
 
 Requires Obsidian **1.11.4+** for its secret-storage API.
 
-Download `flash-translate-obsidian-v0.3.0.zip` from
+Download `flash-translate-obsidian-v0.3.1.zip` from
 [Releases](https://github.com/CYZice/flash-translate/releases/latest). Extract its
 `flash-translate` folder into `<your-test-vault>/.obsidian/plugins/`. Alternatively,
 download the release's `main.js`, `manifest.json`, and `styles.css` into that folder.
