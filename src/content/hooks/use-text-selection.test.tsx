@@ -211,4 +211,14 @@ describe("selection display lifecycle", () => {
     expect(state.selection).toBeNull();
     expect(state.isPinned).toBe(false);
   });
+
+  it("keeps a pinned card when the window loses focus", () => {
+    render("immediate");
+    select("Selected text");
+    act(() => state.togglePin());
+    act(() => window.dispatchEvent(new Event("blur")));
+    expect(state.selection?.text).toBe("Selected text");
+    expect(state.isVisible).toBe(true);
+    expect(state.isPinned).toBe(true);
+  });
 });

@@ -26,6 +26,7 @@ const mockSettings: TranslationSettings = {
   aiContextSentenceCount: 1,
   aiThinkingEnabled: false,
   aiReasoningEffort: "high",
+  translationFontSize: 18,
 };
 
 describe("selectTargetLanguage", () => {
@@ -89,6 +90,7 @@ describe("selectContentAppSettings", () => {
       aiBaseUrl: "",
       aiModel: "",
       aiContextSentenceCount: 1,
+      translationFontSize: 18,
     });
   });
 

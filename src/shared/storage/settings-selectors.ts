@@ -37,6 +37,7 @@ interface ContentAppSettings {
   editorInputAssistEnabled: boolean;
   selectionTrigger: "immediate" | "badge";
   defaultTranslationProvider: "chrome-built-in" | "custom-ai";
+  translationFontSize: number;
   aiBaseUrl: string;
   aiModel: string;
   aiContextSentenceCount: number;
@@ -56,6 +57,7 @@ export const selectContentAppSettings: SettingsSelector<ContentAppSettings> = (
   aiModel: s.aiModel,
   aiContextSentenceCount: s.aiContextSentenceCount,
   defaultTranslationProvider: s.defaultTranslationProvider ?? "chrome-built-in",
+  translationFontSize: s.translationFontSize,
   selectionTrigger: s.selectionTrigger ?? "badge",
 });
 
@@ -83,4 +85,8 @@ export const selectTranslationBehaviorSettings = (s: TranslationSettings) => ({
   editorInputAssistEnabled: s.editorInputAssistEnabled,
   selectionTrigger: s.selectionTrigger ?? "badge",
   defaultTranslationProvider: s.defaultTranslationProvider ?? "chrome-built-in",
+});
+
+export const selectDisplaySettings = (s: TranslationSettings) => ({
+  translationFontSize: s.translationFontSize,
 });

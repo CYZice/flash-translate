@@ -23,6 +23,10 @@ export interface ExclusionPattern {
 export type SelectionTrigger = "immediate" | "badge";
 export type DefaultTranslationProvider = "chrome-built-in" | "custom-ai";
 
+export const DEFAULT_TRANSLATION_FONT_SIZE = 18;
+export const MIN_TRANSLATION_FONT_SIZE = 14;
+export const MAX_TRANSLATION_FONT_SIZE = 24;
+
 export interface TranslationSettings {
   sourceLanguage: string;
   targetLanguage: string;
@@ -33,6 +37,7 @@ export interface TranslationSettings {
   editorInputAssistEnabled: boolean;
   selectionTrigger?: SelectionTrigger;
   defaultTranslationProvider?: DefaultTranslationProvider;
+  translationFontSize: number;
   aiBaseUrl: string;
   aiModel: string;
   aiSystemPrompt: string;
@@ -54,6 +59,7 @@ const DEFAULT_SETTINGS: TranslationSettings = {
   editorInputAssistEnabled: true,
   selectionTrigger: "badge",
   defaultTranslationProvider: "chrome-built-in",
+  translationFontSize: DEFAULT_TRANSLATION_FONT_SIZE,
   aiBaseUrl: "",
   aiModel: "",
   aiSystemPrompt: DEFAULT_AI_SYSTEM_PROMPT,
@@ -71,6 +77,20 @@ function isExclusionPattern(value: unknown): value is ExclusionPattern {
     typeof (value as ExclusionPattern).pattern === "string" &&
     typeof (value as ExclusionPattern).enabled === "boolean"
   );
+}
+
+function validateTranslationFontSize(
+  value: unknown
+): Partial<TranslationSettings> {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return {};
+  }
+  return {
+    translationFontSize: Math.min(
+      MAX_TRANSLATION_FONT_SIZE,
+      Math.max(MIN_TRANSLATION_FONT_SIZE, Math.round(value))
+    ),
+  };
 }
 
 // Validate and normalize settings from storage
@@ -112,6 +132,7 @@ function validateSettings(data: unknown): Partial<TranslationSettings> {
   ) {
     result.defaultTranslationProvider = obj.defaultTranslationProvider;
   }
+  Object.assign(result, validateTranslationFontSize(obj.translationFontSize));
   if (typeof obj.aiBaseUrl === "string") {
     result.aiBaseUrl = obj.aiBaseUrl;
   }

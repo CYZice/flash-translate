@@ -8,6 +8,7 @@ interface TranslationContentProps {
   isLoading: boolean;
   result: string | null;
   error: Error | null;
+  fontSize?: number;
 }
 
 export function TranslationContent({
@@ -17,6 +18,7 @@ export function TranslationContent({
   isLoading,
   result,
   error,
+  fontSize = 18,
 }: TranslationContentProps) {
   if (availability === "unsupported") {
     return (
@@ -59,7 +61,10 @@ export function TranslationContent({
   }
 
   return (
-    <div className="wrap-break-word whitespace-pre-wrap text-[18px] text-gray-800 leading-8">
+    <div
+      className="wrap-break-word whitespace-pre-wrap text-gray-800 leading-7"
+      style={{ fontSize: `${fontSize}px`, lineHeight: 1.75 }}
+    >
       {result || (
         <span className="text-gray-400 italic">
           {getMessage("content_translationPlaceholder")}

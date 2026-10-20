@@ -16,6 +16,7 @@ const VIEWPORT_MARGIN = 8;
 
 export interface CardLayoutConfig {
   selectionRect: DOMRect;
+  selectionBounds?: DOMRect;
   layoutKey: string;
   isPinned?: boolean;
 }
@@ -66,12 +67,21 @@ export interface CardLayout {
  */
 export function useCardLayout({
   selectionRect,
+  selectionBounds = selectionRect,
   layoutKey,
   isPinned = false,
 }: CardLayoutConfig): CardLayout {
-  const anchorRef = useRef({ rect: selectionRect, layoutKey });
+  const anchorRef = useRef({
+    rect: selectionRect,
+    bounds: selectionBounds,
+    layoutKey,
+  });
   if (!isPinned) {
-    anchorRef.current = { rect: selectionRect, layoutKey };
+    anchorRef.current = {
+      rect: selectionRect,
+      bounds: selectionBounds,
+      layoutKey,
+    };
   }
   const [maxCardWidth, setMaxCardWidth] = useState(() =>
     calculateMaxCardWidth(window.visualViewport?.width ?? window.innerWidth)
@@ -83,7 +93,7 @@ export function useCardLayout({
   const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
   const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
   const initialWidth = calculateCardWidth(
-    anchorRef.current.rect.width,
+    anchorRef.current.bounds.width,
     maxCardWidth
   );
   const resetKey = anchorRef.current.layoutKey;
@@ -147,6 +157,7 @@ export function useCardLayout({
     minWidth,
     maxWidth: maxCardWidth,
     initialHeight: preferredHeight,
+    heightResetKey: layoutKey,
     minHeight,
     maxHeight: maxCardHeight,
     onResizeStart: (axis) => {
@@ -163,10 +174,10 @@ export function useCardLayout({
     handleKeyDown: handleDragKeyDown,
   } = useDraggable({ resetKey });
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: resetKey is the explicit reset boundary for this card
+  // biome-ignore lint/correctness/useExhaustiveDependencies: layoutKey is the explicit content reset boundary for this card
   useEffect(() => {
     setIsHeightManuallySized(false);
-  }, [resetKey]);
+  }, [layoutKey]);
 
   const position = calculateCardPosition(
     anchorRef.current.rect,

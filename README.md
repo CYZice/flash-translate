@@ -52,6 +52,12 @@ on-demand download panel and does not change your translation languages.
 Obsidian keeps its command-only option and secret storage. Settings are stored
 separately in each host; they are not synchronized between Chrome and Obsidian.
 
+Chrome's **Display settings → Translation text size** slider adjusts the card's
+body text from 14 to 24 px (default 18 px). New cards follow the selection's full
+width within the viewport. Pinned cards retain their position and width while
+their height adapts to each new selection. They stay open when the window loses
+focus.
+
 ### Usage statistics
 
 Open **Usage on this installation** in either settings page for completed

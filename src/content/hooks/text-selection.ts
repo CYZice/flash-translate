@@ -1,7 +1,10 @@
 // Pure functions for text selection logic
 // These are extracted from useTextSelection hook for testability
 
-import { getSelectionFocusRect } from "@/shared/selection/selection-geometry";
+import {
+  getSelectionBoundsRect,
+  getSelectionFocusRect,
+} from "@/shared/selection/selection-geometry";
 import {
   getRangeContext,
   getRangeText,
@@ -21,6 +24,7 @@ interface RectLike {
 export interface SelectionInfo {
   text: string;
   rect: DOMRect;
+  bounds: DOMRect;
   ranges: readonly Range[];
   readContext: () => TranslationContext;
 }
@@ -191,6 +195,13 @@ export function getSelectionRect(
     // Fallback to provided rect if range fails
     return fallbackRect;
   }
+}
+
+export function getSelectionBounds(
+  selection: Selection | null,
+  fallbackRect: DOMRect
+): DOMRect {
+  return getSelectionBoundsRect(selection) ?? fallbackRect;
 }
 
 export function cloneSelectionRanges(selection: Selection | null): Range[] {

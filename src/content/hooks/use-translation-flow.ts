@@ -2,7 +2,11 @@ import { useEffect } from "react";
 import { DEFAULT_SOURCE_LANGUAGE } from "@/shared/constants/languages";
 import { useLanguageDetectorAvailability } from "@/shared/hooks/use-language-detector-availability";
 import { useSettings } from "@/shared/hooks/use-settings";
-import { getPageLanguage, isUrlExcluded } from "@/shared/storage/settings";
+import {
+  DEFAULT_TRANSLATION_FONT_SIZE,
+  getPageLanguage,
+  isUrlExcluded,
+} from "@/shared/storage/settings";
 import { selectContentAppSettings } from "@/shared/storage/settings-selectors";
 import { DEFAULT_AI_CONTEXT_SENTENCE_COUNT } from "@/shared/utils/ai-context";
 import { evaluateSkipRules, type SkipResult } from "./skip-rules";
@@ -12,6 +16,12 @@ import { type SelectionInfo, useTextSelection } from "./use-text-selection";
 
 function getCurrentUrl(): string {
   return window.location.origin + window.location.pathname;
+}
+
+function getTranslationFontSize(
+  settings: ReturnType<typeof selectContentAppSettings> | null
+): number {
+  return settings?.translationFontSize ?? DEFAULT_TRANSLATION_FONT_SIZE;
 }
 
 export interface TranslationFlowState {
@@ -30,6 +40,7 @@ export interface TranslationFlowState {
   isDetecting: boolean;
   isAiConfigured: boolean;
   defaultTranslationProvider: "chrome-built-in" | "custom-ai";
+  translationFontSize: number;
   editorInputAssistEnabled: boolean;
 
   // Display state
@@ -111,6 +122,7 @@ export function useTranslationFlow(): TranslationFlowState {
   const isAiConfigured = Boolean(
     settings?.aiBaseUrl.trim() && settings?.aiModel.trim()
   );
+  const translationFontSize = getTranslationFontSize(settings);
 
   const isExcluded = isUrlExcluded(getCurrentUrl(), exclusionPatterns);
   // Base display conditions
@@ -163,6 +175,7 @@ export function useTranslationFlow(): TranslationFlowState {
     isAiConfigured,
     defaultTranslationProvider:
       settings?.defaultTranslationProvider ?? "chrome-built-in",
+    translationFontSize,
     editorInputAssistEnabled: settings?.editorInputAssistEnabled ?? false,
 
     // Display state

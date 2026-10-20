@@ -45,6 +45,44 @@ export function getSelectionFocusRect(
   return getRangeEdgeRect(range, atStart);
 }
 
+/** Returns the union of all rendered fragments in the selection. */
+export function getSelectionBoundsRect(
+  selection: Selection | null
+): DOMRect | null {
+  if (!selection?.rangeCount) {
+    return null;
+  }
+
+  try {
+    let left = Number.POSITIVE_INFINITY;
+    let top = Number.POSITIVE_INFINITY;
+    let right = Number.NEGATIVE_INFINITY;
+    let bottom = Number.NEGATIVE_INFINITY;
+    for (let index = 0; index < selection.rangeCount; index++) {
+      const range = selection.getRangeAt(index);
+      const rect = range.getBoundingClientRect();
+      const fragments =
+        visibleRect(rect) && rect.width > 0
+          ? [rect]
+          : Array.from(range.getClientRects());
+      for (const fragment of fragments) {
+        if (!visibleRect(fragment) || fragment.width <= 0) {
+          continue;
+        }
+        left = Math.min(left, fragment.left);
+        top = Math.min(top, fragment.top);
+        right = Math.max(right, fragment.right);
+        bottom = Math.max(bottom, fragment.bottom);
+      }
+    }
+    return Number.isFinite(left)
+      ? new DOMRect(left, top, right - left, bottom - top)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 function getRangeEdgeRect(range: Range, atStart: boolean): DOMRect | null {
   const fragments = range.getClientRects();
   for (

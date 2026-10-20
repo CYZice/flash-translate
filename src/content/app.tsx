@@ -21,6 +21,7 @@ export default function App() {
     isDetecting,
     isAiConfigured,
     defaultTranslationProvider,
+    translationFontSize,
     canDisplay,
     skipResult,
     dismissCard,
@@ -73,6 +74,7 @@ export default function App() {
           onPinToggle={togglePin}
           isAiConfigured={isAiConfigured}
           defaultTranslationProvider={defaultTranslationProvider}
+          translationFontSize={translationFontSize}
           onClose={dismissCard}
           onSourceLanguageOverride={setOverriddenLanguage}
           selection={selection}

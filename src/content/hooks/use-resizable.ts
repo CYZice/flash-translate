@@ -9,6 +9,7 @@ import {
 interface UseResizableOptions {
   initialWidth: number;
   resetKey?: unknown;
+  heightResetKey?: unknown;
   viewportWidth?: number;
   viewportHeight?: number;
   minWidth?: number;
@@ -44,6 +45,7 @@ interface UseResizableReturn {
 export function useResizable({
   initialWidth,
   resetKey,
+  heightResetKey,
   viewportWidth = window.innerWidth,
   viewportHeight = window.innerHeight,
   minWidth = 280,
@@ -91,6 +93,14 @@ export function useResizable({
     setOffsetX(0);
     setIsResizing(false);
   }, [resetKey]);
+
+  // A pinned card keeps its width and position, but each new selection gets a
+  // fresh automatic height measurement.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: heightResetKey defines the content-height lifecycle
+  useEffect(() => {
+    setHeight(initialHeight);
+    setIsResizing(false);
+  }, [heightResetKey]);
 
   // Clamp width when maxWidth changes (e.g., window resize)
   useEffect(() => {

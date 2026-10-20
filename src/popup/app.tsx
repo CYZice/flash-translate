@@ -1,3 +1,4 @@
+import { DisplaySettings } from "./components/display-settings";
 import { Footer } from "./components/footer";
 import { LanguageSettings } from "./components/language-settings";
 import { PopupHeader } from "./components/popup-header";
@@ -12,6 +13,9 @@ export default function App() {
       <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto py-1.5">
         <section className="bg-white">
           <LanguageSettings />
+        </section>
+        <section className="bg-white">
+          <DisplaySettings />
         </section>
         <section className="bg-white">
           <TranslationBehaviorSettings />

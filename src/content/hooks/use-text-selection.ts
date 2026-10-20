@@ -9,6 +9,7 @@ import {
 import {
   cloneSelectionRanges,
   getRangesContext,
+  getSelectionBounds,
   getSelectionRect,
   getSelectionText,
   getValidSelectionText,
@@ -48,6 +49,7 @@ function getControlSelection(sentenceCount: number): SelectionInfo | null {
   return {
     text,
     rect: getTextControlFocusRect(element),
+    bounds: element.getBoundingClientRect(),
     ranges: [],
     readContext: () => {
       if (
@@ -90,6 +92,7 @@ function buildSelectionInfo(
   return {
     text: validText,
     rect,
+    bounds: getSelectionBounds(selection, fallbackRect),
     ranges,
     readContext: () => getRangesContext(ranges, sentenceCount),
   };
@@ -260,7 +263,10 @@ export function useTextSelection(
     }
   };
 
-  const dismissForPageLifecycle = () => {
+  const dismissForPageLifecycle = (force = false) => {
+    if (pinnedRef.current && !force) {
+      return;
+    }
     if (selectionTimerRef.current !== null) {
       window.clearTimeout(selectionTimerRef.current);
       selectionTimerRef.current = null;
@@ -278,6 +284,9 @@ export function useTextSelection(
       dismissForPageLifecycle();
     }
   };
+
+  const dismissForFocusLoss = () => dismissForPageLifecycle();
+  const dismissForNavigation = () => dismissForPageLifecycle(true);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: React Compiler handles function memoization
   useEffect(() => {
@@ -301,14 +310,11 @@ export function useTextSelection(
     document.addEventListener("keydown", handleKeyDown, true);
     document.addEventListener("selectionchange", handleMouseUp, true);
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("blur", dismissForPageLifecycle);
-    window.addEventListener("pagehide", dismissForPageLifecycle);
-    window.addEventListener("popstate", dismissForPageLifecycle);
-    window.addEventListener("hashchange", dismissForPageLifecycle);
-    window.addEventListener(
-      "flash-translate:navigation",
-      dismissForPageLifecycle
-    );
+    window.addEventListener("blur", dismissForFocusLoss);
+    window.addEventListener("pagehide", dismissForNavigation);
+    window.addEventListener("popstate", dismissForNavigation);
+    window.addEventListener("hashchange", dismissForNavigation);
+    window.addEventListener("flash-translate:navigation", dismissForNavigation);
 
     return () => {
       document.removeEventListener("mouseup", handleMouseUp, true);
@@ -316,13 +322,13 @@ export function useTextSelection(
       document.removeEventListener("keydown", handleKeyDown, true);
       document.removeEventListener("selectionchange", handleMouseUp, true);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("blur", dismissForPageLifecycle);
-      window.removeEventListener("pagehide", dismissForPageLifecycle);
-      window.removeEventListener("popstate", dismissForPageLifecycle);
-      window.removeEventListener("hashchange", dismissForPageLifecycle);
+      window.removeEventListener("blur", dismissForFocusLoss);
+      window.removeEventListener("pagehide", dismissForNavigation);
+      window.removeEventListener("popstate", dismissForNavigation);
+      window.removeEventListener("hashchange", dismissForNavigation);
       window.removeEventListener(
         "flash-translate:navigation",
-        dismissForPageLifecycle
+        dismissForNavigation
       );
       history.pushState = originalPushState;
       history.replaceState = originalReplaceState;

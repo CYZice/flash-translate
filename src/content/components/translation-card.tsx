@@ -26,6 +26,7 @@ interface TranslationCardProps {
   onPinToggle: () => void;
   isAiConfigured: boolean;
   defaultTranslationProvider: "chrome-built-in" | "custom-ai";
+  translationFontSize: number;
   termTranslation: HoveredTermTranslationState;
   onSourceLanguageOverride: (lang: string | null) => void;
   onClose: () => void;
@@ -46,6 +47,7 @@ export function TranslationCard({
   onSourceLanguageOverride,
   onClose,
   defaultTranslationProvider,
+  translationFontSize,
 }: TranslationCardProps) {
   const viewResetKey = `${selection.text}\u0000${defaultTranslationProvider}\u0000${isAiConfigured}`;
   const [resultView, setResultView] = useState<{
@@ -80,10 +82,11 @@ export function TranslationCard({
     setResultView({ key: viewResetKey, view });
   };
 
-  const layoutKey = `${selection.text}\u0000${selection.rect.left}:${selection.rect.top}:${selection.rect.width}:${selection.rect.height}`;
+  const layoutKey = `${selection.text}\u0000${selection.rect.left}:${selection.rect.top}:${selection.rect.width}:${selection.rect.height}\u0000${selection.bounds.left}:${selection.bounds.top}:${selection.bounds.width}:${selection.bounds.height}`;
   const layout = useCardLayout({
     layoutKey,
     selectionRect: selection.rect,
+    selectionBounds: selection.bounds,
     isPinned,
   });
 
@@ -190,6 +193,7 @@ export function TranslationCard({
                 result={currentTranslation.result}
                 sourceLanguage={sourceLanguage}
                 targetLanguage={targetLanguage}
+                fontSize={translationFontSize}
               />
               <div className="absolute top-2 right-2">
                 <CopyButton text={currentTranslation.result} />

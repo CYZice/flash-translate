@@ -2,6 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  getSelectionBoundsRect,
   getSelectionFocusRect,
   positionSelectionBadge,
 } from "./selection-geometry";
@@ -90,6 +91,43 @@ describe("selection endpoint geometry", () => {
       configurable: true,
     });
     expect(getSelectionFocusRect(selection)).toBeNull();
+  });
+});
+
+describe("selection bounds for card width", () => {
+  it("covers every line rather than only the moving caret", () => {
+    expect(getSelectionBoundsRect(select())).toMatchObject({
+      left: 20,
+      top: 30,
+      width: 700,
+      height: 50,
+    });
+  });
+  it("includes every selected range", () => {
+    const selection = select();
+    const ranges = [
+      { getBoundingClientRect: () => new DOMRect(20, 30, 300, 20) },
+      { getBoundingClientRect: () => new DOMRect(40, 60, 700, 20) },
+    ];
+    vi.spyOn(selection, "rangeCount", "get").mockReturnValue(2);
+    vi.spyOn(selection, "getRangeAt").mockImplementation(
+      (index) => ranges[index] as Range
+    );
+    expect(getSelectionBoundsRect(selection)).toMatchObject({
+      left: 20,
+      top: 30,
+      width: 720,
+      height: 50,
+    });
+  });
+  it("ignores empty selections and invisible fragments", () => {
+    expect(getSelectionBoundsRect(null)).toBeNull();
+    const selection = select();
+    Object.defineProperty(Range.prototype, "getClientRects", {
+      configurable: true,
+      value: () => [new DOMRect()],
+    });
+    expect(getSelectionBoundsRect(selection)).toBeNull();
   });
 });
 
