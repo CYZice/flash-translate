@@ -34,9 +34,7 @@ export function LanguageSettings() {
           }}
         />
       </div>
-      {settings.autoZhEn ? (
-        <p className="m-0 text-blue-700 text-xs">{copy.automaticLanguages}</p>
-      ) : (
+      {!settings.autoZhEn && (
         <div className="grid grid-cols-2 gap-3">
           {(["sourceLanguage", "targetLanguage"] as const).map((field) => (
             <label

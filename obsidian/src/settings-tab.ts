@@ -72,10 +72,6 @@ export class TranslationSettingsTab extends PluginSettingTab {
           })
       );
     if (this.plugin.settings.autoZhEn) {
-      el.createEl("p", {
-        text: copy.automaticLanguages,
-        cls: "setting-item-description",
-      });
       return;
     }
     for (const field of ["sourceLanguage", "targetLanguage"] as const) {
@@ -100,23 +96,20 @@ export class TranslationSettingsTab extends PluginSettingTab {
   private behavior(copy: Copy): void {
     const el = this.containerEl;
     new Setting(el).setName(copy.behavior).setHeading();
-    new Setting(el)
-      .setName(copy.trigger)
-      .setDesc(copy.triggerDescription)
-      .addDropdown((dropdown) =>
-        dropdown
-          .addOptions({
-            badge: copy.badge,
-            immediate: copy.immediate,
-            off: copy.commandOnly,
+    new Setting(el).setName(copy.trigger).addDropdown((dropdown) =>
+      dropdown
+        .addOptions({
+          badge: copy.badge,
+          immediate: copy.immediate,
+          off: copy.commandOnly,
+        })
+        .setValue(this.plugin.settings.selectionTrigger)
+        .onChange((value) =>
+          this.plugin.updateSettings({
+            selectionTrigger: value as "badge" | "immediate" | "off",
           })
-          .setValue(this.plugin.settings.selectionTrigger)
-          .onChange((value) =>
-            this.plugin.updateSettings({
-              selectionTrigger: value as "badge" | "immediate" | "off",
-            })
-          )
-      );
+        )
+    );
   }
 
   private service(copy: Copy): void {
@@ -139,15 +132,12 @@ export class TranslationSettingsTab extends PluginSettingTab {
       .onChange((value) =>
         this.plugin.updateSettings({ apiKeySecret: value ?? "" })
       );
-    new Setting(el)
-      .setName(copy.model)
-      .setDesc(copy.modelDescription)
-      .addText((text) =>
-        text
-          .setPlaceholder("Model ID")
-          .setValue(this.plugin.settings.model)
-          .onChange((value) => this.plugin.updateSettings({ model: value }))
-      );
+    new Setting(el).setName(copy.model).addText((text) =>
+      text
+        .setPlaceholder("Model ID")
+        .setValue(this.plugin.settings.model)
+        .onChange((value) => this.plugin.updateSettings({ model: value }))
+    );
     new Setting(el)
       .setName(copy.contextRange)
       .setDesc(copy.contextDescription)

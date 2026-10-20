@@ -92,9 +92,6 @@ export function TranslationBehaviorSettings() {
       <div className="divide-y divide-gray-100 px-4">
         <div className="py-3">
           <span className="text-gray-700 text-sm">{copy.trigger}</span>
-          <p className="mt-0.5 text-gray-400 text-xs">
-            {copy.triggerDescription}
-          </p>
           <div className="mt-2 flex gap-2">
             {(
               [
@@ -142,11 +139,6 @@ export function TranslationBehaviorSettings() {
               </button>
             ))}
           </div>
-          {defaultTranslationProvider === "custom-ai" && (
-            <p className="mt-1 text-amber-600 text-xs">
-              需要先在下方 AI 设置中配置接口和模型。
-            </p>
-          )}
         </div>
         <details className="py-3">
           <summary className="cursor-pointer text-gray-600 text-xs">
@@ -267,9 +259,5 @@ function AutoDetectDescription({
     );
   }
 
-  return (
-    <p className="mt-0.5 text-gray-400 text-xs">
-      {getMessage("popup_behavior_autoDetectLanguageDesc")}
-    </p>
-  );
+  return null;
 }

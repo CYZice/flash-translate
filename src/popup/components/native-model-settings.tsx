@@ -58,9 +58,6 @@ export function NativeModelSettings() {
       <summary className="cursor-pointer text-gray-600 text-xs">
         {copy.nativeModels}
       </summary>
-      <p className="mt-2 text-gray-400 text-xs">
-        {copy.nativeModelsDescription}
-      </p>
       {open && <ModelLanguages />}
     </details>
   );

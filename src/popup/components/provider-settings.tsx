@@ -196,9 +196,6 @@ export function ProviderSettings() {
           <span className="block font-semibold text-gray-900 text-xs">
             {copy.ai}
           </span>
-          <span className="mt-0.5 block text-gray-400 text-xs leading-4">
-            {copy.aiDescription}
-          </span>
         </span>
         <ChevronDown
           aria-hidden="true"
@@ -289,12 +286,14 @@ export function ProviderSettings() {
               ))}
             </select>
           </div>
-          <div>
-            <p className="m-0 mb-1.5 font-medium text-gray-500 text-xs">
+          <details>
+            <summary className="cursor-pointer text-gray-500 text-xs">
               {getMessage("popup_ai_contextPreview")}
-            </p>
-            <ContextPreview sentenceCount={contextSentenceCount} />
-          </div>
+            </summary>
+            <div className="mt-2">
+              <ContextPreview sentenceCount={contextSentenceCount} />
+            </div>
+          </details>
         </div>
 
         <details className="border-gray-100 border-t pt-3">
