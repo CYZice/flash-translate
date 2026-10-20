@@ -136,17 +136,35 @@ describe("workspace selection lifecycle", () => {
     expect(vi.getTimerCount()).toBe(0);
     expect(document.querySelector("button")).toBeNull();
   });
-  it.each(["blur", "Escape"])("closes even pinned content on %s", (event) => {
+  it.each([false, true])(
+    "dismisses on window blur only when unpinned (pin=%s)",
+    (pinned) => {
+      const { options, controller } = setup("badge", pinned);
+      select();
+      document.defaultView?.dispatchEvent(new Event("blur"));
+      expect(options.dismiss).toHaveBeenCalledTimes(pinned ? 0 : 1);
+      expect(controller.pending).toBeNull();
+      expect(Reflect.get(controller, "last")).toBeNull();
+      expect(document.querySelector(".flash-translate-badge")).toBeNull();
+      select();
+      expect(options.translate).toHaveBeenCalledTimes(pinned ? 2 : 0);
+    }
+  );
+  it("closes even pinned content on Escape", () => {
     const { options, controller } = setup("badge", true);
     select();
-    if (event === "blur") {
-      document.defaultView?.dispatchEvent(new Event("blur"));
-    } else {
-      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
-    }
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     expect(options.dismiss).toHaveBeenCalledOnce();
     expect(controller.pending).toBeNull();
     expect(Reflect.get(controller, "last")).toBeNull();
+  });
+  it("resumes selection capture after losing focus during a drag", () => {
+    const { options } = setup("badge", true);
+    document.body.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    document.defaultView?.dispatchEvent(new Event("blur"));
+    select();
+    expect(options.translate).toHaveBeenCalledOnce();
+    expect(options.dismiss).not.toHaveBeenCalled();
   });
 });
 

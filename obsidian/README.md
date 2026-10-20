@@ -7,10 +7,12 @@ The small button follows the moving end of your selection, including wrapped
 text. Copy, retry, insert, and replace use compact icons with hover labels.
 
 **Pin position** keeps the card at the same screen coordinates while you scroll
-and select more text. Each new selection updates that card instead of moving it
-next to the selection. In manual mode, the chosen target stays selected. An unpinned card
-closes on outside clicks or workspace scrolling; **Escape**, window blur, and
-plugin unload close either kind of card.
+and select more text, including when moving between plugin output and Markdown
+notes in the same window. It also stays open when the window loses focus. Each
+new selection updates that card instead of moving it next to the selection. In
+manual mode, the chosen target stays selected. An unpinned card closes on outside
+clicks, workspace scrolling, or window blur. **Escape**, the close button, closing
+the host window, and plugin unload close either kind of card.
 
 Selections work in Markdown editing/live preview, reading views, and selectable
 plugin output within workspace leaves, including chat output such as YoloAgent's.

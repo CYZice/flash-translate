@@ -87,8 +87,11 @@ export class SelectionController {
     if (win) {
       listen(win, "blur", (event) => {
         if (event.target === event.currentTarget) {
+          this.dragging = false;
           this.reset();
-          this.options?.dismiss();
+          if (!this.options?.pinned()) {
+            this.options?.dismiss();
+          }
         }
       });
       listen(win, "resize", () => this.reset());

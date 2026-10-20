@@ -241,6 +241,83 @@ describe("Obsidian floating selection integration", () => {
     expect(updated.isConnected).toBe(true);
     expect(document.querySelector(".flash-translate-badge")).toBeNull();
   });
+  it.each([false, true])(
+    "keeps the pin when moving from plugin output to an editable note (blur=%s)",
+    async (blur) => {
+      select(required(container.querySelector("p")));
+      command();
+      await tick();
+      required(
+        document.querySelector<HTMLButtonElement>('[aria-label="Pin position"]')
+      ).click();
+      const card = required(
+        document.querySelector<HTMLElement>(".flash-translate-card")
+      );
+      Object.assign(card.style, {
+        left: "350px",
+        top: "150px",
+        width: "420px",
+      });
+      if (blur) {
+        window.dispatchEvent(new Event("blur"));
+      }
+      expect(card.isConnected).toBe(true);
+
+      const note = document.createElement("div");
+      note.innerHTML =
+        '<div class="cm-editor"><div tabindex="0" class="cm-content">Note text</div></div>';
+      container.append(note);
+      const content = required(note.querySelector<HTMLElement>(".cm-content"));
+      active = {
+        editor: {
+          hasFocus: () => true,
+          getSelection: () => "Note text",
+          getValue: () => "Note text",
+          getCursor: (which: string) => ({
+            line: 0,
+            ch: which === "from" ? 0 : 9,
+          }),
+          posToOffset: (pos: { ch: number }) => pos.ch,
+        } as unknown as Editor,
+        file: { path: "Example.md" },
+      };
+      content.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+      content.focus();
+      select(content);
+      content.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+      await tick();
+      const updated = required(
+        document.querySelector<HTMLElement>(".flash-translate-card")
+      );
+      expect([
+        updated.style.left,
+        updated.style.top,
+        updated.style.width,
+      ]).toEqual(["350px", "150px", "420px"]);
+      expect(
+        document
+          .querySelector('[aria-label="Pin position"]')
+          ?.getAttribute("aria-pressed")
+      ).toBe("true");
+      expect(document.querySelector(".flash-translate-edits")).not.toBeNull();
+      expect(document.querySelector(".flash-translate-badge")).toBeNull();
+      expect(host.request).toHaveBeenCalledTimes(2);
+
+      content.blur();
+      select(required(container.querySelector("p")));
+      await tick();
+      expect(document.querySelector(".flash-translate-edits")).toBeNull();
+      expect(
+        document
+          .querySelector('[aria-label="Pin position"]')
+          ?.getAttribute("aria-pressed")
+      ).toBe("true");
+      expect(host.request).toHaveBeenCalledTimes(3);
+      expect(host.notice).not.toHaveBeenCalled();
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+      expect(document.querySelector(".flash-translate-card")).toBeNull();
+    }
+  );
   it("checks the original document before accepting a note edit", async () => {
     container.innerHTML =
       '<div class="cm-editor"><div tabindex="0" class="cm-content">Hello</div></div>';
