@@ -5,12 +5,12 @@
     <style>
       :root { color-scheme: dark; font-family: system-ui, sans-serif; }
       body { margin: 0; background: transparent; overflow: hidden; }
-      .card { position: relative; box-sizing: border-box; height: 100%; min-height: 190px; padding: 26px 22px 48px; border: 1px solid rgba(255,255,255,.13); border-radius: 20px; background: rgba(27,27,31,.97); color: #f5f5f7; box-shadow: 0 16px 42px rgba(0,0,0,.34); overflow: hidden; }
+      .card { position: relative; box-sizing: border-box; height: 100%; min-height: 190px; padding: 26px 22px 48px; border: 1px solid rgba(255,255,255,.13); border-radius: 20px; background: rgba(27,27,31,.97); color: #f5f5f7; box-shadow: 0 16px 42px rgba(0,0,0,.34); overflow: hidden; -webkit-app-region: drag; }
       .accent { position: absolute; left: 22px; top: 18px; width: 7px; height: 7px; border-radius: 50%; background: #8ab4ff; box-shadow: 0 0 0 4px rgba(138,180,255,.14); }
-      .content { height: 100%; overflow: auto; padding: 8px 2px 4px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.2) transparent; }
+      .content { height: 100%; overflow: auto; padding: 8px 2px 4px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.2) transparent; -webkit-app-region: no-drag; }
       #result { white-space: pre-wrap; line-height: 1.62; font-size: 15px; color: #f5f5f7; }
       .hint { color: #9696a3; }
-      button { position: absolute; width: 34px; height: 34px; border: 0; border-radius: 11px; color: #a9a9b6; background: rgba(255,255,255,.055); cursor: pointer; }
+      button { position: absolute; width: 34px; height: 34px; border: 0; border-radius: 11px; color: #a9a9b6; background: rgba(255,255,255,.055); cursor: pointer; -webkit-app-region: no-drag; }
       button:hover { color: #fff; background: rgba(255,255,255,.13); }
       button.active { color: #8ab4ff; background: rgba(138,180,255,.16); }
       #pin { top: 14px; right: 14px; }
