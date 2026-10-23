@@ -64,7 +64,10 @@ npm run portable:linux
 ```
 
 The output is `desktop/dist/FlashTranslate-<version>-linux-<architecture>/`.
-Run `FlashTranslate` from that folder. It uses the same selection card,
+Open `FlashTranslate.desktop` from the file manager and choose **Allow Launching**
+if Linux asks; then double-click it like a normal application. It launches the
+`FlashTranslate` binary from the same folder without opening a terminal. You can
+also run `FlashTranslate` directly from that folder. It uses the same selection card,
 settings, automatic Chinese/English routing, font-size preference, pin state,
 streaming loader, and retry/copy actions as the Windows desktop build. X11 or
 XWayland is recommended for the most reliable selection coordinates; Wayland

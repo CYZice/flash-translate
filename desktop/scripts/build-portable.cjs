@@ -92,4 +92,14 @@ for (const name of Object.keys(manifest.dependencies)) {
 }
 fs.mkdirSync(path.join(output, "data"));
 fs.copyFileSync(path.join(root, "README.md"), path.join(output, "README.md"));
+if (platform === "linux") {
+  fs.copyFileSync(
+    path.join(root, "src", "assets", "icon.png"),
+    path.join(output, "flash-translate.png")
+  );
+  fs.writeFileSync(
+    path.join(output, "FlashTranslate.desktop"),
+    `[Desktop Entry]\nType=Application\nName=Flash Translate\nComment=Global selection translation\nExec=sh -c \"cd \\\"$(dirname \\\"%k\\\")\\\" && exec ./FlashTranslate\"\nIcon=flash-translate\nTerminal=false\nCategories=Utility;Education;\n`
+  );
+}
 console.log(`便携版已生成：${output}\n运行 ${executableName} 启动，无需安装。`);
