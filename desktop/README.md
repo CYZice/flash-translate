@@ -76,13 +76,33 @@ support remains compositor-dependent.
 ## Linux Debian package
 
 For Ubuntu or Debian, the recommended installed version is
-`flash-translate_0.1.3_amd64.deb`. Double-click it in the file manager and
+`flash-translate_0.1.3-1_amd64.deb`. Double-click it in the file manager and
 choose **Install**. After installation, launch **Flash Translate** from the
 application menu; its settings are stored in the user configuration directory,
 not under `/opt`.
 
 The `.deb` package is for 64-bit Debian-based systems. Other distributions
 should use the portable tarball above.
+
+Build the package on Linux (or WSL), with Python 3, `dpkg-deb`, and `readelf`:
+
+```bash
+npm_config_build_from_source=true npm ci
+npm run portable:linux
+npm run package:deb -- --runtime dist/FlashTranslate-0.1.3-linux-x64
+```
+
+Source-building `selection-hook` uses Node.js 18+, a C++ compiler, Python, and
+the development libraries listed below. Build on the oldest supported Linux
+distribution; upstream prebuilt modules may require a newer glibc. The packager
+reads the actual ELF requirements and declares the minimum glibc dependency.
+An independently source-built module can be supplied using `--native-module`.
+The package is built with native `dpkg-deb`, checks its archive structure and
+permissions, includes the current desktop sources, and excludes portable data.
+It refuses to overwrite an existing artifact.
+
+Revision `0.1.3-1` replaces the malformed `0.1.3` Debian package. Do not use
+`--force-overwrite`, delete `/opt`, or remove unrelated applications to install it.
 
 ## Development
 

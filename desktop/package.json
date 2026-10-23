@@ -12,7 +12,8 @@
     "test": "node --test src/*.test.cjs",
     "test:ui": "electron scripts/check-result-ui.cjs",
     "portable:windows": "node scripts/build-portable.cjs windows",
-    "portable:linux": "node scripts/build-portable.cjs linux"
+    "portable:linux": "node scripts/build-portable.cjs linux",
+    "package:deb": "python3 scripts/build-deb.py"
   },
   "dependencies": {
     "selection-hook": "^2.1.2"

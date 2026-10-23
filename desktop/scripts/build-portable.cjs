@@ -99,7 +99,7 @@ if (platform === "linux") {
   );
   fs.writeFileSync(
     path.join(output, "FlashTranslate.desktop"),
-    `[Desktop Entry]\nType=Application\nName=Flash Translate\nComment=Global selection translation\nExec=sh -c \"cd \\\"$(dirname \\\"%k\\\")\\\" && exec env FLASH_TRANSLATE_PORTABLE=1 ./FlashTranslate\"\nIcon=flash-translate\nTerminal=false\nCategories=Utility;Education;\n`
+    `[Desktop Entry]\nType=Application\nName=Flash Translate\nComment=Global selection translation\nExec=sh -c "cd \\"$(dirname \\"%k\\")\\" && exec env FLASH_TRANSLATE_PORTABLE=1 ./FlashTranslate"\nIcon=flash-translate\nTerminal=false\nCategories=Utility;Education;\n`
   );
 }
 console.log(`便携版已生成：${output}\n运行 ${executableName} 启动，无需安装。`);
