@@ -73,6 +73,17 @@ streaming loader, and retry/copy actions as the Windows desktop build. X11 or
 XWayland is recommended for the most reliable selection coordinates; Wayland
 support remains compositor-dependent.
 
+## Linux Debian package
+
+For Ubuntu or Debian, the recommended installed version is
+`flash-translate_0.1.3_amd64.deb`. Double-click it in the file manager and
+choose **Install**. After installation, launch **Flash Translate** from the
+application menu; its settings are stored in the user configuration directory,
+not under `/opt`.
+
+The `.deb` package is for 64-bit Debian-based systems. Other distributions
+should use the portable tarball above.
+
 ## Development
 
 Run these commands inside `desktop/`:

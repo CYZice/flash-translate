@@ -23,7 +23,10 @@ const { streamTranslation } = require("./translate.cjs");
 const { resolveTranslationConfig } = require("./translation-options.cjs");
 
 app.setName("Flash Translate");
-const dataDirectory = app.isPackaged
+const portableBuild =
+  app.isPackaged &&
+  (process.platform === "win32" || process.env.FLASH_TRANSLATE_PORTABLE === "1");
+const dataDirectory = portableBuild
   ? path.join(path.dirname(process.execPath), "data")
   : path.join(app.getPath("userData"), "desktop");
 try {
