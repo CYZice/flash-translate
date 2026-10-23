@@ -9,14 +9,20 @@
         android:usesCleartextTraffic="true">
         <activity
             android:name=".SettingsActivity"
-            android:exported="false"
-            android:label="Flash Translate settings" />
+            android:exported="true"
+            android:label="翻译设置">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".MainActivity"
             android:excludeFromRecents="true"
             android:exported="true"
+            android:label="翻译"
             android:theme="@style/Theme.FlashTranslate">
-            <intent-filter>
+            <intent-filter android:priority="1000">
                 <action android:name="android.intent.action.PROCESS_TEXT" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />

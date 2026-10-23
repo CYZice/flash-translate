@@ -7,6 +7,10 @@ or your own AI provider. An [Obsidian plugin](obsidian/README.md) is also availa
 for translating workspace selections in a draggable, pinnable card and safely
 inserting results in editable notes.
 
+A [desktop companion](desktop/README.md) supports global selection translation
+on Windows and Linux. It includes a Chinese settings window and a Windows
+portable-folder build that runs without installation.
+
 ## Features
 
 - **Automatic Chinese ↔ English**: Enable **自动中英互译** in the extension's

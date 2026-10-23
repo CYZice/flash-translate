@@ -40,6 +40,15 @@ Its installable files are produced in `obsidian/dist/flash-translate/`.
 See `obsidian/README.md` for test-vault installation and usage. Never install or
 enable a development plugin in a user's real vault without authorization.
 
+The Electron desktop companion lives in `desktop/`. Run `npm ci`, `npm start`,
+and `npm test` inside that directory. Its CommonJS tests use Node's test runner
+and are excluded from the root Vitest suite. On Windows, `npm run portable:windows`
+copies the installed runtime and production dependencies into a portable folder
+under `desktop/dist/`; it refuses to overwrite existing builds. Portable user
+data stays beside the executable in `data/`. Keep API keys in Electron's encrypted
+`safeStorage`, expose only key-presence information to the settings window, and
+never copy user settings into release artifacts. See `desktop/README.md`.
+
 Ultracite and Biome configuration is the source of truth for mechanically
 checkable style rules. Do not duplicate those rules in agent instructions.
 

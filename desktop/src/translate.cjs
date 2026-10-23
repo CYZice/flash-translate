@@ -1,19 +1,11 @@
+"use strict";
 const DEFAULT_SYSTEM_PROMPT =
   "Translate the selected text accurately. Return only the translation, without explanations.";
-
-function getConfig() {
-  return {
-    baseUrl: process.env.FLASH_TRANSLATE_AI_BASE_URL || "",
-    model: process.env.FLASH_TRANSLATE_AI_MODEL || "",
-    apiKey: process.env.FLASH_TRANSLATE_AI_KEY || "",
-    sourceLanguage: process.env.FLASH_TRANSLATE_SOURCE_LANGUAGE || "auto",
-    targetLanguage: process.env.FLASH_TRANSLATE_TARGET_LANGUAGE || "Chinese",
-    systemPrompt: process.env.FLASH_TRANSLATE_AI_SYSTEM_PROMPT || DEFAULT_SYSTEM_PROMPT,
-  };
-}
+const TRAILING_SLASHES = /\/+$/;
+const TRAILING_CR = /\r$/;
 
 function completionsUrl(baseUrl) {
-  const normalized = baseUrl.replace(/\/+$/, "");
+  const normalized = baseUrl.replace(TRAILING_SLASHES, "");
   return normalized.endsWith("/chat/completions")
     ? normalized
     : `${normalized}/chat/completions`;
@@ -27,32 +19,31 @@ async function* readSse(stream) {
   try {
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        break;
+      }
       buffer += decoder.decode(value, { stream: true });
       let newline = buffer.indexOf("\n");
       while (newline >= 0) {
-        const line = buffer.slice(0, newline).replace(/\r$/, "");
+        const line = buffer.slice(0, newline).replace(TRAILING_CR, "");
         buffer = buffer.slice(newline + 1);
-        if (line.startsWith("data:")) yield line.slice(5).trim();
+        if (line.startsWith("data:")) {
+          yield line.slice(5).trim();
+        }
         newline = buffer.indexOf("\n");
       }
     }
     buffer += decoder.decode();
-    const finalLine = buffer.replace(/\r$/, "");
-    if (finalLine.startsWith("data:")) yield finalLine.slice(5).trim();
+    const finalLine = buffer.replace(TRAILING_CR, "");
+    if (finalLine.startsWith("data:")) {
+      yield finalLine.slice(5).trim();
+    }
   } finally {
     reader.releaseLock();
   }
 }
 
-async function* streamTranslation(text, signal) {
-  const config = getConfig();
-  if (!config.baseUrl || !config.model) {
-    throw new Error(
-      "Set FLASH_TRANSLATE_AI_BASE_URL and FLASH_TRANSLATE_AI_MODEL before using global translation."
-    );
-  }
-
+async function* streamTranslation(text, signal, config) {
   const response = await fetch(completionsUrl(config.baseUrl), {
     method: "POST",
     signal,
@@ -65,7 +56,7 @@ async function* streamTranslation(text, signal) {
       model: config.model,
       stream: true,
       messages: [
-        { role: "system", content: config.systemPrompt },
+        { role: "system", content: DEFAULT_SYSTEM_PROMPT },
         {
           role: "user",
           content: JSON.stringify({
@@ -80,16 +71,32 @@ async function* streamTranslation(text, signal) {
   });
 
   if (!response.ok) {
-    const detail = (await response.text()).slice(0, 500);
-    throw new Error(`AI request failed (${response.status}): ${detail}`);
+    throw new Error(
+      `接口请求失败（HTTP ${response.status}），请检查地址、模型和密钥。`
+    );
   }
-  if (!response.body) throw new Error("AI response did not include a stream body");
+  if (!response.body) {
+    throw new Error("AI response did not include a stream body");
+  }
 
+  let hasOutput = false;
   for await (const data of readSse(response.body)) {
-    if (!data || data === "[DONE]") continue;
+    if (data === "[DONE]") {
+      break;
+    }
+    if (!data) {
+      continue;
+    }
     const chunk = JSON.parse(data);
-    const delta = chunk.choices?.[0]?.delta?.content || chunk.choices?.[0]?.text;
-    if (delta) yield delta;
+    const delta =
+      chunk.choices?.[0]?.delta?.content || chunk.choices?.[0]?.text;
+    if (typeof delta === "string" && delta) {
+      hasOutput = true;
+      yield delta;
+    }
+  }
+  if (!hasOutput) {
+    throw new Error("接口未返回译文，请确认模型支持流式 Chat Completions。");
   }
 }
 

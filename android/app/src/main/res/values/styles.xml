@@ -3,10 +3,9 @@
         <item name="android:fontFamily">sans</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowIsFloating">true</item>
-        <item name="android:windowGravity">bottom</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:backgroundDimEnabled">true</item>
-        <item name="android:windowDimAmount">0.20</item>
+        <item name="android:backgroundDimAmount">0.20</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:colorAccent">#8AB4FF</item>
     </style>

@@ -1,12 +1,9 @@
 package com.flashtranslate.android
 
-import android.content.Context
-
-class TranslationRepository(context: Context) {
-    private val appContext = context.applicationContext
+class TranslationRepository {
     private val client = OpenAiStreamClient()
 
-    suspend fun translate(text: String, onDelta: (String) -> Unit) {
-        client.stream(ConfigStore.load(appContext), text, onDelta)
+    suspend fun translate(text: String, config: TranslationConfig, onDelta: (String) -> Unit) {
+        client.stream(config, text, onDelta)
     }
 }

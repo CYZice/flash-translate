@@ -16,8 +16,8 @@ class OpenAiStreamClient(private val http: OkHttpClient = OkHttpClient()) {
         onDelta: (String) -> Unit,
     ) = withContext(Dispatchers.IO) {
         val base = config.baseUrl.trimEnd('/')
-        require(base.isNotEmpty()) { "Set the provider base URL in settings." }
-        require(config.model.isNotBlank()) { "Set the model name in settings." }
+        require(base.isNotEmpty()) { "请先在设置中填写接口地址。" }
+        require(config.model.isNotBlank()) { "请先在设置中填写模型名称。" }
 
         val payload = JSONObject()
             .put("model", config.model)
@@ -25,7 +25,7 @@ class OpenAiStreamClient(private val http: OkHttpClient = OkHttpClient()) {
             .put("messages", JSONArray()
                 .put(JSONObject()
                     .put("role", "system")
-                    .put("content", "Translate the selected text accurately. Return only the translation."))
+                    .put("content", "Translate the selected text accurately. Return only the translation, without explanations."))
                 .put(JSONObject()
                     .put("role", "user")
                     .put("content", JSONObject()
@@ -46,25 +46,28 @@ class OpenAiStreamClient(private val http: OkHttpClient = OkHttpClient()) {
         http.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
                 val detail = response.body?.string()?.take(500).orEmpty()
-                error("Provider request failed (${response.code}): $detail")
+                error("接口请求失败（HTTP ${response.code}），请检查地址、模型和密钥。$detail")
             }
             val source = response.body?.charStream()?.buffered()
-                ?: error("Provider response did not include a stream body.")
+                ?: error("接口没有返回流式内容。")
+            var hasOutput = false
             source.useLines { lines ->
                 lines.forEach { line ->
                     if (!line.startsWith("data:")) return@forEach
                     val data = line.removePrefix("data:").trim()
                     if (data.isEmpty() || data == "[DONE]") return@forEach
                     val choices = JSONObject(data).optJSONArray("choices") ?: return@forEach
-                    val delta = choices.optJSONObject(0)
-                        ?.optJSONObject("delta")
-                        ?.optString("content")
-                        .orEmpty()
+                    val choice = choices.optJSONObject(0) ?: return@forEach
+                    val delta = choice.optJSONObject("delta")?.optString("content")
+                        ?.takeIf { it.isNotEmpty() }
+                        ?: choice.optString("text")
                     if (delta.isNotEmpty()) {
+                        hasOutput = true
                         withContext(Dispatchers.Main.immediate) { onDelta(delta) }
                     }
                 }
             }
+            if (!hasOutput) error("接口未返回译文，请确认模型支持流式 Chat Completions。")
         }
     }
 }
