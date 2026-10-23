@@ -19,13 +19,7 @@ On Linux:
 npm run start:linux
 ```
 
-For the most predictable Ubuntu 24.04 experience, use the X11/XWayland path:
-
-```bash
-npm run start:ubuntu24
-```
-
-Ubuntu 24.04 can run Electron under Wayland, but the first stable release uses X11/XWayland for more consistent global-selection coordinates and floating-window placement. Ubuntu normally provides XWayland by default. The native selection module's source-build dependencies are:
+Ubuntu 24.04 can run Electron under Wayland, but X11/XWayland is recommended for more consistent global-selection coordinates and floating-window placement. Ubuntu normally provides XWayland by default. The native selection module's source-build dependencies are:
 
 ```bash
 sudo apt install libevdev-dev libxtst-dev libx11-dev libxfixes-dev libwayland-dev
