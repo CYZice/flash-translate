@@ -3,7 +3,7 @@ const path = require("node:path");
 const SelectionHook = require("selection-hook");
 const { streamTranslation } = require("./translate.cjs");
 
-const TOOLBAR_WIDTH = 184;
+const TOOLBAR_WIDTH = 124;
 const TOOLBAR_HEIGHT = 44;
 const RESULT_WIDTH = 460;
 const RESULT_HEIGHT = 320;
@@ -12,6 +12,8 @@ let toolbarWindow = null;
 let resultWindow = null;
 let selectionHook = null;
 let currentSelection = null;
+let currentTranslation = "";
+let resultPinned = false;
 
 function createToolbarWindow() {
   toolbarWindow = new BrowserWindow({
@@ -54,7 +56,9 @@ function createResultWindow() {
   });
 
   resultWindow.loadFile(path.join(__dirname, "result.html"));
-  resultWindow.on("blur", () => resultWindow?.hide());
+  resultWindow.on("blur", () => {
+    if (!resultPinned) resultWindow?.hide();
+  });
 }
 
 function moveToolbar(x, y) {
@@ -132,6 +136,7 @@ ipcMain.handle("selection-translate", () => {
   const point = currentSelection.mousePosEnd || currentSelection.endBottom;
   toolbarWindow?.hide();
   const text = currentSelection.text;
+  currentTranslation = "";
   showResult("Translating…", point?.x || 0, point?.y || 0);
   const controller = new AbortController();
   resultWindow?.webContents.send("selection-translation-state", "loading");
@@ -141,6 +146,7 @@ ipcMain.handle("selection-translate", () => {
     try {
       for await (const delta of streamTranslation(text, controller.signal)) {
         output += delta;
+        currentTranslation = output;
         resultWindow?.webContents.send("selection-result", output);
       }
       resultWindow?.webContents.send("selection-translation-state", "done");
@@ -157,6 +163,17 @@ ipcMain.handle("selection-translate", () => {
 
 ipcMain.on("selection-hide", () => toolbarWindow?.hide());
 ipcMain.on("result-hide", () => resultWindow?.hide());
+ipcMain.handle("result-copy", () => {
+  if (!currentTranslation) return false;
+  clipboard.writeText(currentTranslation);
+  return true;
+});
+ipcMain.handle("result-pin-toggle", () => {
+  resultPinned = !resultPinned;
+  resultWindow?.setAlwaysOnTop(resultPinned, "floating");
+  resultWindow?.webContents.send("result-pin-state", resultPinned);
+  return resultPinned;
+});
 
 app.whenReady().then(() => {
   createToolbarWindow();

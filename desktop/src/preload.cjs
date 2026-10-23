@@ -22,4 +22,13 @@ contextBridge.exposeInMainWorld("selectionDesktop", {
   hideResult() {
     ipcRenderer.send("result-hide");
   },
+  copyResult() {
+    return ipcRenderer.invoke("result-copy");
+  },
+  toggleResultPin() {
+    return ipcRenderer.invoke("result-pin-toggle");
+  },
+  onResultPinState(callback) {
+    ipcRenderer.on("result-pin-state", (_event, pinned) => callback(pinned));
+  },
 });
