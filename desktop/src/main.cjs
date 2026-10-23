@@ -5,8 +5,10 @@ const { streamTranslation } = require("./translate.cjs");
 
 const TOOLBAR_WIDTH = 124;
 const TOOLBAR_HEIGHT = 44;
-const RESULT_WIDTH = 460;
-const RESULT_HEIGHT = 320;
+const RESULT_WIDTH = 420;
+const RESULT_HEIGHT = 240;
+const RESULT_MIN_HEIGHT = 190;
+const RESULT_MAX_HEIGHT = 480;
 
 let toolbarWindow = null;
 let resultWindow = null;
@@ -84,18 +86,30 @@ function showResult(text, x, y) {
 
   const display = screen.getDisplayNearestPoint({ x, y });
   const bounds = display.workArea;
+  const [currentWidth, currentHeight] = resultWindow.getSize();
   const left = Math.min(
-    Math.max(bounds.x + 8, Math.round(x - RESULT_WIDTH / 2)),
-    bounds.x + bounds.width - RESULT_WIDTH - 8,
+    Math.max(bounds.x + 8, Math.round(x - currentWidth / 2)),
+    bounds.x + bounds.width - currentWidth - 8,
   );
   const top = Math.min(
     Math.max(bounds.y + 8, Math.round(y + 20)),
-    bounds.y + bounds.height - RESULT_HEIGHT - 8,
+    bounds.y + bounds.height - currentHeight - 8,
   );
 
   resultWindow.setPosition(left, top, false);
   resultWindow.show();
   resultWindow.webContents.send("selection-result", text);
+}
+
+function resizeResultForText(text) {
+  if (!resultWindow || resultWindow.isDestroyed()) return;
+  const [width, currentHeight] = resultWindow.getSize();
+  const lineCount = Math.ceil(Math.max(text.length, 1) / 42);
+  const nextHeight = Math.min(
+    RESULT_MAX_HEIGHT,
+    Math.max(RESULT_MIN_HEIGHT, 132 + lineCount * 24),
+  );
+  if (nextHeight !== currentHeight) resultWindow.setSize(width, nextHeight, true);
 }
 
 function startSelectionMonitoring() {
@@ -137,6 +151,7 @@ ipcMain.handle("selection-translate", () => {
   toolbarWindow?.hide();
   const text = currentSelection.text;
   currentTranslation = "";
+  resizeResultForText("");
   showResult("Translating…", point?.x || 0, point?.y || 0);
   const controller = new AbortController();
   resultWindow?.webContents.send("selection-translation-state", "loading");
@@ -147,6 +162,7 @@ ipcMain.handle("selection-translate", () => {
       for await (const delta of streamTranslation(text, controller.signal)) {
         output += delta;
         currentTranslation = output;
+        resizeResultForText(output);
         resultWindow?.webContents.send("selection-result", output);
       }
       resultWindow?.webContents.send("selection-translation-state", "done");
