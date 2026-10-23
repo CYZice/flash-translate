@@ -3,6 +3,11 @@ const path = require("node:path");
 const SelectionHook = require("selection-hook");
 const { streamTranslation } = require("./translate.cjs");
 
+if (process.platform === "linux") {
+  // Let Electron select X11 or Wayland from the current desktop session.
+  app.commandLine.appendSwitch("ozone-platform-hint", "auto");
+}
+
 const TOOLBAR_WIDTH = 124;
 const TOOLBAR_HEIGHT = 44;
 const RESULT_WIDTH = 420;
@@ -133,8 +138,19 @@ function startSelectionMonitoring() {
     console.error("[selection-hook]", error);
   });
 
-  if (!selectionHook.start({ debug: false })) {
+  const selectionStarted = selectionHook.start({
+    debug: false,
+    enableClipboard: true,
+  });
+
+  if (!selectionStarted) {
     throw new Error("Unable to start selection-hook");
+  }
+
+  if (process.platform === "linux" && process.env.XDG_SESSION_TYPE === "wayland") {
+    console.warn(
+      "[selection-hook] Wayland mode is supported with compositor-dependent limitations; X11 provides the most reliable selection coordinates.",
+    );
   }
 }
 
@@ -192,6 +208,9 @@ ipcMain.handle("result-pin-toggle", () => {
 });
 
 app.whenReady().then(() => {
+  if (process.platform !== "win32" && process.platform !== "linux") {
+    console.warn(`[flash-translate] Unsupported desktop platform: ${process.platform}`);
+  }
   createToolbarWindow();
   createResultWindow();
   startSelectionMonitoring();

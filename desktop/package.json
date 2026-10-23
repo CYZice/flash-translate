@@ -6,6 +6,8 @@
   "main": "src/main.cjs",
   "scripts": {
     "start": "electron .",
+    "start:windows": "electron .",
+    "start:linux": "electron --ozone-platform-hint=auto .",
     "dev": "electron ."
   },
   "dependencies": {
