@@ -96,7 +96,7 @@ function showResult(text, x, y) {
     bounds.y + bounds.height - currentHeight - 8,
   );
 
-  resultWindow.setPosition(left, top, false);
+  if (!resultPinned) resultWindow.setPosition(left, top, false);
   resultWindow.show();
   resultWindow.webContents.send("selection-result", text);
 }
