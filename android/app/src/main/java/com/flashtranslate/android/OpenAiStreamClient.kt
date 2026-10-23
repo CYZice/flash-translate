@@ -58,9 +58,10 @@ class OpenAiStreamClient(private val http: OkHttpClient = OkHttpClient()) {
                     if (data.isEmpty() || data == "[DONE]") return@forEach
                     val choices = JSONObject(data).optJSONArray("choices") ?: return@forEach
                     val choice = choices.optJSONObject(0) ?: return@forEach
-                    val delta = choice.optJSONObject("delta")?.optString("content")
-                        ?.takeIf { it.isNotEmpty() }
-                        ?: choice.optString("text")
+                    val delta = when (val content = choice.optJSONObject("delta")?.opt("content")) {
+                        is String -> content
+                        else -> choice.opt("text")?.let { if (it is String) it else "" }.orEmpty()
+                    }
                     if (delta.isNotEmpty()) {
                         hasOutput = true
                         withContext(Dispatchers.Main.immediate) { onDelta(delta) }

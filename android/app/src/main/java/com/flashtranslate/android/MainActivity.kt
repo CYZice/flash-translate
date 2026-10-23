@@ -1,11 +1,11 @@
 package com.flashtranslate.android
 
-import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
 import android.os.Bundle
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -59,6 +59,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -71,22 +72,54 @@ private val Muted = Color(0xFF9CA3AF)
 private val Border = Color(0xFFE5E7EB)
 
 class MainActivity : ComponentActivity() {
+    private var drawerPinned = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setFinishOnTouchOutside(true)
         window.setGravity(Gravity.BOTTOM)
-        window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
+        window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+        window.addFlags(
+            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+        )
 
-        val selectedText = intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)?.toString()?.trim().orEmpty()
+        val selectedText = (
+            intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)
+                ?: intent.getCharSequenceExtra(Intent.EXTRA_TEXT)
+            )?.toString()?.trim().orEmpty()
         setContent {
-            TranslationDrawer(selectedText = selectedText, onClose = ::finish)
+            TranslationDrawer(
+                selectedText = selectedText,
+                onClose = ::finish,
+                onPinnedChange = { drawerPinned = it },
+            )
         }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
+        }
+    }
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        if (event.action == MotionEvent.ACTION_OUTSIDE && !drawerPinned) {
+            finish()
+            return true
+        }
+        return super.dispatchTouchEvent(event)
     }
 }
 
 @Composable
-private fun TranslationDrawer(selectedText: String, onClose: () -> Unit) {
+private fun TranslationDrawer(
+    selectedText: String,
+    onClose: () -> Unit,
+    onPinnedChange: (Boolean) -> Unit,
+) {
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
     val repository = remember { TranslationRepository() }
     var config by remember { mutableStateOf(ConfigStore.load(context)) }
     var output by remember { mutableStateOf("") }
@@ -121,10 +154,9 @@ private fun TranslationDrawer(selectedText: String, onClose: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = 12.dp, vertical = 8.dp)
-            .heightIn(min = 172.dp, max = 520.dp)
+            .heightIn(min = 172.dp, max = (configuration.screenHeightDp * 0.72f).dp)
             .border(1.dp, Border, RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         color = Color.White,
         tonalElevation = 0.dp,
     ) {
@@ -156,7 +188,7 @@ private fun TranslationDrawer(selectedText: String, onClose: () -> Unit) {
                     DrawerIconButton(
                         onClick = {
                             pinned = !pinned
-                            (context as? Activity)?.setFinishOnTouchOutside(!pinned)
+                            onPinnedChange(pinned)
                         },
                         selected = pinned,
                         description = if (pinned) "取消锁定抽屉" else "锁定抽屉",
