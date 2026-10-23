@@ -19,7 +19,21 @@ On Linux:
 npm run start:linux
 ```
 
-Linux works most reliably in an X11 session. Wayland is supported by `selection-hook`, but selection coordinates and clipboard fallback depend on the compositor and the source application. If the toolbar is not positioned correctly under Wayland, use an X11 session for the first release.
+For the most predictable Ubuntu 24.04 experience, use the X11/XWayland path:
+
+```bash
+npm run start:ubuntu24
+```
+
+Ubuntu 24.04 can run Electron under Wayland, but the first stable release uses X11/XWayland for more consistent global-selection coordinates and floating-window placement. Ubuntu normally provides XWayland by default. The native selection module's source-build dependencies are:
+
+```bash
+sudo apt install libevdev-dev libxtst-dev libx11-dev libxfixes-dev libwayland-dev
+```
+
+These packages are only needed when the prebuilt native binary cannot be used or when rebuilding the native module.
+
+Linux works most reliably in an X11 session. Wayland remains available through `npm run start:linux`, but selection coordinates and clipboard fallback depend on the compositor and the source application.
 
 Configure the existing OpenAI-compatible provider through environment variables before starting:
 

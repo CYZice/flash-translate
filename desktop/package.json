@@ -8,6 +8,7 @@
     "start": "electron .",
     "start:windows": "electron .",
     "start:linux": "electron --ozone-platform-hint=auto .",
+    "start:ubuntu24": "electron --ozone-platform=x11 .",
     "dev": "electron ."
   },
   "dependencies": {
