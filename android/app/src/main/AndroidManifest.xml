@@ -3,7 +3,9 @@
 
     <application
         android:allowBackup="true"
+        android:icon="@drawable/flash_translate_icon"
         android:label="Flash Translate"
+        android:roundIcon="@drawable/flash_translate_icon"
         android:supportsRtl="true"
         android:theme="@style/Theme.FlashTranslate"
         android:usesCleartextTraffic="true">
