@@ -1,0 +1,17 @@
+{
+  "name": "flash-translate-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Lightweight global selection companion for Flash Translate",
+  "main": "src/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron ."
+  },
+  "dependencies": {
+    "selection-hook": "^2.1.2"
+  },
+  "devDependencies": {
+    "electron": "^38.2.0"
+  }
+}

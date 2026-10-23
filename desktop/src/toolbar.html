@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+      body { margin: 0; background: transparent; }
+      .toolbar {
+        display: flex; gap: 6px; padding: 6px;
+        border: 1px solid rgba(255,255,255,.18); border-radius: 14px;
+        background: rgba(28,28,32,.96); box-shadow: 0 8px 24px rgba(0,0,0,.3);
+      }
+      button { border: 0; border-radius: 9px; padding: 7px 12px; color: white; background: #3a3a43; cursor: pointer; }
+      button:hover { background: #5a5a68; }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <button id="translate">Translate</button>
+      <button id="copy">Copy</button>
+    </div>
+    <script>
+      document.getElementById("translate").onclick = () => window.selectionDesktop.translate();
+      document.getElementById("copy").onclick = () => window.selectionDesktop.copy();
+      window.selectionDesktop.onSelectionChanged(() => {});
+    </script>
+  </body>
+</html>
