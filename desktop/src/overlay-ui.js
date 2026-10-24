@@ -1,3 +1,17 @@
+const toolbarView = document.getElementById("toolbar-view");
+const resultView = document.getElementById("result-view");
+
+function setOverlayMode(mode) {
+  const showToolbar = mode === "toolbar";
+  toolbarView.hidden = !showToolbar;
+  resultView.hidden = showToolbar;
+  document.body.dataset.mode = showToolbar ? "toolbar" : "result";
+}
+
+window.selectionDesktop.onOverlayMode(setOverlayMode);
+document.getElementById("translate").onclick = () =>
+  window.selectionDesktop.translate();
+
 const result = document.getElementById("result");
 const copyButton = document.getElementById("copy");
 const autoButton = document.getElementById("auto");

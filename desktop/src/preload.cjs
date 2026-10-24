@@ -8,6 +8,9 @@ contextBridge.exposeInMainWorld("selectionDesktop", {
   onResultLanguages(callback) {
     ipcRenderer.on("result-languages", (_event, data) => callback(data));
   },
+  onOverlayMode(callback) {
+    ipcRenderer.on("overlay-mode", (_event, mode) => callback(mode));
+  },
   onResultPreferences(callback) {
     ipcRenderer.on("result-preferences", (_event, data) => callback(data));
   },

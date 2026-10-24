@@ -7,11 +7,21 @@
       content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'none'"
     >
     <title>翻译</title>
-    <link rel="stylesheet" href="result.css">
-    <script src="result-ui.js" defer></script>
+    <link rel="stylesheet" href="overlay.css">
+    <script src="overlay-ui.js" defer></script>
   </head>
-  <body>
-    <main class="card">
+  <body data-mode="result">
+    <section id="toolbar-view" aria-label="翻译选项" hidden>
+      <button
+        type="button"
+        id="translate"
+        title="翻译选中文本"
+        aria-label="翻译选中文本"
+      >
+        <img src="assets/icon.png" alt="" width="16" height="16">
+      </button>
+    </section>
+    <main id="result-view" class="card">
       <header>
         <div class="direction">
           <span id="source" title="自动识别">AUTO</span

@@ -66,8 +66,8 @@ const RESULT_MIN_HEIGHT = 172;
 const RESULT_MAX_WIDTH = 960;
 const RESULT_MAX_HEIGHT = 720;
 
-let toolbarWindow = null;
-let resultWindow = null;
+let overlayWindow = null;
+let overlayMode = "hidden";
 let selectionHook = null;
 let currentSelection = null;
 let lastTranslationSelection = null;
@@ -82,8 +82,18 @@ let connectionTest = null;
 let monitorWarning = "";
 
 function hideSelectionButton() {
-  toolbarWindow?.hide();
+  hideOverlay();
   currentSelection = null;
+}
+
+function hideOverlay() {
+  overlayWindow?.hide();
+  overlayMode = "hidden";
+}
+
+function setOverlayMode(mode) {
+  overlayMode = mode;
+  overlayWindow?.webContents.send("overlay-mode", mode);
 }
 
 function nativePointToDip(point) {
@@ -93,16 +103,19 @@ function nativePointToDip(point) {
 function dismissFloatingWindows(input) {
   const dismissal = getDismissal({
     ...input,
-    toolbar: toolbarWindow?.isVisible() ? toolbarWindow.getBounds() : null,
-    result: resultWindow?.isVisible() ? resultWindow.getBounds() : null,
+    toolbar: overlayWindow?.isVisible() ? overlayWindow.getBounds() : null,
+    result: overlayWindow?.isVisible() ? overlayWindow.getBounds() : null,
     resultPinned,
-    resultFocused: resultWindow?.isFocused(),
+    resultFocused: overlayWindow?.isFocused(),
   });
-  if (dismissal.toolbar) {
+  if (dismissal.toolbar && overlayMode === "toolbar") {
     hideSelectionButton();
   }
   if (dismissal.result) {
-    resultWindow?.hide();
+    if (overlayMode === "result") {
+      hideOverlay();
+      currentSelection = null;
+    }
   }
 }
 
@@ -186,7 +199,7 @@ ipcMain.handle("settings-save", (event, input) => {
     settingsStore.save(input);
     const settings = publicSettings();
     translationFontSize = settings.translationFontSize;
-    resultWindow?.webContents.send("result-preferences", {
+    overlayWindow?.webContents.send("result-preferences", {
       translationFontSize,
     });
     resizeResultForText(currentTranslation);
@@ -232,32 +245,8 @@ ipcMain.handle("settings-test", async (event, input) => {
   }
 });
 
-function createToolbarWindow() {
-  toolbarWindow = new BrowserWindow({
-    width: TOOLBAR_WIDTH,
-    height: TOOLBAR_HEIGHT,
-    frame: false,
-    transparent: true,
-    hasShadow: false,
-    resizable: false,
-    movable: false,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-    focusable: false,
-    show: false,
-    webPreferences: {
-      contextIsolation: true,
-      nodeIntegration: false,
-      preload: path.join(__dirname, "preload.cjs"),
-    },
-  });
-
-  toolbarWindow.loadFile(path.join(__dirname, "toolbar.html"));
-  toolbarWindow.on("blur", hideSelectionButton);
-}
-
-function createResultWindow() {
-  resultWindow = new BrowserWindow({
+function createOverlayWindow() {
+  overlayWindow = new BrowserWindow({
     width: RESULT_WIDTH,
     height: RESULT_HEIGHT,
     frame: false,
@@ -275,16 +264,16 @@ function createResultWindow() {
     },
   });
 
-  resultWindow.loadFile(path.join(__dirname, "result.html"));
-  resultWindow.on("blur", () => {
-    if (!resultPinned) {
-      resultWindow?.hide();
+  overlayWindow.loadFile(path.join(__dirname, "overlay.html"));
+  overlayWindow.on("blur", () => {
+    if (overlayMode === "toolbar" || !resultPinned) {
+      hideOverlay();
     }
   });
 }
 
 function moveToolbar(x, y) {
-  if (!toolbarWindow || toolbarWindow.isDestroyed()) {
+  if (!overlayWindow || overlayWindow.isDestroyed()) {
     return;
   }
 
@@ -294,35 +283,50 @@ function moveToolbar(x, y) {
     { width: TOOLBAR_WIDTH, height: TOOLBAR_HEIGHT },
     display.workArea
   );
-  toolbarWindow.setPosition(position.x, position.y, false);
-  toolbarWindow.showInactive();
+  overlayWindow.setResizable(false);
+  overlayWindow.setBounds({
+    x: position.x,
+    y: position.y,
+    width: TOOLBAR_WIDTH,
+    height: TOOLBAR_HEIGHT,
+  });
+  setOverlayMode("toolbar");
+  overlayWindow.showInactive();
 }
 
 function showResult(text, x, y) {
-  if (!resultWindow || resultWindow.isDestroyed()) {
+  if (!overlayWindow || overlayWindow.isDestroyed()) {
     return;
   }
 
   const display = screen.getDisplayNearestPoint({ x, y });
-  const [currentWidth, currentHeight] = resultWindow.getSize();
+  const toolbarMode = overlayMode === "toolbar";
+  const [currentWidth, currentHeight] = overlayWindow.getSize();
+  const width = toolbarMode ? RESULT_WIDTH : currentWidth;
+  const height = toolbarMode ? RESULT_HEIGHT : currentHeight;
   const position = placeFloatingWindow(
     { x, y },
-    { width: currentWidth, height: currentHeight },
+    { width, height },
     display.workArea
   );
 
-  if (!resultPinned) {
-    resultWindow.setPosition(position.x, position.y, false);
-  }
-  resultWindow.show();
-  resultWindow.webContents.send("selection-result", text);
+  overlayWindow.setResizable(true);
+  overlayWindow.setBounds({
+    x: resultPinned ? overlayWindow.getBounds().x : position.x,
+    y: resultPinned ? overlayWindow.getBounds().y : position.y,
+    width,
+    height,
+  });
+  setOverlayMode("result");
+  overlayWindow.show();
+  overlayWindow.webContents.send("selection-result", text);
 }
 
 function resizeResultWindow(deltaWidth, deltaHeight) {
-  if (!resultWindow || resultWindow.isDestroyed()) {
+  if (!overlayWindow || overlayWindow.isDestroyed()) {
     return;
   }
-  const bounds = resultWindow.getBounds();
+  const bounds = overlayWindow.getBounds();
   const display = screen.getDisplayMatching(bounds);
   const minWidth = 280;
   const maxWidth = Math.max(
@@ -346,18 +350,18 @@ function resizeResultWindow(deltaWidth, deltaHeight) {
     display.workArea.y + 8,
     Math.min(bounds.y, bottom - height)
   );
-  resultWindow.setBounds({ x: bounds.x, y, width, height });
+  overlayWindow.setBounds({ x: bounds.x, y, width, height });
   resultManuallySized = true;
 }
 
 function resizeResultForText(text) {
-  if (!resultWindow || resultWindow.isDestroyed()) {
+  if (!overlayWindow || overlayWindow.isDestroyed()) {
     return;
   }
   if (resultManuallySized) {
     return;
   }
-  const [width, currentHeight] = resultWindow.getSize();
+  const [width, currentHeight] = overlayWindow.getSize();
   const lineCount = text
     .split("\n")
     .reduce(
@@ -372,7 +376,7 @@ function resizeResultForText(text) {
         ),
       0
     );
-  const display = screen.getDisplayMatching(resultWindow.getBounds());
+  const display = screen.getDisplayMatching(overlayWindow.getBounds());
   const nextHeight = Math.min(
     RESULT_MAX_HEIGHT,
     display.workArea.height - 16,
@@ -383,11 +387,11 @@ function resizeResultForText(text) {
   );
   if (nextHeight !== currentHeight) {
     // setSize clamps to stale fixed-size constraints on transparent Windows windows.
-    resultWindow.setBounds({ width, height: nextHeight });
-    const bounds = resultWindow.getBounds();
+    overlayWindow.setBounds({ width, height: nextHeight });
+    const bounds = overlayWindow.getBounds();
     const bottom = display.workArea.y + display.workArea.height - 8;
     if (bounds.y + nextHeight > bottom) {
-      resultWindow.setPosition(
+      overlayWindow.setPosition(
         bounds.x,
         Math.max(display.workArea.y + 8, bottom - nextHeight)
       );
@@ -402,7 +406,7 @@ function startSelectionMonitoring() {
       (settingsWindow &&
         !settingsWindow.isDestroyed() &&
         settingsWindow.isFocused()) ||
-      (resultWindow && !resultWindow.isDestroyed() && resultWindow.isFocused())
+      (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isFocused())
     ) {
       return;
     }
@@ -461,7 +465,7 @@ function translationError(error, aborted) {
 }
 
 function startTranslation(selection) {
-  if (!(selection?.text && resultWindow)) {
+  if (!(selection?.text && overlayWindow)) {
     return false;
   }
   const saved = settingsStore.read();
@@ -480,19 +484,19 @@ function startTranslation(selection) {
   lastTranslationSelection = selection;
   hideSelectionButton();
   currentTranslation = "";
-  resizeResultForText("");
   showResult("", point.x, point.y);
-  resultWindow?.webContents.send("result-languages", {
+  resizeResultForText("");
+  overlayWindow?.webContents.send("result-languages", {
     source: config.sourceLanguage,
     target: config.targetLanguage,
     autoTranslate: config.autoTranslate,
   });
-  resultWindow.webContents.send("result-preferences", { translationFontSize });
+  overlayWindow.webContents.send("result-preferences", { translationFontSize });
   const controller = new AbortController();
-  const contents = resultWindow.webContents;
+  const contents = overlayWindow.webContents;
   activeTranslation = controller;
   const timeout = setTimeout(() => controller.abort(), 120_000);
-  resultWindow?.webContents.send("selection-translation-state", "loading");
+  overlayWindow.webContents.send("selection-translation-state", "loading");
 
   (async () => {
     let output = "";
@@ -541,7 +545,7 @@ ipcMain.handle("result-auto-toggle", () => {
     const { config } = settingsStore.read();
     const enabled = !config.autoTranslate;
     settingsStore.save({ ...config, autoTranslate: enabled });
-    resultWindow?.webContents.send("result-auto-state", enabled);
+    overlayWindow?.webContents.send("result-auto-state", enabled);
     return { ok: true, enabled };
   } catch (error) {
     return { ok: false, error: error.message };
@@ -549,7 +553,7 @@ ipcMain.handle("result-auto-toggle", () => {
 });
 
 ipcMain.on("selection-hide", hideSelectionButton);
-ipcMain.on("result-hide", () => resultWindow?.hide());
+ipcMain.on("result-hide", hideOverlay);
 ipcMain.handle("result-copy", () => {
   if (!currentTranslation) {
     return false;
@@ -559,11 +563,11 @@ ipcMain.handle("result-copy", () => {
 });
 ipcMain.handle("result-pin-toggle", () => {
   resultPinned = !resultPinned;
-  resultWindow?.webContents.send("result-pin-state", resultPinned);
+  overlayWindow?.webContents.send("result-pin-state", resultPinned);
   return resultPinned;
 });
 ipcMain.on("result-resize", (event, input) => {
-  if (!resultWindow || event.sender !== resultWindow.webContents) {
+  if (!overlayWindow || event.sender !== overlayWindow.webContents) {
     return;
   }
   const width = Number(input?.width);
@@ -579,9 +583,8 @@ app.whenReady().then(() => {
       `[flash-translate] Unsupported desktop platform: ${process.platform}`
     );
   }
-  createToolbarWindow();
-  createResultWindow();
-  resultWindow.on("hide", () => {
+  createOverlayWindow();
+  overlayWindow.on("hide", () => {
     const controller = activeTranslation;
     activeTranslation = null;
     controller?.abort();
