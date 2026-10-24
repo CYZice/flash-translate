@@ -19,6 +19,7 @@
     "selection-hook": "^2.1.2"
   },
   "devDependencies": {
-    "electron": "^38.2.0"
+    "electron": "^38.2.0",
+    "rcedit": "^5.0.2"
   }
 }

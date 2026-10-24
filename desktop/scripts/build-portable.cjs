@@ -102,4 +102,30 @@ if (platform === "linux") {
     `[Desktop Entry]\nType=Application\nName=Flash Translate\nComment=Global selection translation\nExec=sh -c "cd \\"$(dirname \\"%k\\")\\" && exec env FLASH_TRANSLATE_PORTABLE=1 ./FlashTranslate"\nIcon=flash-translate\nTerminal=false\nCategories=Utility;Education;\n`
   );
 }
-console.log(`便携版已生成：${output}\n运行 ${executableName} 启动，无需安装。`);
+
+async function patchWindowsMetadata() {
+  if (platform !== "win32") {
+    return;
+  }
+  const { rcedit } = await import("rcedit");
+  await rcedit(path.join(output, executableName), {
+    "version-string": {
+      CompanyName: "Flash Translate",
+      FileDescription: "Flash Translate",
+      InternalName: "FlashTranslate",
+      OriginalFilename: "FlashTranslate.exe",
+      ProductName: "Flash Translate",
+    },
+    "file-version": `${manifest.version}.0`,
+    "product-version": `${manifest.version}.0`,
+  });
+}
+
+patchWindowsMetadata()
+  .then(() => {
+    console.log(`便携版已生成：${output}\n运行 ${executableName} 启动，无需安装。`);
+  })
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
