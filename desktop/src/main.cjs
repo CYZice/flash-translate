@@ -63,7 +63,8 @@ const TOOLBAR_HEIGHT = 36;
 const RESULT_WIDTH = 400;
 const RESULT_HEIGHT = 172;
 const RESULT_MIN_HEIGHT = 172;
-const RESULT_MAX_HEIGHT = 480;
+const RESULT_MAX_WIDTH = 960;
+const RESULT_MAX_HEIGHT = 720;
 
 let toolbarWindow = null;
 let resultWindow = null;
@@ -73,6 +74,7 @@ let lastTranslationSelection = null;
 let currentTranslation = "";
 let translationFontSize = 18;
 let resultPinned = false;
+let resultManuallySized = false;
 let settingsWindow = null;
 let tray = null;
 let activeTranslation = null;
@@ -316,8 +318,43 @@ function showResult(text, x, y) {
   resultWindow.webContents.send("selection-result", text);
 }
 
+function resizeResultWindow(deltaWidth, deltaHeight) {
+  if (!resultWindow || resultWindow.isDestroyed()) {
+    return;
+  }
+  const bounds = resultWindow.getBounds();
+  const display = screen.getDisplayMatching(bounds);
+  const minWidth = 280;
+  const maxWidth = Math.max(
+    minWidth,
+    Math.min(RESULT_MAX_WIDTH, display.workArea.width - 16)
+  );
+  const maxHeight = Math.max(
+    RESULT_MIN_HEIGHT,
+    Math.min(RESULT_MAX_HEIGHT, display.workArea.height - 16)
+  );
+  const width = Math.max(
+    minWidth,
+    Math.min(maxWidth, bounds.width + deltaWidth)
+  );
+  const height = Math.max(
+    RESULT_MIN_HEIGHT,
+    Math.min(maxHeight, bounds.height + deltaHeight)
+  );
+  const bottom = display.workArea.y + display.workArea.height - 8;
+  const y = Math.max(
+    display.workArea.y + 8,
+    Math.min(bounds.y, bottom - height)
+  );
+  resultWindow.setBounds({ x: bounds.x, y, width, height });
+  resultManuallySized = true;
+}
+
 function resizeResultForText(text) {
   if (!resultWindow || resultWindow.isDestroyed()) {
+    return;
+  }
+  if (resultManuallySized) {
     return;
   }
   const [width, currentHeight] = resultWindow.getSize();
@@ -524,6 +561,16 @@ ipcMain.handle("result-pin-toggle", () => {
   resultPinned = !resultPinned;
   resultWindow?.webContents.send("result-pin-state", resultPinned);
   return resultPinned;
+});
+ipcMain.on("result-resize", (event, input) => {
+  if (!resultWindow || event.sender !== resultWindow.webContents) {
+    return;
+  }
+  const width = Number(input?.width);
+  const height = Number(input?.height);
+  if (Number.isFinite(width) && Number.isFinite(height)) {
+    resizeResultWindow(width, height);
+  }
 });
 
 app.whenReady().then(() => {

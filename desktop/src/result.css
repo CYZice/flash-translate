@@ -21,6 +21,7 @@ body {
   padding: 4px;
 }
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -155,8 +156,28 @@ footer {
   justify-content: flex-end;
   align-items: center;
   min-height: 32px;
-  padding: 0 8px 6px 16px;
+  padding: 0 24px 6px 16px;
   gap: 4px;
+}
+#resize-handle {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  color: #cbd5e1;
+  cursor: nwse-resize;
+  -webkit-app-region: no-drag;
+}
+#resize-handle:hover {
+  color: #94a3b8;
+}
+#resize-handle svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 1.4;
 }
 #notice {
   flex: 1;

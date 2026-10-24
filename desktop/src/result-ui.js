@@ -4,7 +4,32 @@ const autoButton = document.getElementById("auto");
 const pinButton = document.getElementById("pin");
 const notice = document.getElementById("notice");
 const loading = document.getElementById("loading");
+const resizeHandle = document.getElementById("resize-handle");
 let translationState = "loading";
+let resizePoint = null;
+
+resizeHandle.onpointerdown = (event) => {
+  event.preventDefault();
+  resizePoint = { x: event.clientX, y: event.clientY };
+  resizeHandle.setPointerCapture(event.pointerId);
+};
+resizeHandle.onpointermove = (event) => {
+  if (!resizePoint) {
+    return;
+  }
+  const width = event.clientX - resizePoint.x;
+  const height = event.clientY - resizePoint.y;
+  if (width || height) {
+    window.selectionDesktop.resizeResult(width, height);
+    resizePoint = { x: event.clientX, y: event.clientY };
+  }
+};
+resizeHandle.onpointerup = () => {
+  resizePoint = null;
+};
+resizeHandle.onpointercancel = () => {
+  resizePoint = null;
+};
 
 function updateLoading() {
   loading.hidden =

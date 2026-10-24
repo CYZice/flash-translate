@@ -43,6 +43,9 @@ contextBridge.exposeInMainWorld("selectionDesktop", {
   toggleResultPin() {
     return ipcRenderer.invoke("result-pin-toggle");
   },
+  resizeResult(width, height) {
+    ipcRenderer.send("result-resize", { width, height });
+  },
   onResultPinState(callback) {
     ipcRenderer.on("result-pin-state", (_event, pinned) => callback(pinned));
   },
