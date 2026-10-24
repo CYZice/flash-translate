@@ -123,7 +123,9 @@ async function patchWindowsMetadata() {
 
 patchWindowsMetadata()
   .then(() => {
-    console.log(`便携版已生成：${output}\n运行 ${executableName} 启动，无需安装。`);
+    console.log(
+      `便携版已生成：${output}\n运行 ${executableName} 启动，无需安装。`
+    );
   })
   .catch((error) => {
     console.error(error);

@@ -6,11 +6,16 @@ const path = require("node:path");
 const { test } = require("node:test");
 
 const mainSource = fs.readFileSync(path.join(__dirname, "main.cjs"), "utf8");
+const browserWindowPattern = /new BrowserWindow\(/g;
+const overlayWindowPattern = /let overlayWindow = null;/;
+const toolbarWindowPattern = /let toolbarWindow = null;/;
+const resultWindowPattern = /let resultWindow = null;/;
+const overlayHtmlPattern = /overlay\.html/;
 
 test("toolbar and result use one overlay BrowserWindow", () => {
-  assert.equal((mainSource.match(/new BrowserWindow\(/g) || []).length, 2);
-  assert.match(mainSource, /let overlayWindow = null;/);
-  assert.doesNotMatch(mainSource, /let toolbarWindow = null;/);
-  assert.doesNotMatch(mainSource, /let resultWindow = null;/);
-  assert.match(mainSource, /overlay\.html/);
+  assert.equal((mainSource.match(browserWindowPattern) || []).length, 2);
+  assert.match(mainSource, overlayWindowPattern);
+  assert.doesNotMatch(mainSource, toolbarWindowPattern);
+  assert.doesNotMatch(mainSource, resultWindowPattern);
+  assert.match(mainSource, overlayHtmlPattern);
 });

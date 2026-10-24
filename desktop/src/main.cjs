@@ -111,11 +111,9 @@ function dismissFloatingWindows(input) {
   if (dismissal.toolbar && overlayMode === "toolbar") {
     hideSelectionButton();
   }
-  if (dismissal.result) {
-    if (overlayMode === "result") {
-      hideOverlay();
-      currentSelection = null;
-    }
+  if (dismissal.result && overlayMode === "result") {
+    hideOverlay();
+    currentSelection = null;
   }
 }
 
@@ -406,7 +404,9 @@ function startSelectionMonitoring() {
       (settingsWindow &&
         !settingsWindow.isDestroyed() &&
         settingsWindow.isFocused()) ||
-      (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isFocused())
+      (overlayWindow &&
+        !overlayWindow.isDestroyed() &&
+        overlayWindow.isFocused())
     ) {
       return;
     }
