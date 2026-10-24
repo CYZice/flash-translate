@@ -12,6 +12,8 @@ const toolbarWindowPattern = /let toolbarWindow = null;/;
 const resultWindowPattern = /let resultWindow = null;/;
 const overlayHtmlPattern = /overlay\.html/;
 const loadCompletePattern = /did-finish-load/;
+const selectionToolbarPattern =
+  /const selectionWasToolbar = overlayMode === "toolbar"/;
 
 test("toolbar and result use one overlay BrowserWindow", () => {
   assert.equal((mainSource.match(browserWindowPattern) || []).length, 2);
@@ -20,4 +22,5 @@ test("toolbar and result use one overlay BrowserWindow", () => {
   assert.doesNotMatch(mainSource, resultWindowPattern);
   assert.match(mainSource, overlayHtmlPattern);
   assert.match(mainSource, loadCompletePattern);
+  assert.match(mainSource, selectionToolbarPattern);
 });

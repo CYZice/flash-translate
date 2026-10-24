@@ -487,7 +487,12 @@ function startTranslation(selection) {
   const config = resolveTranslationConfig(text, saved.config);
   translationFontSize = config.translationFontSize;
   lastTranslationSelection = selection;
-  hideSelectionButton();
+  const selectionWasToolbar = overlayMode === "toolbar";
+  if (selectionWasToolbar) {
+    currentSelection = null;
+  } else {
+    hideSelectionButton();
+  }
   currentTranslation = "";
   showResult("", point.x, point.y);
   resizeResultForText("");
