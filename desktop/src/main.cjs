@@ -263,6 +263,11 @@ function createOverlayWindow() {
   });
 
   overlayWindow.loadFile(path.join(__dirname, "overlay.html"));
+  overlayWindow.webContents.on("did-finish-load", () => {
+    if (overlayMode !== "hidden") {
+      overlayWindow?.webContents.send("overlay-mode", overlayMode);
+    }
+  });
   overlayWindow.on("blur", () => {
     if (overlayMode === "toolbar" || !resultPinned) {
       hideOverlay();
