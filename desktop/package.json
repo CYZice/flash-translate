@@ -1,6 +1,6 @@
 {
   "name": "flash-translate-desktop",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": true,
   "description": "Lightweight global selection companion for Flash Translate",
   "main": "src/main.cjs",

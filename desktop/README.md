@@ -21,7 +21,7 @@ Windows and Linux, with an OpenAI-compatible translation endpoint.
 
 ## Windows portable use
 
-Open the generated `FlashTranslate-0.1.3-win-x64` folder and double-click
+Open the generated `FlashTranslate-0.1.4-win-x64` folder and double-click
 `FlashTranslate.exe`. Keep the entire folder together; no installer, Node.js, or
 npm is needed on the destination PC.
 
@@ -76,7 +76,7 @@ support remains compositor-dependent.
 ## Linux Debian package
 
 For Ubuntu or Debian, the recommended installed version is
-`flash-translate_0.1.3-1_amd64.deb`. Double-click it in the file manager and
+`flash-translate_0.1.4-1_amd64.deb`. Double-click it in the file manager and
 choose **Install**. After installation, launch **Flash Translate** from the
 application menu; its settings are stored in the user configuration directory,
 not under `/opt`.
@@ -89,7 +89,7 @@ Build the package on Linux (or WSL), with Python 3, `dpkg-deb`, and `readelf`:
 ```bash
 npm_config_build_from_source=true npm ci
 npm run portable:linux
-npm run package:deb -- --runtime dist/FlashTranslate-0.1.3-linux-x64
+npm run package:deb -- --runtime dist/FlashTranslate-0.1.4-linux-x64
 ```
 
 Source-building `selection-hook` uses Node.js 18+, a C++ compiler, Python, and
@@ -101,7 +101,7 @@ The package is built with native `dpkg-deb`, checks its archive structure and
 permissions, includes the current desktop sources, and excludes portable data.
 It refuses to overwrite an existing artifact.
 
-Revision `0.1.3-1` replaces the malformed `0.1.3` Debian package. Do not use
+Revision `0.1.4-1` is the corrected Debian package for this release. Do not use
 `--force-overwrite`, delete `/opt`, or remove unrelated applications to install it.
 
 ## Development
