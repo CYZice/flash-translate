@@ -107,7 +107,8 @@ async function patchWindowsMetadata() {
   if (platform !== "win32") {
     return;
   }
-  const { rcedit } = await import("rcedit");
+  const module = await import("rcedit");
+  const rcedit = module.default ?? module.rcedit;
   await rcedit(path.join(output, executableName), {
     "version-string": {
       CompanyName: "Flash Translate",
