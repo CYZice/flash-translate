@@ -11,6 +11,10 @@ A [desktop companion](desktop/README.md) supports global selection translation
 on Windows and Linux. It includes a Chinese settings window and a Windows
 portable-folder build that runs without installation.
 
+The native Android client lives in [`android/`](android/README.md). It uses the
+system text-selection action and opens the translation result in a bottom drawer
+without an accessibility service or floating overlay.
+
 ## Features
 
 - **Automatic Chinese ↔ English**: Enable **自动中英互译** in the extension's

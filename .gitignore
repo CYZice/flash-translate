@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 
 releases
+
+# Platform build caches and generated desktop artifacts
+android/.gradle/
+android/app/build/
+desktop/scripts/__pycache__/
