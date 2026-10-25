@@ -123,6 +123,22 @@ button:disabled {
   text-align: right;
   color: #6b7280;
 }
+.settings-section {
+  display: grid;
+  gap: 9px;
+  padding-top: 2px;
+}
+.settings-section h2 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+}
+.hint {
+  margin: -3px 0 0 22px;
+  color: #9ca3af;
+  font-size: 11px;
+}
 .language-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

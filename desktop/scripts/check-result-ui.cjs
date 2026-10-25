@@ -56,36 +56,11 @@ app.whenReady().then(async () => {
     );
   }
   try {
-    await window.loadFile(path.join(source, "overlay.html"));
+    await window.loadFile(path.join(source, "result.html"));
     window.showInactive();
-    web.send("overlay-mode", "toolbar");
     await web.executeJavaScript(
       "new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))"
     );
-    await check("toolbar and result share one renderer page", async () => {
-      const toolbarState = await web.executeJavaScript(`(() => ({
-        toolbar: !document.querySelector('#toolbar-view').hidden,
-        result: !document.querySelector('#result-view').hidden,
-        mode: document.body.dataset.mode,
-      }))()`);
-      assert.deepEqual(toolbarState, {
-        toolbar: true,
-        result: false,
-        mode: "toolbar",
-      });
-      web.send("overlay-mode", "result");
-      await new Promise((resolve) => setTimeout(resolve, 20));
-      const resultState = await web.executeJavaScript(`(() => ({
-        toolbar: !document.querySelector('#toolbar-view').hidden,
-        result: !document.querySelector('#result-view').hidden,
-        mode: document.body.dataset.mode,
-      }))()`);
-      assert.deepEqual(resultState, {
-        toolbar: false,
-        result: true,
-        mode: "result",
-      });
-    });
     web.send("result-languages", {
       source: "English",
       target: "Chinese",
@@ -206,7 +181,7 @@ app.whenReady().then(async () => {
       }
     });
     assert.deepEqual(errors, []);
-    console.log(`${6 - failures.length}/6 renderer checks passed`);
+    console.log(`${5 - failures.length}/5 renderer checks passed`);
   } catch (error) {
     failures.push("renderer setup");
     console.error(error);

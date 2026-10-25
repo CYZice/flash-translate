@@ -11,7 +11,10 @@ Automatic Chinese/English mode is enabled by default: text containing Chinese
 (including mixed technical text) translates to English; other text translates
 to Chinese. Turn it off in settings to choose a manual language direction.
 The settings font-size slider adjusts the translation between 14 and 24px
-(default 18px). Saving updates an open card and remembers the size. While
+(default 18px). Saving updates an open card and remembers the size. The
+startup setting is off by default; when enabled, Flash Translate starts into
+the system tray. The privacy setting clears the translation and selection data
+when a card is closed and is enabled by default. While
 waiting for the first translation chunk, a blue highlight flows along a fixed
 infinity outline at the top-left text position, without a loading label. Reduced
 motion preferences stop the animation. The pin matches the browser extension's
@@ -21,7 +24,7 @@ Windows and Linux, with an OpenAI-compatible translation endpoint.
 
 ## Windows portable use
 
-Open the generated `FlashTranslate-0.1.4-win-x64` folder and double-click
+Open the generated `FlashTranslate-1.1.4-win-x64` folder and double-click
 `FlashTranslate.exe`. Keep the entire folder together; no installer, Node.js, or
 npm is needed on the destination PC.
 
@@ -76,7 +79,7 @@ support remains compositor-dependent.
 ## Linux Debian package
 
 For Ubuntu or Debian, the recommended installed version is
-`flash-translate_0.1.4-1_amd64.deb`. Double-click it in the file manager and
+`flash-translate_1.1.4-1_amd64.deb`. Double-click it in the file manager and
 choose **Install**. After installation, launch **Flash Translate** from the
 application menu; its settings are stored in the user configuration directory,
 not under `/opt`.
@@ -89,7 +92,7 @@ Build the package on Linux (or WSL), with Python 3, `dpkg-deb`, and `readelf`:
 ```bash
 npm_config_build_from_source=true npm ci
 npm run portable:linux
-npm run package:deb -- --runtime dist/FlashTranslate-0.1.4-linux-x64
+npm run package:deb -- --runtime dist/FlashTranslate-1.1.4-linux-x64
 ```
 
 Source-building `selection-hook` uses Node.js 18+, a C++ compiler, Python, and
@@ -101,7 +104,7 @@ The package is built with native `dpkg-deb`, checks its archive structure and
 permissions, includes the current desktop sources, and excludes portable data.
 It refuses to overwrite an existing artifact.
 
-Revision `0.1.4-1` is the corrected Debian package for this release. Do not use
+Revision `1.1.4-1` is the corrected Debian package for this release. Do not use
 `--force-overwrite`, delete `/opt`, or remove unrelated applications to install it.
 
 ## Development
@@ -158,7 +161,7 @@ Build a Windows portable folder using the already-installed Electron runtime:
 npm run portable:windows
 ```
 
-The output is `desktop/dist/FlashTranslate-<version>-win-<architecture>/`.
+The output is `desktop/dist/FlashTranslate-1.1.4-win-<architecture>/`.
 The builder copies runtime and production dependencies, excluding tests, other
 platforms' native binaries, and any development or user settings. It refuses to
 overwrite an existing output folder. Move an old build elsewhere before

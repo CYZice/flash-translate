@@ -6,6 +6,8 @@ const clearKey = document.getElementById("clear-key");
 const testButton = document.getElementById("test");
 const autoZhEn = document.getElementById("auto-zh-en");
 const fontSize = document.getElementById("font-size");
+const startOnLogin = document.getElementById("start-on-login");
+const clearOnClose = document.getElementById("clear-on-close");
 
 function updatePreferences() {
   document.getElementById("manual-languages").hidden = autoZhEn.checked;
@@ -31,6 +33,8 @@ function readForm() {
     targetLanguage: document.getElementById("target-language").value,
     autoZhEn: autoZhEn.checked,
     translationFontSize: Number(fontSize.value),
+    startOnLogin: startOnLogin.checked,
+    clearOnClose: clearOnClose.checked,
   };
 }
 
@@ -41,6 +45,8 @@ function fillForm(settings) {
   document.getElementById("target-language").value = settings.targetLanguage;
   autoZhEn.checked = settings.autoZhEn;
   fontSize.value = String(settings.translationFontSize);
+  startOnLogin.checked = settings.startOnLogin;
+  clearOnClose.checked = settings.clearOnClose;
   updatePreferences();
   keyInput.value = settings.apiKey;
   clearKey.checked = false;

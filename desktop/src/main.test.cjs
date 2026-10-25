@@ -7,20 +7,15 @@ const { test } = require("node:test");
 
 const mainSource = fs.readFileSync(path.join(__dirname, "main.cjs"), "utf8");
 const browserWindowPattern = /new BrowserWindow\(/g;
-const overlayWindowPattern = /let overlayWindow = null;/;
 const toolbarWindowPattern = /let toolbarWindow = null;/;
 const resultWindowPattern = /let resultWindow = null;/;
-const overlayHtmlPattern = /overlay\.html/;
-const loadCompletePattern = /did-finish-load/;
-const selectionToolbarPattern =
-  /const selectionWasToolbar = overlayMode === "toolbar"/;
+const toolbarHtmlPattern = /toolbar\.html/;
+const resultHtmlPattern = /result\.html/;
 
-test("toolbar and result use one overlay BrowserWindow", () => {
-  assert.equal((mainSource.match(browserWindowPattern) || []).length, 2);
-  assert.match(mainSource, overlayWindowPattern);
-  assert.doesNotMatch(mainSource, toolbarWindowPattern);
-  assert.doesNotMatch(mainSource, resultWindowPattern);
-  assert.match(mainSource, overlayHtmlPattern);
-  assert.match(mainSource, loadCompletePattern);
-  assert.match(mainSource, selectionToolbarPattern);
+test("toolbar and result use independent BrowserWindows", () => {
+  assert.equal((mainSource.match(browserWindowPattern) || []).length, 3);
+  assert.match(mainSource, toolbarWindowPattern);
+  assert.match(mainSource, resultWindowPattern);
+  assert.match(mainSource, toolbarHtmlPattern);
+  assert.match(mainSource, resultHtmlPattern);
 });

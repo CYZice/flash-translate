@@ -18,7 +18,7 @@ function getSelectionAnchor(selection) {
   ) {
     return null;
   }
-  return [selection.mousePosEnd, selection.endBottom].find(validPoint) || null;
+  return [selection.endBottom, selection.mousePosEnd].find(validPoint) || null;
 }
 
 function contains(rect, point) {

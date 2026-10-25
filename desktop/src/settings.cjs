@@ -13,6 +13,8 @@ const PREFERENCES = {
   autoTranslate: false,
   autoZhEn: true,
   translationFontSize: 18,
+  startOnLogin: false,
+  clearOnClose: true,
 };
 
 function normalizeSettings(input) {
@@ -20,10 +22,15 @@ function normalizeSettings(input) {
     throw new Error("设置格式无效。");
   }
   const config = {};
-  for (const key of ["autoTranslate", "autoZhEn"]) {
+  for (const key of [
+    "autoTranslate",
+    "autoZhEn",
+    "startOnLogin",
+    "clearOnClose",
+  ]) {
     const value = input[key] ?? PREFERENCES[key];
     if (typeof value !== "boolean") {
-      throw new Error("自动翻译设置无效。");
+      throw new Error("布尔设置无效。");
     }
     config[key] = value;
   }
@@ -115,6 +122,8 @@ function createSettingsStore(file, encryption) {
       ...input,
       autoTranslate: input.autoTranslate ?? saved.config.autoTranslate,
       autoZhEn: input.autoZhEn ?? saved.config.autoZhEn,
+      startOnLogin: input.startOnLogin ?? saved.config.startOnLogin,
+      clearOnClose: input.clearOnClose ?? saved.config.clearOnClose,
       translationFontSize:
         input.translationFontSize ?? saved.config.translationFontSize,
     });

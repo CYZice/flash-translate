@@ -1,0 +1,44 @@
+:root {
+  color-scheme: light;
+  background: transparent;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+body {
+  padding: 4px;
+}
+button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 4px rgb(15 23 42 / 12%);
+  cursor: pointer;
+}
+button:hover {
+  background: #f9fafb;
+  border-color: #cbd5e1;
+}
+button:active {
+  background: #eff6ff;
+}
+button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+img {
+  pointer-events: none;
+}

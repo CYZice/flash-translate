@@ -65,8 +65,12 @@ test("pinned results survive outside input while Escape explicitly closes them",
 
 test("selection coordinates support left monitors and skip unavailable native points", () => {
   assert.deepEqual(
-    getSelectionAnchor({ text: "hello", mousePosEnd: { x: -800, y: 300 } }),
-    { x: -800, y: 300 }
+    getSelectionAnchor({
+      text: "hello",
+      mousePosEnd: { x: -800, y: 300 },
+      endBottom: { x: -760, y: 320 },
+    }),
+    { x: -760, y: 320 }
   );
   assert.deepEqual(
     getSelectionAnchor({
