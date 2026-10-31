@@ -15,6 +15,15 @@
   "popup_header_title": {
     "message": "Flash Translate"
   },
+  "popup_header_subtitle": {
+    "message": "デバイス上で翻訳"
+  },
+  "popup_header_sidePanel": {
+    "message": "サイドパネルで開く"
+  },
+  "content_retryTranslation": {
+    "message": "翻訳を再試行"
+  },
 
   "popup_section_languages": { "message": "言語" },
   "popup_section_behavior": { "message": "動作" },
@@ -140,6 +149,9 @@
   },
   "popup_footer_githubRepository": {
     "message": "GitHub リポジトリ"
+  },
+  "popup_footer_releases": {
+    "message": "ブラウザー版をダウンロード"
   },
   "popup_footer_shared": {
     "message": "共有しました！"

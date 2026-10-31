@@ -164,9 +164,13 @@ describe("selection display lifecycle", () => {
     expect(state.selection?.text).toBe("First selection");
     expect(state.isVisible).toBe(true);
     select("Second selection");
-    expect(state.selection?.text).toBe("Second selection");
+    expect(state.selection?.text).toBe("First selection");
+    expect(state.pendingSelection?.text).toBe("Second selection");
     expect(state.isVisible).toBe(true);
     expect(state.isPinned).toBe(true);
+    act(() => state.activateCard());
+    expect(state.selection?.text).toBe("Second selection");
+    expect(state.pendingSelection).toBeNull();
   });
 
   it("applies display-mode changes to the current selection", () => {

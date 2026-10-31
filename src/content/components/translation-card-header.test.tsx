@@ -49,6 +49,8 @@ function render(termTranslation: HoveredTermTranslationState) {
         isDragging={false}
         isPinned={false}
         onPinToggle={vi.fn()}
+        selectionTrigger="badge"
+        onSelectionTriggerChange={vi.fn()}
         onClose={vi.fn()}
         onMovePointerDown={vi.fn()}
         onResultViewChange={vi.fn()}
@@ -139,11 +141,14 @@ describe("TranslationCardHeader", () => {
   it("shows one engine switch and no card settings button", () => {
     render(IDLE_TERM_TRANSLATION);
 
-    expect(container.querySelectorAll("button")).toHaveLength(3);
+    expect(container.querySelectorAll("button")).toHaveLength(4);
     expect(
       container.querySelector(
         '[aria-label="content_switchTranslationProvider"]'
       )
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[aria-label="开启划词即译"]')
     ).not.toBeNull();
     expect(
       container.querySelector('[aria-label="content_toggleSettings"]')

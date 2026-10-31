@@ -122,18 +122,34 @@ export function useTextSelection(
   selectionTrigger: "immediate" | "badge" = "badge"
 ) {
   const [selection, setSelection] = useState<SelectionInfo | null>(null);
+  const [pendingSelection, setPendingSelection] =
+    useState<SelectionInfo | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
   const pinnedRef = useLatestRef(isPinned);
   const selectionRef = useLatestRef(selection);
+  const pendingSelectionRef = useLatestRef(pendingSelection);
   const lastSelectionTextRef = useRef<string | null>(null);
   const pendingClearRef = useRef(false);
   const selectionTextAtPointerDownRef = useRef<string | null>(null);
   const selectionTimerRef = useRef<number | null>(null);
   const isSelectingRef = useRef(false);
 
-  const scheduleCardDisplay = () => {
-    setIsVisible(pinnedRef.current || selectionTrigger === "immediate");
+  const commitSelection = (nextSelection: SelectionInfo) => {
+    const keepPinnedCard =
+      pinnedRef.current &&
+      selectionTrigger === "badge" &&
+      selectionRef.current !== null;
+
+    if (keepPinnedCard) {
+      setPendingSelection(nextSelection);
+      setIsVisible(true);
+      return;
+    }
+
+    setSelection(nextSelection);
+    setPendingSelection(null);
+    setIsVisible(selectionTrigger === "immediate");
   };
 
   const handleMouseUp = (event: Event) => {
@@ -158,10 +174,11 @@ export function useTextSelection(
       if (controlSelection) {
         pendingClearRef.current = false;
         if (controlSelection.text !== lastSelectionTextRef.current) {
-          scheduleCardDisplay();
+          commitSelection(controlSelection);
+        } else if (!pinnedRef.current) {
+          setSelection(controlSelection);
         }
         lastSelectionTextRef.current = controlSelection.text;
-        setSelection(controlSelection);
         return;
       }
       const rawText = getSelectionText(windowSelection);
@@ -185,6 +202,7 @@ export function useTextSelection(
         return;
       }
       if (!selectionInfo) {
+        setPendingSelection(null);
         if (!pinnedRef.current) {
           handlePendingClear(
             pendingClearRef,
@@ -205,10 +223,11 @@ export function useTextSelection(
           lastSelectionTextRef.current
         )
       ) {
-        scheduleCardDisplay();
+        commitSelection(selectionInfo);
+      } else if (!pinnedRef.current) {
+        setSelection(selectionInfo);
       }
       lastSelectionTextRef.current = selectionInfo.text;
-      setSelection(selectionInfo);
     }, SELECTION_DELAY_MS);
   };
 
@@ -226,6 +245,7 @@ export function useTextSelection(
       return;
     }
     pendingClearRef.current = true;
+    setPendingSelection(null);
     isSelectingRef.current = true;
     if (selectionTimerRef.current !== null) {
       window.clearTimeout(selectionTimerRef.current);
@@ -254,11 +274,15 @@ export function useTextSelection(
     pendingClearRef.current = false;
     selectionTextAtPointerDownRef.current = null;
     setIsVisible(false);
+    setPendingSelection(null);
     clearSelectionState(setSelection, lastSelectionTextRef);
   };
 
   const activateCard = () => {
-    if (selection) {
+    const nextSelection = pendingSelectionRef.current ?? selectionRef.current;
+    if (nextSelection) {
+      setSelection(nextSelection);
+      setPendingSelection(null);
       setIsVisible(true);
     }
   };
@@ -276,6 +300,7 @@ export function useTextSelection(
     pendingClearRef.current = false;
     selectionTextAtPointerDownRef.current = null;
     clearSelectionState(setSelection, lastSelectionTextRef);
+    setPendingSelection(null);
     setIsVisible(false);
   };
 
@@ -340,15 +365,25 @@ export function useTextSelection(
 
   // Apply a mode change to the current selection, not only the next one.
   useEffect(() => {
-    if (selectionRef.current) {
-      setIsVisible(pinnedRef.current || selectionTrigger === "immediate");
+    if (selectionTrigger === "immediate") {
+      const nextSelection = pendingSelectionRef.current;
+      if (nextSelection) {
+        setSelection(nextSelection);
+        setPendingSelection(null);
+      }
+      if (selectionRef.current) {
+        setIsVisible(true);
+      }
+    } else if (!pinnedRef.current) {
+      setIsVisible(false);
     }
-  }, [selectionTrigger, pinnedRef, selectionRef]);
+  }, [pendingSelectionRef, pinnedRef, selectionRef, selectionTrigger]);
 
   const togglePin = () => setIsPinned((pinned) => !pinned);
 
   return {
     selection,
+    pendingSelection,
     isVisible,
     isPinned,
     togglePin,

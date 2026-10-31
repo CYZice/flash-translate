@@ -6,6 +6,9 @@
   "ext_actionTitle": { "message": "闪译" },
 
   "popup_header_title": { "message": "闪译" },
+  "popup_header_subtitle": { "message": "设备端翻译" },
+  "popup_header_sidePanel": { "message": "在侧边栏打开" },
+  "content_retryTranslation": { "message": "重试翻译" },
   "popup_section_languages": { "message": "语言" },
   "popup_section_behavior": { "message": "行为" },
 
@@ -84,6 +87,7 @@
   "popup_footer_support": { "message": "支持" },
   "popup_footer_chromeWebStore": { "message": "Chrome 网上应用店" },
   "popup_footer_githubRepository": { "message": "GitHub 仓库" },
+  "popup_footer_releases": { "message": "下载浏览器版" },
   "popup_footer_shared": { "message": "已分享" },
   "popup_footer_shareExtension": { "message": "分享此扩展" },
   "popup_footer_shareText": {

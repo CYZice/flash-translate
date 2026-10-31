@@ -27,6 +27,7 @@ function getTranslationFontSize(
 export interface TranslationFlowState {
   // Selection
   selection: SelectionInfo | null;
+  pendingSelection: SelectionInfo | null;
   isVisible: boolean;
   isPinned: boolean;
   selectionTrigger: "immediate" | "badge";
@@ -70,6 +71,7 @@ export function useTranslationFlow(): TranslationFlowState {
   const [settings, isLoading] = useSettings(selectContentAppSettings);
   const {
     selection,
+    pendingSelection,
     isVisible,
     isPinned,
     togglePin,
@@ -161,6 +163,7 @@ export function useTranslationFlow(): TranslationFlowState {
   return {
     // Selection
     selection,
+    pendingSelection,
     isVisible,
     isPinned,
     selectionTrigger: settings?.selectionTrigger ?? "badge",

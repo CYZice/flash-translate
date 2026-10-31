@@ -15,6 +15,15 @@
   "popup_header_title": {
     "message": "Flash Translate"
   },
+  "popup_header_subtitle": {
+    "message": "On-device translation"
+  },
+  "popup_header_sidePanel": {
+    "message": "Open side panel"
+  },
+  "content_retryTranslation": {
+    "message": "Retry translation"
+  },
 
   "popup_section_languages": { "message": "Languages" },
   "popup_section_behavior": { "message": "Behavior" },
@@ -142,6 +151,9 @@
   },
   "popup_footer_githubRepository": {
     "message": "GitHub Repository"
+  },
+  "popup_footer_releases": {
+    "message": "Download browser build"
   },
   "popup_footer_shared": {
     "message": "Shared!"

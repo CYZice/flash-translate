@@ -1,3 +1,4 @@
+import { saveSettings } from "@/shared/storage/settings";
 import { EditorInputAssist } from "./components/editor-input-assist";
 import { SelectionBadge } from "./components/selection-badge";
 import { TranslationCard } from "./components/translation-card";
@@ -9,6 +10,7 @@ import { useHoveredTermTranslation } from "./term-translation/use-hovered-term-t
 export default function App() {
   const {
     selection,
+    pendingSelection,
     isVisible,
     isPinned,
     togglePin,
@@ -45,17 +47,20 @@ export default function App() {
       !isDetecting &&
       selection !== null,
   });
+  const badgeSelection =
+    selectionTrigger === "badge" && canDisplay && !skipResult.shouldSkip
+      ? (pendingSelection ?? (!isVisible ? selection : null))
+      : null;
 
   // Keep the input hint mounted even when there is no active text selection.
   if (!(canDisplay && selection && isVisible)) {
     return (
       <>
-        {selectionTrigger === "badge" &&
-        canDisplay &&
-        !skipResult.shouldSkip &&
-        selection &&
-        !isVisible ? (
-          <SelectionBadge rect={selection.rect} onActivate={activateCard} />
+        {badgeSelection ? (
+          <SelectionBadge
+            rect={badgeSelection.rect}
+            onActivate={activateCard}
+          />
         ) : null}
         <EditorInputAssist {...inputAssist} />
       </>
@@ -64,6 +69,9 @@ export default function App() {
 
   return (
     <>
+      {badgeSelection ? (
+        <SelectionBadge rect={badgeSelection.rect} onActivate={activateCard} />
+      ) : null}
       <div hidden={skipResult.shouldSkip}>
         <TranslationCard
           autoDetectEnabled={autoDetectEnabled}
@@ -72,6 +80,10 @@ export default function App() {
           isDetecting={isDetecting || skipResult.shouldSkip}
           isPinned={isPinned}
           onPinToggle={togglePin}
+          selectionTrigger={selectionTrigger}
+          onSelectionTriggerChange={(value) => {
+            saveSettings({ selectionTrigger: value });
+          }}
           isAiConfigured={isAiConfigured}
           defaultTranslationProvider={defaultTranslationProvider}
           translationFontSize={translationFontSize}

@@ -1,4 +1,4 @@
-import { Pin, PinOff, X } from "lucide-react";
+import { Pin, PinOff, X, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/shared/components/button";
 import { saveSettings } from "@/shared/storage/settings";
@@ -26,6 +26,8 @@ interface TranslationCardHeaderProps {
   isPinned: boolean;
   onClose: () => void;
   onPinToggle: () => void;
+  selectionTrigger: "immediate" | "badge";
+  onSelectionTriggerChange: (value: "immediate" | "badge") => void;
   onMovePointerDown: (event: React.PointerEvent<HTMLElement>) => void;
   onResultViewChange: (view: TranslationResultView) => void;
   onSourceLanguageOverride: (lang: string | null) => void;
@@ -49,6 +51,8 @@ export function TranslationCardHeader({
   onSourceLanguageOverride,
   isPinned,
   onPinToggle,
+  selectionTrigger,
+  onSelectionTriggerChange,
 }: TranslationCardHeaderProps) {
   const onSourceChange = async (lang: string) => {
     // When auto-detect is enabled, override the detected language
@@ -112,6 +116,28 @@ export function TranslationCardHeader({
           aiIsLoading={aiIsLoading}
           onViewChange={onResultViewChange}
         />
+        <Button
+          aria-label={
+            selectionTrigger === "immediate" ? "关闭划词即译" : "开启划词即译"
+          }
+          aria-pressed={selectionTrigger === "immediate"}
+          className={cn(
+            "min-h-7 min-w-7 rounded-sm p-0 shadow-none",
+            selectionTrigger === "immediate" && "bg-blue-50 text-blue-700"
+          )}
+          onClick={() =>
+            onSelectionTriggerChange(
+              selectionTrigger === "immediate" ? "badge" : "immediate"
+            )
+          }
+          tooltip={
+            selectionTrigger === "immediate" ? "关闭划词即译" : "开启划词即译"
+          }
+          tooltipAlign="end"
+          variant="default"
+        >
+          <Zap size={14} />
+        </Button>
         <Button
           aria-label={isPinned ? "取消钉住翻译卡片" : "钉住翻译卡片"}
           aria-pressed={isPinned}

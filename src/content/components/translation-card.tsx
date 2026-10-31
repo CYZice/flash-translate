@@ -1,4 +1,7 @@
+import { RotateCcw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/shared/components/button";
+import { getMessage } from "@/shared/utils/i18n";
 import { useCardLayout } from "../hooks/use-card-layout";
 import type { SelectionInfo } from "../hooks/use-text-selection";
 import { useTranslator } from "../hooks/use-translator";
@@ -24,6 +27,8 @@ interface TranslationCardProps {
   isDetecting: boolean;
   isPinned: boolean;
   onPinToggle: () => void;
+  selectionTrigger: "immediate" | "badge";
+  onSelectionTriggerChange: (value: "immediate" | "badge") => void;
   isAiConfigured: boolean;
   defaultTranslationProvider: "chrome-built-in" | "custom-ai";
   translationFontSize: number;
@@ -42,6 +47,8 @@ export function TranslationCard({
   isDetecting,
   isPinned,
   onPinToggle,
+  selectionTrigger,
+  onSelectionTriggerChange,
   isAiConfigured,
   termTranslation,
   onSourceLanguageOverride,
@@ -80,6 +87,13 @@ export function TranslationCard({
 
   const handleResultViewChange = (view: TranslationResultView) => {
     setResultView({ key: viewResetKey, view });
+  };
+
+  const handleRetry = () => {
+    currentTranslation.translate(
+      selection.text,
+      activeResultView === "ai" ? selection.readContext() : undefined
+    );
   };
 
   const layoutKey = `${selection.text}\u0000${selection.rect.left}:${selection.rect.top}:${selection.rect.width}:${selection.rect.height}\u0000${selection.bounds.left}:${selection.bounds.top}:${selection.bounds.width}:${selection.bounds.height}`;
@@ -172,6 +186,8 @@ export function TranslationCard({
           onClose={onClose}
           isPinned={isPinned}
           onPinToggle={onPinToggle}
+          selectionTrigger={selectionTrigger}
+          onSelectionTriggerChange={onSelectionTriggerChange}
           onMovePointerDown={layout.handleDragPointerDown}
           onResultViewChange={handleResultViewChange}
           onSourceLanguageOverride={onSourceLanguageOverride}
@@ -185,7 +201,7 @@ export function TranslationCard({
           ref={bodyRef}
         >
           <div className="min-w-0 break-words" ref={contentRef}>
-            <div className="relative px-4 py-3 pr-12">
+            <div className="px-4 py-3">
               <TranslationContent
                 availability={currentTranslation.availability}
                 error={currentTranslation.error}
@@ -195,12 +211,23 @@ export function TranslationCard({
                 targetLanguage={targetLanguage}
                 fontSize={translationFontSize}
               />
-              <div className="absolute top-2 right-2">
-                <CopyButton text={currentTranslation.result} />
-              </div>
             </div>
           </div>
         </div>
+        <footer className="flex shrink-0 items-center justify-end gap-1 border-gray-100 border-t px-3 py-1.5">
+          <CopyButton text={currentTranslation.result} />
+          <Button
+            aria-label={getMessage("content_retryTranslation")}
+            className="min-h-7 min-w-7 rounded-sm p-0 shadow-none"
+            disabled={currentTranslation.isLoading}
+            onClick={handleRetry}
+            tooltip={getMessage("content_retryTranslation")}
+            tooltipAlign="end"
+            variant="muted"
+          >
+            <RotateCcw size={14} />
+          </Button>
+        </footer>
         <ResizeHandle
           onKeyDown={layout.handleBottomKeyDown}
           onMouseDown={layout.handleBottomMouseDown}
