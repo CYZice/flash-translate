@@ -8,25 +8,25 @@ import { UsageStatistics } from "./components/usage-statistics";
 
 export default function App() {
   return (
-    <div className="flex h-auto max-h-[600px] w-96 flex-col overflow-hidden bg-gray-100 font-sans text-gray-900">
+    <div className="flex h-auto max-h-[640px] w-96 flex-col overflow-hidden bg-gray-100 font-sans text-gray-900">
       <PopupHeader />
-      <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto py-1.5">
-        <section className="bg-white">
+      <main className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-slate-100 px-2.5 py-2.5">
+        <section className="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm">
           <LanguageSettings />
         </section>
-        <section className="bg-white">
+        <section className="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm">
           <DisplaySettings />
         </section>
-        <section className="bg-white">
+        <section className="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm">
           <TranslationBehaviorSettings />
         </section>
-        <section className="bg-white">
+        <section className="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm">
           <ProviderSettings />
         </section>
-        <section className="bg-white">
+        <section className="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm">
           <UsageStatistics />
         </section>
-      </div>
+      </main>
       <Footer />
     </div>
   );

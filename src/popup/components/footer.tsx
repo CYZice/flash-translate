@@ -1,5 +1,6 @@
 import {
   CheckIcon,
+  DownloadIcon,
   ExternalLinkIcon,
   HelpCircleIcon,
   Share2Icon,
@@ -48,6 +49,16 @@ export function Footer() {
   return (
     <footer className="flex shrink-0 items-center justify-between gap-4 border-gray-200 border-t bg-white px-4 py-2.5">
       <div className="flex items-center justify-center gap-4">
+        <a
+          className="flex items-center gap-1.5 font-medium text-blue-600 text-xs transition-colors hover:text-blue-700"
+          href={urls.releases}
+          rel="noopener noreferrer"
+          target="_blank"
+          title={getMessage("popup_footer_releases")}
+        >
+          <DownloadIcon size={16} />
+          <span>{getMessage("popup_footer_releases")}</span>
+        </a>
         <a
           className="flex items-center gap-1.5 text-gray-500 text-xs transition-colors hover:text-gray-700"
           href={urls.support}
