@@ -111,6 +111,9 @@ extract it, and load the extracted folder through **Load unpacked** in
 `chrome://extensions/` with Developer mode enabled. The release also includes the
 [Obsidian plugin](obsidian/README.md#install-a-release).
 
+To create the browser ZIP locally, run `bun run zip`; it is written to
+`releases/flash-translate-v<version>.zip` and can be loaded the same way.
+
 ### Manual Installation (Development)
 
 1. Run `bun run dev` or `bun run build`
